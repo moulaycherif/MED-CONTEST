@@ -1,0 +1,42 @@
+import * as XLSX from "xlsx";
+import * as fs from "fs";
+
+const data = [
+  {
+    questionText: "Quelle est la capitale de la France ?",
+    option1: "Paris",
+    option2: "Lyon",
+    option3: "Marseille",
+    option4: "Toulouse",
+    correctAnswer: "Paris",
+    subject: "Géographie",
+    exam: "Bac",
+  },
+  {
+    questionText: "Qui a peint La Joconde ?",
+    option1: "Picasso",
+    option2: "Van Gogh",
+    option3: "Da Vinci",
+    option4: "Rembrandt",
+    correctAnswer: "Da Vinci",
+    subject: "Art",
+    exam: "Concours ENS",
+  },
+  {
+    questionText: "Le plus grand océan ?",
+    option1: "Atlantique",
+    option2: "Indien",
+    option3: "Pacifique",
+    option4: "Arctique",
+    correctAnswer: "Pacifique",
+    subject: "Géographie",
+    exam: "Bac",
+  },
+];
+
+const worksheet = XLSX.utils.json_to_sheet(data);
+const workbook = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(workbook, worksheet, "Questions");
+XLSX.writeFile(workbook, "Template_Questions.xlsx");
+
+console.log("✅ Template_Questions.xlsx créé !");

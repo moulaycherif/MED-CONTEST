@@ -1,0 +1,83 @@
+// routes/studentRoutes.ts
+import express from "express";
+import { authenticateStudent, AuthRequest } from "../middleware/authMiddleware";
+import Exam from "../models/Exam"; // Modèle des examens
+import Result from "../models/Result"; // Modèle des résultats
+import Question from "../models/Question"; // Modèle des questions
+
+const router = express.Router();
+
+// 🔹 Profil étudiant
+router.get("/profile", authenticateStudent, async (req: AuthRequest, res) => {
+  res.json({
+    id: req.student._id,
+    name: req.student.name,
+    email: req.student.email,
+  });
+});
+
+// 🔹 Liste des examens disponibles
+router.get("/exams", authenticateStudent, async (req: AuthRequest, res) => {
+  try {
+    const exams = await Exam.find().select("title date"); // titre et date
+    res.json(exams);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// 🔹 Questions pour un examen
+router.get("/exams/:examId/questions", authenticateStudent, async (req: AuthRequest, res) => {
+  const { examId } = req.params;
+  try {
+    const questions = await Question.find({ exam: examId }).select("text options"); // questions + options
+    res.json(questions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// 🔹 Soumettre les réponses d’un examen
+router.post("/exams/:examId/submit", authenticateStudent, async (req: AuthRequest, res) => {
+  const { examId } = req.params;
+  const { answers } = req.body; // { questionId: answer }
+  try {
+    // Calcul du score (exemple simple)
+    const questions = await Question.find({ exam: examId });
+    let score = 0;
+    questions.forEach(q => {
+      if (answers[q._id] && answers[q._id] === q.reponseCorrecte) {
+        score += 1;
+      }
+    });
+
+    // Enregistrer le résultat
+    const result = new Result({
+      student: req.student._id,
+      exam: examId,
+      answers,
+      score,
+    });
+    await result.save();
+
+    res.json({ message: "Examen soumis ✅", score });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// 🔹 Historique des résultats
+router.get("/results", authenticateStudent, async (req: AuthRequest, res) => {
+  try {
+    const results = await Result.find({ student: req.student._id }).populate("exam", "title date");
+    res.json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+export default router;
