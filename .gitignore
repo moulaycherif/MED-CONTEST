@@ -1,18 +1,47 @@
-# Node
-node_modules
-dist
-build
-
-# Logs
+# === Node & dependencies ===
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment files
+# === Build outputs ===
+dist/
+build/
+.cache/
+.vite/
+coverage/
+
+# === Environment files ===
 .env
 .env.local
+.env.development
 .env.production
+.env.test
 
-# IDE
-.vscode
+# === Editor & system files ===
+.vscode/
+.idea/
+*.swp
+*.swo
 .DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+logs/
+debug.log
+
+# === TypeScript ===
+*.tsbuildinfo
+
+# === OS generated files ===
+ehthumbs.db
+Icon?
+desktop.ini
+
+# === Specific folders (frontend/backend) ===
+qcm-frontend/node_modules/
+qcm-frontend/dist/
+qcm-frontend/.vite/
+qcm-backend/node_modules/
+qcm-backend/dist/
