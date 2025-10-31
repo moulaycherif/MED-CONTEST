@@ -13,8 +13,8 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("✅ Connecté à MongoDB");
-    app.listen(PORT, () =>
-      console.log(`🚀 Backend running sur http://localhost:${PORT}`)
-    );
+    app.listen(PORT, () => {
+      console.log(`🚀 Backend running sur le port ${PORT}`);
+    });
   })
   .catch((err) => console.error("❌ Erreur MongoDB :", err));
