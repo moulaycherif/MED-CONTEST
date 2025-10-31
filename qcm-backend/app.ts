@@ -9,22 +9,27 @@ dotenv.config({ path: "./.env" });
 
 const app = express();
 
-// Middlewares
+// ✅ Middleware CORS
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",            // Frontend local
+    "https://med-contest.vercel.app"    // Frontend déployé
+  ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// ✅ Routes principales
 app.use("/api/auth", authRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/answers", answerRoutes);
 
+// ✅ Route test
 app.get("/", (req, res) => {
-  res.send("✅ API QCM en ligne. Utilisez /api/questions pour interagir.");
+  res.send("✅ API MED-CONTEST backend en ligne ! Utilisez /api/questions ou /api/auth pour interagir.");
 });
 
 export default app;
