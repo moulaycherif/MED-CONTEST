@@ -10,6 +10,7 @@ dotenv.config({ path: "./.env" });
 const app = express();
 
 // ✅ Middleware CORS
+
 app.use(cors({
   origin: [
     "http://localhost:5173",            // Frontend local
