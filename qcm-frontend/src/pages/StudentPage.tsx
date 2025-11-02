@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import QuizPage from "./QuizPage"; // on réutilise ton composant existant
+import { API_BASE_URL } from "../config";
 
 interface Question {
   _id: string;
@@ -21,7 +22,7 @@ export default function StudentPage() {
   // Charger la liste des examens et matières
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/questions")
+      .get(`${API_BASE_URL}/api/questions`)
       .then((res) => {
         const allQuestions: Question[] = res.data;
 

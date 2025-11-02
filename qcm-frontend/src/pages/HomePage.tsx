@@ -9,6 +9,8 @@ import BackgroundWrapper from "../components/BackgroundWrapper";
 import imageEt from "../Image2.jfif";
 import imageEn from "../Image3.jfif";
 
+import { API_BASE_URL } from "../config";
+
 export default function HomePage() {
   const [mode, setMode] = useState<"login" | "student" | "admin" | "">("");
   const [email, setEmail] = useState("");
@@ -18,7 +20,7 @@ export default function HomePage() {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
+      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
       setToken(res.data.token); // JWT
       setMode("student"); // accès au dashboard
       setError("");
@@ -164,7 +166,7 @@ export default function HomePage() {
     <button
       onClick={async () => {
         try {
-          const res = await axios.post("http://localhost:5000/api/auth/login-admin", { email, password });
+          const res = await axios.post(`${API_BASE_URL}/api/auth/login-admin`, { email, password });
           setToken(res.data.token);
           localStorage.setItem("token", res.data.token);
           setError("");

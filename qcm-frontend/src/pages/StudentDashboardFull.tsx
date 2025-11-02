@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 
+import { API_BASE_URL } from "../config";
+
 interface Question {
   _id: string;
   texte: string;
@@ -33,7 +35,7 @@ export default function StudentDashboardFull() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/questions/exams")
+      .get(`${API_BASE_URL}/api/questions/exams`)
       .then((res) => setExams(res.data || []))
       .catch(console.error);
   }, []);
@@ -41,7 +43,7 @@ export default function StudentDashboardFull() {
   useEffect(() => {
     if (mode === "parMatiere" && selectedExam) {
       axios
-        .get(`http://localhost:5000/api/questions/subjects/${encodeURIComponent(selectedExam)}`)
+        .get(`${API_BASE_URL}/api/questions/subjects/${encodeURIComponent(selectedExam)}`)
         .then((res) => setSubjects(res.data || []))
         .catch(console.error);
     }
@@ -56,7 +58,7 @@ export default function StudentDashboardFull() {
     if (mode === "parMatiere" && selectedSubject) params.subject = selectedSubject;
 
     axios
-      .get("http://localhost:5000/api/questions", { params })
+      .get(`${API_BASE_URL}/api/questions`, { params })
       .then((res) => {
         setQuestions(res.data || []);
         setAnswers({});
@@ -222,7 +224,7 @@ export default function StudentDashboardFull() {
                   const params: any = { exam: selectedExam };
                   if (mode === "parMatiere" && selectedSubject) params.subject = selectedSubject;
                   axios
-                    .get("http://localhost:5000/api/questions", { params })
+                    .get(`${API_BASE_URL}/api/questions`, { params })
                     .then((res) => {
                       setQuestions(res.data || []);
                       setAnswers({});

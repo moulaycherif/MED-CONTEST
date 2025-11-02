@@ -6,19 +6,32 @@ const AdminLogin: React.FC = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// const API_BASE_URL = "https://med-contest-backend.onrender.com";
+
+
+  // 🔧 Test temporaire : forcer l'URL de l'API backend
+// const API_BASE_URL =
+//  import.meta.env.VITE_API_BASE_URL || "https://med-contest-backend.onrender.com";
+
+console.log("🌍 API_BASE_URL (forcée) =", API_BASE_URL);
+
+
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post("http://localhost:5000/api/auth/login-admin", {
-        email,
-        password,
-      });
-      setMessage("Connexion réussie ✅");
-      localStorage.setItem("token", res.data.token);
-    } catch (err: any) {
-      setMessage(err.response?.data?.error || "Erreur de connexion ❌");
-    }
-  };
+  e.preventDefault();
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/auth/login-admin`, {
+      email,
+      password,
+    });
+    setMessage("Connexion réussie ✅");
+    localStorage.setItem("token", res.data.token);
+  } catch (err: any) {
+    setMessage(err.response?.data?.error || "Erreur de connexion ❌");
+  }
+};
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">

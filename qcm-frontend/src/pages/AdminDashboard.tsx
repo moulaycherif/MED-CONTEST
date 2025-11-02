@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+import { API_BASE_URL } from "../config";
+
 interface Student {
   _id: string;
   name: string;
@@ -41,7 +43,7 @@ const AdminDashboard: React.FC = () => {
 
   const fetchStudents = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/auth/students", {
+      const res = await axios.get(`${API_BASE_URL}/api/auth/students`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStudents(res.data);
@@ -59,7 +61,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/create-student",
+        `${API_BASE_URL}/api/auth/create-student`,
         { name, email, password },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -77,7 +79,7 @@ const AdminDashboard: React.FC = () => {
   const handleDeleteStudent = async (id: string) => {
     if (!confirm("Supprimer cet étudiant ?")) return;
     try {
-      const res = await axios.delete(`http://localhost:5000/api/auth/students/${id}`, {
+      const res = await axios.delete(`${API_BASE_URL}/api/auth/students/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessage(res.data.message);
@@ -94,7 +96,7 @@ const AdminDashboard: React.FC = () => {
 
   const fetchExams = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/questions/exams");
+      const res = await axios.get(`${API_BASE_URL}/api/questions/exams`);
       setExams(res.data);
     } catch (err) {
       console.error("Erreur récupération examens :", err);
@@ -112,7 +114,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/questions/import?mode=${mode}`,
+        `${API_BASE_URL}/api/questions/import?mode=${mode}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
