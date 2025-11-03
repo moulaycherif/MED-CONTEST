@@ -34,7 +34,6 @@ export default function StudentDashboardFull() {
       .catch(console.error);
   }, []);
 
-  // Charger les questions selon le concours ou la matière choisie
   const loadQuestions = (exam: string, subject?: string) => {
     const params: any = { exam };
     if (subject) params.subject = subject;
@@ -79,7 +78,7 @@ export default function StudentDashboardFull() {
 
     return (
       <div
-        className="relative grid grid-cols-12 gap-4 w-full min-h-screen text-white"
+        className="relative flex flex-col w-full min-h-screen text-white"
         style={{
           backgroundImage: `url("/src/Image3.jfif")`,
           backgroundSize: "cover",
@@ -87,7 +86,7 @@ export default function StudentDashboardFull() {
         }}
       >
         <div className="absolute inset-0 bg-black/50 z-0"></div>
-        <div className="relative z-10 col-span-12 p-6">
+        <div className="relative z-10 p-6">
           <button onClick={() => setPageAstuce(null)} className="mb-4 px-4 py-2 bg-gray-700 rounded">
             ⬅️ Retour
           </button>
@@ -125,7 +124,7 @@ export default function StudentDashboardFull() {
 
       {/* 🧩 COLONNE GAUCHE */}
       <motion.div
-        className="relative z-10 col-span-12 md:col-span-2 p-3 bg-white/20 backdrop-blur-md rounded-2xl space-y-6"
+        className="relative z-10 col-span-12 md:col-span-3 p-3 bg-white/20 backdrop-blur-md rounded-2xl space-y-6"
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
       >
@@ -141,7 +140,7 @@ export default function StudentDashboardFull() {
 
         <div>
           <h2 className="font-bold text-lg mb-2">📘 QCE par matière</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             {subjects.map((matiere) => (
               <button
                 key={matiere}
@@ -149,7 +148,7 @@ export default function StudentDashboardFull() {
                   setSelectedSubject(matiere);
                   setView("matiereList");
                 }}
-                className="py-2 px-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded font-semibold"
+                className="py-2 px-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded font-semibold w-full"
               >
                 {matiere}
               </button>
@@ -159,12 +158,12 @@ export default function StudentDashboardFull() {
 
         <div>
           <h2 className="font-bold text-lg mb-2">💡 Soutien</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             {subjects.map((matiere) => (
               <button
                 key={matiere}
                 onClick={() => setPageAstuce(matiere)}
-                className="py-2 px-3 bg-green-700 hover:bg-green-600 text-white rounded font-semibold"
+                className="py-2 px-3 bg-green-700 hover:bg-green-600 text-white rounded font-semibold w-full"
               >
                 {matiere}
               </button>
@@ -175,7 +174,7 @@ export default function StudentDashboardFull() {
 
       {/* 🎯 COLONNE CENTRALE */}
       <motion.div
-        className="relative z-10 col-span-12 md:col-span-6 p-6 bg-white/10 backdrop-blur-md rounded-2xl"
+        className="relative z-10 col-span-12 md:col-span-9 p-6 bg-white/10 backdrop-blur-md rounded-2xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -188,7 +187,7 @@ export default function StudentDashboardFull() {
         {view === "concoursList" && (
           <div>
             <h2 className="text-xl font-bold text-center mb-4">🏆 Choisis ton concours</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {exams.map((exam) => (
                 <motion.div
                   key={exam}
@@ -213,7 +212,7 @@ export default function StudentDashboardFull() {
             <h2 className="text-xl font-bold text-center mb-4">
               📘 {selectedSubject} — Choisis un concours
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {exams.map((exam) => (
                 <motion.div
                   key={exam}
@@ -303,12 +302,7 @@ export default function StudentDashboardFull() {
             )}
           </>
         )}
-        <h3 className="font-bold text-lg mb-3 text-center">📊 Informations</h3>
-        <p className="text-gray-200 text-center">
-          Résultats, progression, et statistiques à venir ici 📈
-        </p>
-            </motion.div>
-            
+      </motion.div>
     </div>
   );
 }
