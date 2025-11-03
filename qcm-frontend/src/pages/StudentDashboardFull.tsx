@@ -303,21 +303,12 @@ export default function StudentDashboardFull() {
             )}
           </>
         )}
-      </motion.div>
-
-    </div>  
-    
-    {/* 💡 COLONNE DROITE */}
-     // <motion.div
-       // className="relative z-10 col-span-12 md:col-span-3 p-4 bg-white/20 backdrop-blur-md rounded-2xl"
-       // initial={{ opacity: 0, x: 30 }}
-       // animate={{ opacity: 1, x: 0 }}
-     // >
-     //   <h3 className="font-bold text-lg mb-3 text-center">📊 Informations</h3>
-      //  <p className="text-gray-200 text-center">
-      //    Résultats, progression, et statistiques à venir ici 📈
-    //    </p>
-     // </motion.div>
+        <h3 className="font-bold text-lg mb-3 text-center">📊 Informations</h3>
+        <p className="text-gray-200 text-center">
+          Résultats, progression, et statistiques à venir ici 📈
+        </p>
+            </motion.div>
+            
     </div>
   );
 }
