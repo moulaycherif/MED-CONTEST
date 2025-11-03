@@ -7,6 +7,7 @@ import BackgroundWrapper from "../components/BackgroundWrapper";
 import { Link } from "react-router-dom";
 
 import heroImage from "../Image2.jfif";
+import MedecineImage from "../assets/medicine.png"; // <-- importe ton image
 
 export default function HomePage() {
   return (
@@ -49,14 +50,16 @@ export default function HomePage() {
 
 
 
-        <motion.img
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-          src={heroImage}
-          alt="Étudiants Med-Contest"
-          className="rounded-3xl shadow-lg w-full max-w-3xl mb-12"
-        />
+        {/* 🌟 Image au milieu */}
+      <motion.img
+        src={MedecineImage}
+        alt="Médecine"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
+        className="w-64 md:w-80 lg:w-96 rounded-2xl shadow-lg mb-10"
+      >
+</motion.img>
 
         <div className="flex flex-wrap gap-6 justify-center">
           <Link
