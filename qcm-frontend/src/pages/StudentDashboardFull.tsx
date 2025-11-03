@@ -125,7 +125,7 @@ export default function StudentDashboardFull() {
 
       {/* 🧩 COLONNE GAUCHE */}
       <motion.div
-        className="relative z-10 col-span-12 md:col-span-1 p-2 bg-white/20 backdrop-blur-md rounded-2xl space-y-6"
+        className="relative z-10 col-span-12 md:col-span-2 p-3 bg-white/20 backdrop-blur-md rounded-2xl space-y-6"
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
       >
@@ -305,17 +305,19 @@ export default function StudentDashboardFull() {
         )}
       </motion.div>
 
-      {/* 💡 COLONNE DROITE */}
-      <motion.div
-        className="relative z-10 col-span-12 md:col-span-3 p-4 bg-white/20 backdrop-blur-md rounded-2xl"
-        initial={{ opacity: 0, x: 30 }}
-        animate={{ opacity: 1, x: 0 }}
-      >
-        <h3 className="font-bold text-lg mb-3 text-center">📊 Informations</h3>
-        <p className="text-gray-200 text-center">
-          Résultats, progression, et statistiques à venir ici 📈
-        </p>
-      </motion.div>
+    </div>  
+    
+    {/* 💡 COLONNE DROITE */}
+     // <motion.div
+       // className="relative z-10 col-span-12 md:col-span-3 p-4 bg-white/20 backdrop-blur-md rounded-2xl"
+       // initial={{ opacity: 0, x: 30 }}
+       // animate={{ opacity: 1, x: 0 }}
+     // >
+     //   <h3 className="font-bold text-lg mb-3 text-center">📊 Informations</h3>
+      //  <p className="text-gray-200 text-center">
+      //    Résultats, progression, et statistiques à venir ici 📈
+    //    </p>
+     // </motion.div>
     </div>
   );
 }
