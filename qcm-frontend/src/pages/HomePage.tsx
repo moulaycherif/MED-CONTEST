@@ -1,193 +1,134 @@
 // src/pages/HomePage.tsx
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import axios from "axios";
-import StudentDashboardFull from "./StudentDashboardFull";
-import AdminDashboard from "./AdminDashboard";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import BackgroundWrapper from "../components/BackgroundWrapper";
+import { Link } from "react-router-dom";
 
-import imageEt from "../Image2.jfif";
-import imageEn from "../Image3.jfif";
-
-import { API_BASE_URL } from "../config";
+import heroImage from "../Image2.jfif";
 
 export default function HomePage() {
-  const [mode, setMode] = useState<"login" | "student" | "admin" | "">("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [token, setToken] = useState<string | null>(null);
-  const [error, setError] = useState("");
-
-  const handleLogin = async () => {
-    try {
-      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
-      setToken(res.data.token); // JWT
-      setMode("student"); // accès au dashboard
-      setError("");
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Erreur de connexion");
-    }
-  };
-
   return (
     <BackgroundWrapper>
-      <main className="flex flex-col min-h-screen p-8 text-center">
+      <Navbar />
+
+      {/* 🏠 Section d'accueil principale */}
+      <main className="flex flex-col min-h-screen items-center justify-center text-center px-6 pt-24 pb-12 bg-gradient-to-br from-blue-50 via-white to-blue-100">
         <motion.h1
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="text-4xl md:text-5xl font-bold text-black drop-shadow-lg mb-10"
+          className="text-4xl md:text-5xl font-extrabold text-blue-700 mb-6 drop-shadow-lg"
         >
-          🎓 QCM - Médecine
+          🎓 Bienvenue sur <span className="text-blue-500">Med-Contest</span>
         </motion.h1>
 
-        {/* Choix Étudiant / Enseignant */}
-        {mode === "" && (
-          <motion.div
-            className="flex flex-col md:flex-row items-center justify-center flex-grow gap-10"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
+        <motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.8, delay: 0.3 }}
+  className="text-lg md:text-xl max-w-2xl mb-10 space-y-4"
+>
+  {/* Paragraphe 1 */}
+  <p className="text-blue-700 font-medium">
+    La plateforme marocaine dédiée aux étudiants souhaitant faire une carrière en médecine 🩺 —
+  </p>
+
+  {/* Paragraphe 2 — clignotement fluide + zoom */}
+  <p className="text-red-600 font-semibold animate-blink-zoom">
+    Le 1er pas passe par la réussite du Concours d'accès aux Facultés de Médecine et de Pharmacie.
+  </p>
+
+  {/* Paragraphe 3 */}
+  <p className="text-gray-700">
+    Cette application est un moyen efficace pour vous préparer aux concours avec des QCM interactifs,
+    un suivi intelligent et un espace d’astuces pour réviser plus rapidement.
+  </p>
+</motion.div>
+
+
+
+        <motion.img
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          src={heroImage}
+          alt="Étudiants Med-Contest"
+          className="rounded-3xl shadow-lg w-full max-w-3xl mb-12"
+        />
+
+        <div className="flex flex-wrap gap-6 justify-center">
+          <Link
+            to="/demo"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition"
           >
-            <button
-              onClick={() => setMode("login")}
-              className="relative flex flex-col items-center justify-center text-white font-bold py-12 px-16 rounded-2xl shadow-lg transition transform hover:-translate-y-1 hover:shadow-2xl"
-              style={{
-                backgroundImage: `url(${imageEt})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                width: "260px",
-                height: "180px",
-              }}
-            >
-              <span className="text-2xl backdrop-blur-sm bg-black/40 rounded-lg px-4 py-2">
-                👨‍🎓 Étudiant
-              </span>
-            </button>
-
-            <button
-              onClick={() => setMode("admin")}
-              className="relative flex flex-col items-center justify-center text-white font-bold py-12 px-16 rounded-2xl shadow-lg transition transform hover:-translate-y-1 hover:shadow-2xl"
-              style={{
-                backgroundImage: `url(${imageEn})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                width: "260px",
-                height: "180px",
-              }}
-            >
-              <span className="text-2xl backdrop-blur-sm bg-black/40 rounded-lg px-4 py-2">
-                👩‍🏫 Enseignant
-              </span>
-            </button>
-          </motion.div>
-        )}
-
-        {/* Formulaire de connexion étudiant */}
-        {mode === "login" && !token && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col items-center gap-4"
+            🚀 Essayer la démo
+          </Link>
+          <Link
+            to="/abonnement"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition"
           >
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="border px-3 py-2 rounded w-64 text-black bg-white"
-            />
-            <input
-              type="password"
-              placeholder="Mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="border px-3 py-2 rounded w-64 text-black bg-white"
-            />
-            <button
-              onClick={handleLogin}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Se connecter
-            </button>
-            {error && <p className="text-red-600">{error}</p>}
-            <button onClick={() => setMode("")} className="mt-2 text-gray-600 underline">
-              🔙 Retour
-            </button>
-          </motion.div>
-        )}
-
-        {/* Dashboard Étudiant */}
-        {mode === "student" && token && (
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="w-full mt-6 bg-white/90 text-gray-900 rounded-2xl p-6 shadow-lg"
+            💎 Voir les abonnements
+          </Link>
+          <Link
+            to="/contact"
+            className="px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-blue-700">🧩 Tableau de bord Étudiant</h2>
-              <button
-                onClick={() => { setMode(""); setToken(null); }}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
-                🔙 Déconnexion
-              </button>
-            </div>
-            <StudentDashboardFull token={token} />
-          </motion.div>
-        )}
-
-        {/* Dashboard Enseignant */}
-        {mode === "admin" && !token && (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ duration: 0.5 }}
-    className="flex flex-col items-center gap-4"
-  >
-    <input
-      type="email"
-      placeholder="Email admin"
-      value={email}
-      onChange={(e) => setEmail(e.target.value)}
-      className="border px-3 py-2 rounded w-64 text-black bg-white"
-    />
-    <input
-      type="password"
-      placeholder="Mot de passe admin"
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-      className="border px-3 py-2 rounded w-64 text-black bg-white"
-    />
-    <button
-      onClick={async () => {
-        try {
-          const res = await axios.post(`${API_BASE_URL}/api/auth/login-admin`, { email, password });
-          setToken(res.data.token);
-          localStorage.setItem("token", res.data.token);
-          setError("");
-        } catch (err: any) {
-          setError(err.response?.data?.error || "Erreur de connexion admin");
-        }
-      }}
-      className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-    >
-      Se connecter (Admin)
-    </button>
-    {error && <p className="text-red-600">{error}</p>}
-    <button onClick={() => setMode("")} className="mt-2 text-gray-600 underline">
-      🔙 Retour
-    </button>
-  </motion.div>
-)}
-
-{mode === "admin" && token && <AdminDashboard />}
-
+            📩 Nous contacter
+          </Link>
+        </div>
       </main>
+
+      {/* 🧠 Section de présentation rapide */}
+      <section className="px-6 py-16 bg-white text-center">
+        <h2 className="text-3xl font-bold text-blue-700 mb-6">Pourquoi choisir Med-Contest ?</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="p-6 bg-blue-50 rounded-2xl shadow"
+          >
+            <h3 className="text-xl font-semibold text-blue-600 mb-3">📚 QCM par matière</h3>
+            <p className="text-gray-600">
+              Des centaines de QCM classés par spécialité et par niveau.
+            </p>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="p-6 bg-green-50 rounded-2xl shadow"
+          >
+            <h3 className="text-xl font-semibold text-green-600 mb-3">📈 Suivi intelligent</h3>
+            <p className="text-gray-600">
+              Suivez votre progression, vos points forts et vos lacunes.
+            </p>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="p-6 bg-purple-50 rounded-2xl shadow"
+          >
+            <h3 className="text-xl font-semibold text-purple-600 mb-3">👨‍🏫 Espace enseignant</h3>
+            <p className="text-gray-600">
+              Les enseignants peuvent créer, modifier et partager leurs QCM.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* 💬 Section contact + WhatsApp */}
+      <section className="px-6 py-12 bg-blue-700 text-white text-center">
+        <h2 className="text-2xl font-bold mb-4">Besoin d’aide ?</h2>
+        <p className="mb-6">Contactez-nous directement sur WhatsApp pour toute question ou assistance.</p>
+        <a
+          href="https://wa.me/212600000000" // Remplace par ton vrai numéro WhatsApp
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 rounded-lg shadow hover:bg-green-600 transition"
+        >
+          💬 Discuter sur WhatsApp
+        </a>
+      </section>
+
+      <Footer />
     </BackgroundWrapper>
   );
 }

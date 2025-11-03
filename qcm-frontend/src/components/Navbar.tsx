@@ -5,55 +5,36 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 🔹 Fonction déconnexion (pour l’instant : redirige vers HomePage)
   const handleLogout = () => {
-    // 👉 Ici tu pourras vider le token du localStorage plus tard
-    // localStorage.removeItem("token");
+    localStorage.removeItem("token");
     navigate("/");
   };
 
   return (
-    <nav className="bg-gray-800 text-white px-6 py-3 shadow-md flex justify-between items-center">
-      {/* Logo */}
-      <Link to="/" className="text-xl font-bold hover:text-yellow-300">
-        📘 QCM App
+    <nav className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-md shadow-md z-50 px-8 py-4 flex justify-between items-center">
+      {/* Logo à gauche */}
+      <Link
+        to="/"
+        className="text-2xl font-bold text-blue-700 hover:text-blue-500 transition"
+      >
+        🩺 Med-Contest
       </Link>
 
-      {/* Liens */}
-      <div className="flex gap-6 items-center">
-        <Link
-          to="/dashboard"
-          className={`hover:text-yellow-300 ${
-            location.pathname.startsWith("/dashboard") ? "text-yellow-400" : ""
-          }`}
-        >
-          🎓 Étudiant
-        </Link>
+      {/* Liens au centre */}
+      <div className="hidden md:flex gap-6 text-gray-700 font-medium">
+        <Link to="/" className="hover:text-blue-500 transition">Accueil</Link>
+        <Link to="/demo" className="hover:text-blue-500 transition">Démo</Link>
+        <Link to="/abonnement" className="hover:text-blue-500 transition">Abonnement</Link>
+        <Link to="/contact" className="hover:text-blue-500 transition">Contact</Link>
+      </div>
 
-        <Link
-          to="/admin"
-          className={`hover:text-yellow-300 ${
-            location.pathname.startsWith("/admin") ? "text-yellow-400" : ""
-          }`}
-        >
-          🛠️ Admin
-        </Link>
-
-        <Link
-          to="/stats"
-          className={`hover:text-yellow-300 ${
-            location.pathname.startsWith("/stats") ? "text-yellow-400" : ""
-          }`}
-        >
-          📊 Statistiques
-        </Link>
-
-        {/* 🔹 Bouton Déconnexion */}
+      {/* Bouton à droite */}
+      <div className="flex items-center gap-3">
         <button
-          onClick={handleLogout}
-          className="ml-4 px-4 py-2 bg-red-500 rounded hover:bg-red-600"
+          onClick={() => navigate("/login")}
+          className="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition"
         >
-          🚪 Déconnexion
+          Connexion
         </button>
       </div>
     </nav>

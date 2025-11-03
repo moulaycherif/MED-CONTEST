@@ -9,6 +9,27 @@ html, body, #root {
 @tailwind components;
 @tailwind utilities;
 
+@keyframes blinkZoom {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.05);
+  }
+}
+
+.animate-blink-zoom {
+  animation: blinkZoom 1.6s ease-in-out infinite;
+}
+
+button:hover {
+  transform: scale(1.05);
+  transition: all 0.2s ease-in-out;
+}
+
+
 /* ✅ Styles personnalisés optionnels */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
