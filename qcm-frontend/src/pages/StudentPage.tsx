@@ -1,153 +1,238 @@
-import React, { useState } from "react";
+// ✅ src/pages/StudentPage.tsx
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
+// 📘 Interface question
+interface Question {
+  _id: string;
+  texte: string;
+  options: string[];
+  reponseCorrecte: string;
+  subject: string;
+  note: number;
+}
+
+// ✅ Composant principal
 export default function StudentPage() {
-  const [section, setSection] = useState<"concours" | "matiere" | "soutien" | null>(null);
-  const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null);
+  const [view, setView] = useState<
+    "accueil" | "concoursList" | "matiereList" | "soutien" | "questions"
+  >("accueil");
+  const [exams, setExams] = useState<string[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const navigate = useNavigate();
 
-  const matieres = [
-    { id: "bio", name: "Biologie" },
-    { id: "chimie", name: "Chimie" },
-    { id: "physique", name: "Physique" },
-    { id: "maths", name: "Mathématiques" },
-  ];
+  // 🔹 Chargement des examens depuis l’API
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/api/questions/exams`)
+      .then((res) => setExams(res.data || []))
+      .catch(console.error);
+  }, []);
 
-  // --- CONTENU CENTRAL ---
-  const renderCenterContent = () => {
-    if (section === "concours") {
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center"
-        >
-          {/* Exemple d'affichage dynamique */}
-          {["Concours 2021", "Concours 2022", "Concours 2023"].map((c, i) => (
-            <motion.div
-              key={i}
-              className="w-48 h-48 bg-white shadow-md rounded-2xl flex items-center justify-center text-blue-700 font-bold hover:scale-105 hover:shadow-xl transition-all cursor-pointer"
-            >
-              {c}
-            </motion.div>
-          ))}
-        </motion.div>
-      );
-    }
-
-    if (section === "matiere" && selectedMatiere) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <h2 className="text-2xl font-bold text-blue-800 mb-6">
-            QCM de {selectedMatiere}
-          </h2>
-          <p className="text-gray-700">
-            Liste des QCMs de {selectedMatiere} (affichée ici après intégration API).
-          </p>
-        </motion.div>
-      );
-    }
-
-    if (section === "soutien" && selectedMatiere) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <h2 className="text-2xl font-bold text-purple-800 mb-6">
-            Soutien : {selectedMatiere}
-          </h2>
-          <p className="text-gray-700">
-            Contenu des astuces ou soutien pour {selectedMatiere}.
-          </p>
-        </motion.div>
-      );
-    }
-
-    return (
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-gray-700 text-lg text-center mt-20"
-      >
-        Sélectionnez une section à gauche pour commencer.
-      </motion.p>
-    );
+  // 🔹 Fonction pour charger les questions d’un concours ou matière
+  const loadQuestions = (exam: string, subject?: string) => {
+    const params: any = { exam };
+    if (subject) params.subject = subject;
+    axios
+      .get(`${API_BASE_URL}/api/questions`, { params })
+      .then((res) => {
+        setQuestions(res.data || []);
+        setView("questions");
+      })
+      .catch(console.error);
   };
 
-  return (
-    <div className="grid grid-cols-12 gap-4 w-full pt-20 px-4">
+  // 🔹 Charger automatiquement les images de matières depuis /src/assets
+  const importAll = (r: any) => {
+    let images: { [key: string]: string } = {};
+    r.keys().forEach((item: string) => {
+      const name = item.replace("./", "").replace(/\.(jpg|jpeg|png|jfif|svg)$/, "");
+      images[name.toLowerCase()] = r(item);
+    });
+    return images;
+  };
 
-      {/* 📘 COLONNE GAUCHE */}
+  const allImages = importAll(
+    require.context("../assets", false, /\.(png|jpe?g|svg|jfif)$/)
+  );
+
+  const subjects = [
+    "Maths",
+    "Physique",
+    "Chimie",
+    "SVT",
+  ];
+
+  // ✅ Rendu principal
+  return (
+    <div
+      className="flex min-h-screen text-white"
+      style={{
+        backgroundImage: `url("/src/assets/bg_med.jpg")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* 🧭 COLONNE GAUCHE */}
       <motion.div
-        className="col-span-3 bg-white/20 backdrop-blur-md p-4 rounded-2xl text-white space-y-6"
-        initial={{ opacity: 0, x: -40 }}
-        animate={{ opacity: 1, x: 0 }}
+        className="w-64 bg-[rgba(15,23,42,0.85)] backdrop-blur-md p-5 flex flex-col gap-8 shadow-2xl fixed top-0 left-0 bottom-0"
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
       >
-        {/* QCE PAR CONCOURS */}
+        {/* Logo */}
+        <h1 className="text-2xl font-extrabold text-yellow-400 text-center mb-6">
+          🩺 MED-CONTEST
+        </h1>
+
+        {/* QCE par concours */}
         <div>
-          <h3 className="font-bold text-lg mb-3">🎯 QCE par Concours</h3>
+          <h2 className="text-yellow-400 font-semibold text-lg mb-3">🎯 QCE par Concours</h2>
           <button
             onClick={() => {
-              setSection("concours");
-              setSelectedMatiere(null);
+              setView("concoursList");
+              setSelectedSubject(null);
             }}
-            className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg shadow text-white"
+            className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition"
           >
             Concours
           </button>
         </div>
 
-        {/* QCE PAR MATIÈRE */}
+        {/* QCE par matière */}
         <div>
-          <h3 className="font-bold text-lg mb-3">📚 QCE par Matière</h3>
+          <h2 className="text-yellow-400 font-semibold text-lg mb-3">📘 QCE par Matière</h2>
           <div className="flex flex-col gap-2">
-            {matieres.map((m) => (
+            {subjects.map((s) => (
               <button
-                key={m.id}
+                key={s}
                 onClick={() => {
-                  setSection("matiere");
-                  setSelectedMatiere(m.name);
+                  setView("matiereList");
+                  setSelectedSubject(s);
                 }}
-                className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg shadow"
+                className="w-full py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold"
               >
-                {m.name}
+                {s}
               </button>
             ))}
           </div>
         </div>
 
-        {/* SOUTIEN */}
+        {/* Soutien */}
         <div>
-          <h3 className="font-bold text-lg mb-3">🧠 Soutien</h3>
+          <h2 className="text-yellow-400 font-semibold text-lg mb-3">💡 Soutien</h2>
           <div className="flex flex-col gap-2">
-            {matieres.map((m) => (
+            {subjects.map((s) => (
               <button
-                key={m.id}
+                key={s}
                 onClick={() => {
-                  setSection("soutien");
-                  setSelectedMatiere(m.name);
+                  setView("soutien");
+                  setSelectedSubject(s);
                 }}
-                className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg shadow"
+                className="w-full py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold"
               >
-                {m.name}
+                {s}
               </button>
             ))}
           </div>
         </div>
       </motion.div>
 
-      {/* 🎯 COLONNE CENTRALE (reste de la page) */}
+      {/* 🧠 COLONNE CENTRALE */}
       <motion.div
-        className="col-span-9 bg-white/80 rounded-2xl shadow-lg p-6 min-h-[70vh]"
+        className="ml-64 flex-1 p-10 backdrop-blur-lg bg-white/10 overflow-y-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        {renderCenterContent()}
+        {/* ACCUEIL */}
+        {view === "accueil" && (
+          <p className="text-center text-[#f1f5f9] text-xl mt-40">
+            👋 Choisissez une section à gauche pour commencer votre entraînement.
+          </p>
+        )}
+
+        {/* LISTE DES CONCOURS */}
+        {view === "concoursList" && (
+          <div>
+            <h2 className="text-3xl font-bold text-center mb-8 text-yellow-400">
+              🏆 Choisissez un concours
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {exams.map((exam) => (
+                <motion.div
+                  key={exam}
+                  whileHover={{ scale: 1.05 }}
+                  className="cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/10 hover:bg-white/20 transition"
+                  onClick={() => loadQuestions(exam)}
+                >
+                  <img
+                    src={allImages["concours"] || "/src/assets/concours.jfif"}
+                    alt={exam}
+                    className="w-full h-40 object-cover"
+                  />
+                  <p className="text-center py-3 font-semibold">{exam}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* LISTE DES CONCOURS PAR MATIÈRE */}
+        {view === "matiereList" && selectedSubject && (
+          <div>
+            <h2 className="text-3xl font-bold text-center mb-8 text-yellow-400">
+              📘 {selectedSubject} — Choisissez un concours
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {exams.map((exam) => (
+                <motion.div
+                  key={exam}
+                  whileHover={{ scale: 1.05 }}
+                  className="cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/10 hover:bg-white/20 transition"
+                  onClick={() => loadQuestions(exam, selectedSubject)}
+                >
+                  <img
+                    src={
+                      allImages[selectedSubject.toLowerCase()] ||
+                      allImages["concours"] ||
+                      "/src/assets/concours.jfif"
+                    }
+                    alt={selectedSubject}
+                    className="w-full h-40 object-cover"
+                  />
+                  <p className="text-center py-3 font-semibold">{exam}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SOUTIEN */}
+        {view === "soutien" && selectedSubject && (
+          <div className="text-center mt-16">
+            <h2 className="text-3xl font-bold text-yellow-400 mb-6">
+              💡 Soutien : {selectedSubject}
+            </h2>
+            <p className="text-lg text-gray-100">
+              Contenu de soutien et astuces pour {selectedSubject} — à venir.
+            </p>
+          </div>
+        )}
+
+        {/* QUESTIONS */}
+        {view === "questions" && (
+          <div className="text-center mt-16">
+            <h2 className="text-3xl font-bold text-yellow-400 mb-4">📚 Questions</h2>
+            {questions.length > 0 ? (
+              <p className="text-gray-100">Affichage des questions du QCM sélectionné.</p>
+            ) : (
+              <p className="text-gray-400">Aucune question trouvée.</p>
+            )}
+          </div>
+        )}
       </motion.div>
     </div>
   );
