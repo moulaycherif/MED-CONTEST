@@ -133,6 +133,7 @@ export default function StudentPage() {
         {/* 🎯 QCE PAR CONCOURS */}
         <div>
           <h3 className="font-bold text-lg mb-3 text-yellow-300">🎯 QCE par Concours</h3>
+          <div className="flex flex-col gap-2"></div>
           <button
             onClick={() => {
               setSection("concours");
