@@ -4,7 +4,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "../config";
 import AdminDashboard from "./AdminDashboard";
-import StudentDashboardFull from "./StudentDashboardFull";
+import StudentPage from "./StudentPage";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -50,7 +50,7 @@ export default function LoginPage() {
 
   // 🔹 Redirection dynamique après login
   if (token && role === "admin") return <AdminDashboard />;
-  if (token && role === "student") return <StudentDashboardFull token={token} />;
+  if (token && role === "student") return <StudentPage token={token} />;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
