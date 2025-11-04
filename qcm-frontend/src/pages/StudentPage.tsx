@@ -80,7 +80,7 @@ export default function StudentPage() {
       {/* 🧭 COLONNE GAUCHE */}
       <motion.div
         className="w-64 bg-[rgba(15,23,42,0.85)] backdrop-blur-md p-5 flex flex-col gap-8 shadow-2xl fixed top-0 left-0 bottom-0"
-        initial={{ x: -50, opacity: 0 }}
+        initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
         {/* Logo */}
