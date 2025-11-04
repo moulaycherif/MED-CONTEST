@@ -138,7 +138,7 @@ export default function StudentPage() {
               setSection("concours");
               setSelectedMatiere(null);
             }}
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition"
+            className="py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition"
           >
             Concours
           </button>
