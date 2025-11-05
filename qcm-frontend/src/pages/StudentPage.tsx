@@ -13,7 +13,7 @@ export default function StudentPage() {
   const renderCenterContent = () => {
     // 🏆 SECTION CONCOURS
     if (section === "concours") {
-      const concoursImage = "/src/assets/CONCOURS.JFIF";
+      const concoursImage = "../assets/CONCOURS.jfif";
       const annees = ["2025", "2024", "2023", "2022"];
 
       return (
