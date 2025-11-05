@@ -46,13 +46,13 @@ export default function StudentPage() {
     // 📚 SECTION QCE PAR MATIÈRE
     if (section === "matiere" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
-        Mathématiques: "/src/assets/MATHS.JFIF",
-        Physique: "/src/assets/PHYSIQUE.JFIF",
-        Chimie: "/src/assets/CHIMIE.JFIF",
-        SVT: "/src/assets/SVT.JFIF",
+        Mathématiques: "../assets/MATHS.JFIF",
+        Physique: "../assets/PHYSIQUE.JFIF",
+        Chimie: "../assets/CHIMIE.JFIF",
+        SVT: "../assets/SVT.JFIF",
       };
 
-      const matiereImage = matiereImages[selectedMatiere] || "/src/assets/default.jpg";
+      const matiereImage = matiereImages[selectedMatiere] || "../assets/default.jpg";
       const annees = ["2025", "2024", "2023"];
 
       return (
@@ -85,13 +85,13 @@ export default function StudentPage() {
     // 💡 SECTION SOUTIEN
     if (section === "soutien" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
-        Mathématiques: "/src/assets/MATHS.JFIF",
-        Physique: "/src/assets/PHYSIQUE.JFIF",
-        Chimie: "/src/assets/CHIMIE.JFIF",
-        SVT: "/src/assets/SVT.JFIF",
+        Mathématiques: "../assets/MATHS.JFIF",
+        Physique: "../assets/PHYSIQUE.JFIF",
+        Chimie: "../assets/CHIMIE.JFIF",
+        SVT: "../assets/SVT.JFIF",
       };
 
-      const matiereImage = matiereImages[selectedMatiere] || "/src/assets/default.jpg";
+      const matiereImage = matiereImages[selectedMatiere] || "../assets/default.jpg";
 
       return (
         <motion.div
