@@ -2,6 +2,14 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+// ✅ Importation des images (depuis src/assets)
+import concoursImg from "../assets/CONCOURS.JFIF";
+import mathsImg from "../assets/MATHS.JFIF";
+import physiqueImg from "../assets/PHYSIQUE.JFIF";
+import chimieImg from "../assets/CHIMIE.JFIF";
+import svtImg from "../assets/SVT.JFIF";
+import bgImage from "/Image3.jfif"; // image d’arrière-plan (dans public)
+
 export default function StudentPage() {
   const navigate = useNavigate();
   const [section, setSection] = useState<"concours" | "matiere" | "soutien" | null>(null);
@@ -9,18 +17,17 @@ export default function StudentPage() {
 
   const matieres = ["Mathématiques", "Physique", "Chimie", "SVT"];
 
-  // --- Contenu central selon section ---
+  // --- Fonction pour afficher le contenu central ---
   const renderCenterContent = () => {
     // 🏆 SECTION CONCOURS
     if (section === "concours") {
-      const concoursImage = "../assets/CONCOURS.jfif";
       const annees = ["2025", "2024", "2023", "2022"];
 
       return (
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center"
+          className="flex flex-wrap gap-6 justify-center items-center min-h-full"
         >
           {annees.map((year) => (
             <motion.div
@@ -30,10 +37,11 @@ export default function StudentPage() {
               onClick={() => navigate(`/exam/${year}`)}
             >
               <img
-                src={concoursImage}
+                src={concoursImg}
                 alt={`Concours ${year}`}
                 className="w-48 h-48 object-cover"
               />
+              {/* 🔹 Titre superposé */}
               <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2 font-semibold">
                 Concours {year}
               </div>
@@ -46,20 +54,20 @@ export default function StudentPage() {
     // 📚 SECTION QCE PAR MATIÈRE
     if (section === "matiere" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
-        Mathématiques: "../assets/MATHS.JFIF",
-        Physique: "../assets/PHYSIQUE.JFIF",
-        Chimie: "../assets/CHIMIE.JFIF",
-        SVT: "../assets/SVT.JFIF",
+        Mathématiques: mathsImg,
+        Physique: physiqueImg,
+        Chimie: chimieImg,
+        SVT: svtImg,
       };
 
-      const matiereImage = matiereImages[selectedMatiere] || "../assets/default.jpg";
+      const matiereImage = matiereImages[selectedMatiere];
       const annees = ["2025", "2024", "2023"];
 
       return (
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center"
+          className="flex flex-wrap gap-6 justify-center items-center min-h-full"
         >
           {annees.map((year) => (
             <motion.div
@@ -85,19 +93,19 @@ export default function StudentPage() {
     // 💡 SECTION SOUTIEN
     if (section === "soutien" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
-        Mathématiques: "../assets/MATHS.JFIF",
-        Physique: "../assets/PHYSIQUE.JFIF",
-        Chimie: "../assets/CHIMIE.JFIF",
-        SVT: "../assets/SVT.JFIF",
+        Mathématiques: mathsImg,
+        Physique: physiqueImg,
+        Chimie: chimieImg,
+        SVT: svtImg,
       };
 
-      const matiereImage = matiereImages[selectedMatiere] || "../assets/default.jpg";
+      const matiereImage = matiereImages[selectedMatiere];
 
       return (
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center"
+          className="flex flex-wrap gap-6 justify-center items-center min-h-full"
         >
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -129,12 +137,12 @@ export default function StudentPage() {
     );
   };
 
-  // --- Structure globale de la page ---
+  // --- STRUCTURE GLOBALE ---
   return (
     <div
       className="h-screen w-screen flex text-white"
       style={{
-        backgroundImage: `url("/Image3.jfif")`,
+        backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -145,7 +153,7 @@ export default function StudentPage() {
         initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
-        {/* Logo */}
+        {/* LOGO */}
         <div className="text-center mb-4 font-extrabold text-yellow-400 text-xl">
           MED-CONTEST
         </div>
@@ -153,17 +161,15 @@ export default function StudentPage() {
         {/* 🎯 QCE PAR CONCOURS */}
         <div>
           <h3 className="font-bold text-lg mb-3 text-yellow-300">🎯 QCE par Concours</h3>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => {
-                setSection("concours");
-                setSelectedMatiere(null);
-              }}
-              className="py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition"
-            >
-              Concours
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setSection("concours");
+              setSelectedMatiere(null);
+            }}
+            className="py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition w-full"
+          >
+            Concours
+          </button>
         </div>
 
         {/* 📚 QCE PAR MATIÈRE */}
