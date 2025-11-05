@@ -115,7 +115,7 @@ export default function StudentPage() {
     <div
       className="min-h-screen w-full flex overflow-hidden text-white"
       style={{
-        backgroundImage: `url(${bg})`,
+        backgroundImage: `url("/Image3.jfif")`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
