@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 // ✅ Importation des images (depuis src/assets)
-import concoursImg from "../assets/CONCOURS.JFIF";
-import mathsImg from "../assets/MATHS.JFIF";
-import physiqueImg from "../assets/PHYSIQUE.JFIF";
-import chimieImg from "../assets/CHIMIE.JFIF";
-import svtImg from "../assets/SVT.JFIF";
+import concoursImg from "../assets/CONCOURS.jfif";
+import mathsImg from "../assets/MATHS.jfif";
+import physiqueImg from "../assets/PHYSIQUE.jfif";
+import chimieImg from "../assets/CHIMIE.jfif";
+import svtImg from "../assets/SVT.jfif";
 import bgImage from "/Image3.jfif"; // image d’arrière-plan (dans public)
 
 export default function StudentPage() {
