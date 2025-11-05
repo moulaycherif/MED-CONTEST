@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import bg from "../assets/bg_med.jpg";
 
 // 📸 Charger automatiquement toutes les images du dossier assets
 const images = import.meta.glob("../assets/*.{png,jpg,jpeg,jfif}", { eager: true });
@@ -21,7 +20,7 @@ export default function StudentPage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center"
+          className="min-h-screen w-full flex flex-wrap gap-6 justify-center"
         >
           {["2021", "2022", "2023"].map((year, i) => (
             <motion.div
