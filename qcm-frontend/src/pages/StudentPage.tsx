@@ -20,7 +20,8 @@ export default function StudentPage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center"
+          className="flex min-h-screen w-full bg-gray-50"
+          // "flex flex-wrap gap-6 justify-center"
         >
           {["2021", "2022", "2023"].map((year, i) => (
             <motion.div
