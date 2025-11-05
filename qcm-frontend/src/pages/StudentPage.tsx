@@ -112,13 +112,14 @@ export default function StudentPage() {
 
   return (
     <div
-      className="min-h-screen w-full flex overflow-hidden text-white"
-      style={{
-        backgroundImage: `url("/Image3.jfif")`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
+  className="w-screen h-screen flex text-white overflow-hidden"
+  style={{
+    backgroundImage: `url("/Image3.jfif")`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  }}
+>
+
       {/* ✅ COLONNE GAUCHE */}
       <motion.div
         className="w-1/5 bg-blue-900/60 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl"
