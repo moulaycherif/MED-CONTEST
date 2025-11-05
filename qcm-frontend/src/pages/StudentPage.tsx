@@ -149,7 +149,7 @@ export default function StudentPage() {
     >
       {/* ✅ COLONNE GAUCHE */}
       <motion.div
-        className="w-1/5 bg-blue-900/60 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl"
+        className="w-1/8 bg-blue-900/60 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl"
         initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
@@ -213,7 +213,7 @@ export default function StudentPage() {
 
       {/* ✅ COLONNE CENTRALE */}
       <motion.div
-        className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-8 overflow-y-auto"
+        className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
