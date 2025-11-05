@@ -27,7 +27,7 @@ export default function StudentPage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center items-center min-h-full"
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
         >
           {annees.map((year) => (
             <motion.div
@@ -67,7 +67,7 @@ export default function StudentPage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center items-center min-h-full"
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
         >
           {annees.map((year) => (
             <motion.div
@@ -105,7 +105,7 @@ export default function StudentPage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-center items-center min-h-full"
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
         >
           <motion.div
             whileHover={{ scale: 1.05 }}
