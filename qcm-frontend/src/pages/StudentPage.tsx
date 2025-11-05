@@ -149,18 +149,18 @@ export default function StudentPage() {
     >
       {/* ✅ COLONNE GAUCHE */}
       <motion.div
-        className="w-1/8 bg-blue-900/60 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl"
+        className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl"
         initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
         {/* LOGO */}
-        <div className="text-center mb-4 font-extrabold text-yellow-400 text-xl">
-          MED-CONTEST
-        </div>
+       {/* <div className="text-center mb-4 font-extrabold text-yellow-400 text-xl">
+       //   MED-CONTEST
+       // </div>*/}
 
         {/* 🎯 QCE PAR CONCOURS */}
         <div>
-          <h3 className="font-bold text-lg mb-3 text-yellow-300">🎯 QCE par Concours</h3>
+          <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>
           <button
             onClick={() => {
               setSection("concours");
