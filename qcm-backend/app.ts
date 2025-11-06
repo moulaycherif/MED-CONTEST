@@ -1,12 +1,13 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import questionRoutes from "./routes/questionRoutes";
-import answerRoutes from "./routes/answerRoutes";
 import authRoutes from "./routes/authRoutes";
+import questionRoutes from "./routes/questionRoutes";
+import resultRoutes from "./routes/answerRoutes";
+import adminRoutes from "./routes/adminRoutes";  // ✅ AJOUT ICI
 
 import studentRoutes from "./routes/studentRoutes";
-import adminRoutes from "./routes/adminRoutes";
+
+import dotenv from "dotenv";
 
 
 dotenv.config({ path: "./.env" });
@@ -29,10 +30,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // ✅ Routes principales
 app.use("/api/auth", authRoutes);
-app.use("/api/student", studentRoutes);
 app.use("/api/questions", questionRoutes);
-app.use("/api/answers", answerRoutes);
+app.use("/api/results", resultRoutes);
 app.use("/api/admin", adminRoutes);
+
+app.use("/api/student", studentRoutes);
 
 // ✅ Route test
 app.get("/", (req, res) => {
