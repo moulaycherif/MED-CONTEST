@@ -5,6 +5,9 @@ import questionRoutes from "./routes/questionRoutes";
 import answerRoutes from "./routes/answerRoutes";
 import authRoutes from "./routes/authRoutes";
 
+import studentRoutes from "./routes/studentRoutes";
+
+
 dotenv.config({ path: "./.env" });
 
 const app = express();
@@ -25,6 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ✅ Routes principales
 app.use("/api/auth", authRoutes);
+app.use("/api/student", studentRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/answers", answerRoutes);
 

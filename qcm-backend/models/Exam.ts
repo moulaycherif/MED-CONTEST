@@ -1,4 +1,3 @@
-// qcm-backend/models/Exam.ts
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IExam extends Document {
@@ -16,4 +15,5 @@ const ExamSchema = new Schema<IExam>(
   { timestamps: true }
 );
 
-export default mongoose.model<IExam>("Exam", ExamSchema);
+// ✅ Évite l’erreur OverwriteModelError
+export default mongoose.models.Exam || mongoose.model<IExam>("Exam", ExamSchema);

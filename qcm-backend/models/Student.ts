@@ -1,4 +1,3 @@
-// qcm-backend/models/Student.ts
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IStudent extends Document {
@@ -18,4 +17,4 @@ const StudentSchema = new Schema<IStudent>(
   { timestamps: true }
 );
 
-export default mongoose.model<IStudent>("Student", StudentSchema);
+export default mongoose.models.Student || mongoose.model<IStudent>("Student", StudentSchema);

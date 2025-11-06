@@ -1,4 +1,3 @@
-// qcm-backend/models/Result.ts
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IResult extends Document {
@@ -18,4 +17,4 @@ const ResultSchema = new Schema<IResult>(
   { timestamps: true }
 );
 
-export default mongoose.model<IResult>("Result", ResultSchema);
+export default mongoose.models.Result || mongoose.model<IResult>("Result", ResultSchema);
