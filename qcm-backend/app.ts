@@ -6,6 +6,7 @@ import answerRoutes from "./routes/answerRoutes";
 import authRoutes from "./routes/authRoutes";
 
 import studentRoutes from "./routes/studentRoutes";
+import adminRoutes from "./routes/adminRoutes";
 
 
 dotenv.config({ path: "./.env" });
@@ -31,6 +32,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/answers", answerRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ✅ Route test
 app.get("/", (req, res) => {
