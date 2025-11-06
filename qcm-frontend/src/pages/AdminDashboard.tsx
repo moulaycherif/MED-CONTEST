@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
 import { API_BASE_URL } from "../config";
 
 interface Student {
@@ -34,7 +33,7 @@ const AdminDashboard: React.FC = () => {
   const [exams, setExams] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<string>("");
 
-  const token = localStorage.getItem("token"); // JWT Admin
+  const token = localStorage.getItem("token");
   const itemsPerPage = 10;
 
   // ===============================================
@@ -43,12 +42,12 @@ const AdminDashboard: React.FC = () => {
 
   const fetchStudents = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/auth/students`, {
+      const res = await axios.get(`${API_BASE_URL}/api/admin/students`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStudents(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Erreur récupération étudiants :", err);
       setMessage("Erreur récupération étudiants");
     }
   };
@@ -79,13 +78,13 @@ const AdminDashboard: React.FC = () => {
   const handleDeleteStudent = async (id: string) => {
     if (!confirm("Supprimer cet étudiant ?")) return;
     try {
-      const res = await axios.delete(`${API_BASE_URL}/api/auth/students/${id}`, {
+      const res = await axios.delete(`${API_BASE_URL}/api/admin/students/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessage(res.data.message);
       fetchStudents();
     } catch (err) {
-      console.error(err);
+      console.error("❌ Erreur suppression étudiant :", err);
       setMessage("Erreur suppression étudiant");
     }
   };
