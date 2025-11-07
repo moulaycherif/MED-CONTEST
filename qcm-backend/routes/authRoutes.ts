@@ -1,4 +1,3 @@
-// routes/authRoutes.ts
 import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -8,14 +7,12 @@ import Admin from "../models/Admin";
 
 dotenv.config();
 
-console.log("✅ .env chargé avec succès :");
-
 const router = express.Router();
+
+// 🔑 Même secret utilisé partout
 const SECRET = process.env.JWT_SECRET || "super_secret_key";
 
 /* ---------------------- 🔹 CRÉER L'ADMIN ---------------------- */
-// 🔹 Créer l'admin automatiquement à partir du .env
-
 router.post("/create-admin", async (req, res) => {
   try {
     const existingAdmin = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
@@ -39,25 +36,33 @@ router.post("/create-admin", async (req, res) => {
   }
 });
 
-
 /* ---------------------- 🔹 LOGIN ADMIN ---------------------- */
-router.post("/login-admin", async (req, res) => {
+router.post("/admin/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const admin = await Admin.findOne({ email });
-
-    console.log("🔹 Requête reçue :", req.body);
-
-    if (!admin) return res.status(400).json({ error: "Admin non trouvé" });
+    if (!admin) return res.status(400).json({ error: "Admin introuvable" });
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) return res.status(400).json({ error: "Mot de passe incorrect" });
 
-    const token = jwt.sign({ id: admin._id, email: admin.email, role: "admin" }, SECRET, { expiresIn: "3h" });
+    const token = jwt.sign(
+      { id: admin._id, role: "admin" },
+      SECRET,
+      { expiresIn: "7d" }
+    );
 
-    res.json({ message: "Connexion admin réussie ✅", token });
-  } catch (err) {
-    console.error(err);
+    res.json({
+      message: "Connexion admin réussie ✅",
+      token,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur connexion admin :", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -72,7 +77,11 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, student.password);
     if (!isMatch) return res.status(400).json({ error: "Mot de passe incorrect" });
 
-    const token = jwt.sign({ id: student._id, email: student.email, role: "student" }, SECRET, { expiresIn: "2h" });
+    const token = jwt.sign(
+      { id: student._id, email: student.email, role: "student" },
+      SECRET,
+      { expiresIn: "2h" }
+    );
 
     res.json({ message: "Connexion étudiant réussie ✅", token });
   } catch (err) {
@@ -81,14 +90,14 @@ router.post("/login", async (req, res) => {
   }
 });
 
-/* ---------------------- 🔹 GESTION ÉTUDIANTS (ADMIN SEULEMENT) ---------------------- */
+/* ---------------------- 🔹 MIDDLEWARES ---------------------- */
 const verifyToken = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Token manquant" });
   try {
     req.user = jwt.verify(token, SECRET);
     next();
-  } catch {
+  } catch (err) {
     res.status(403).json({ error: "Token invalide" });
   }
 };
@@ -98,6 +107,7 @@ const verifyAdmin = (req: any, res: any, next: any) => {
   else res.status(403).json({ error: "Accès réservé à l'admin" });
 };
 
+/* ---------------------- 🔹 GESTION ÉTUDIANTS (ADMIN) ---------------------- */
 router.post("/create-student", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { name, email, password } = req.body;

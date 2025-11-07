@@ -1,4 +1,3 @@
-// qcm-backend/middleware/authAdmin.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import Admin from "../models/Admin";
@@ -25,6 +24,7 @@ export const authenticateAdmin = async (
     req.admin = admin;
     next();
   } catch (err) {
+    console.error("❌ Erreur vérification token admin :", err);
     return res.status(401).json({ error: "Token invalide" });
   }
 };
