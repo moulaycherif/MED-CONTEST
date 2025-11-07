@@ -1,4 +1,3 @@
-// src/pages/LoginPage.tsx
 import React, { useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
@@ -10,7 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [role, setRole] = useState<"admin" | "student" | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,26 +19,30 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1️⃣ Essai connexion admin
-      const adminRes = await axios.post(`${API_BASE_URL}/api/auth/login-admin`, {
+      // 1️⃣ Connexion admin
+      const adminRes = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, {
         email,
         password,
       });
+
       setToken(adminRes.data.token);
+      localStorage.setItem("token", adminRes.data.token);
       setRole("admin");
       setLoading(false);
       return;
     } catch (err) {
-      // Si ce n’est pas un admin, on essaye étudiant
+      // Si ce n’est pas un admin, on essaie étudiant
     }
 
     try {
-      // 2️⃣ Essai connexion étudiant
+      // 2️⃣ Connexion étudiant
       const studentRes = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         email,
         password,
       });
+
       setToken(studentRes.data.token);
+      localStorage.setItem("token", studentRes.data.token);
       setRole("student");
       setLoading(false);
     } catch (err: any) {
@@ -93,9 +96,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {error && (
-          <p className="text-red-600 text-center mt-3">{error}</p>
-        )}
+        {error && <p className="text-red-600 text-center mt-3">{error}</p>}
 
         <p className="text-gray-500 text-center text-sm mt-6">
           © 2025 Med-Contest — Tous droits réservés

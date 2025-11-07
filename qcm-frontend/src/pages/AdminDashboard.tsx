@@ -2,6 +2,31 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
+// ✅ Fonction universelle de déconnexion
+function logout() {
+  try {
+    // 🔹 Supprime tous les tokens potentiels
+    localStorage.removeItem("token");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("studentToken");
+
+    // 🔹 (Optionnel) vider tout le localStorage
+    // localStorage.clear();
+
+    // 🔹 Supprimer les cookies auth éventuels
+    document.cookie.split(";").forEach(function (c) {
+      document.cookie =
+        c.trim().split("=")[0] +
+        "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    });
+
+    // 🔹 Redirection vers la page d’accueil
+    window.location.href = "/";
+  } catch (err) {
+    console.error("Erreur pendant la déconnexion :", err);
+  }
+}
+
 interface Student {
   _id: string;
   name: string;
@@ -144,7 +169,20 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center">👩‍🏫 Tableau de bord Enseignant</h1>
+
+      {/* ✅ Header avec bouton de déconnexion */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-center flex-1">
+          👩‍🏫 Tableau de bord Enseignant
+        </h1>
+
+        <button
+          onClick={logout}
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+        >
+          🚪 Déconnexion
+        </button>
+      </div>
 
       {/* Onglets */}
       <div className="flex justify-center gap-4 mb-8">
