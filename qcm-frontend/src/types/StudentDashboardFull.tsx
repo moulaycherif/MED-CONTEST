@@ -19,7 +19,7 @@ export default function StudentDashboardFull() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  const subjects = ["Mathématiques", "Physique", "Chimie", "SVT"];
+  const subjects = ["Mathématique", "Physique", "Chimie", "SVT"];
 
   useEffect(() => {
     axios

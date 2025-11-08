@@ -15,7 +15,7 @@ export default function StudentPage() {
   const [section, setSection] = useState<"concours" | "matiere" | "soutien" | null>(null);
   const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null);
 
-  const matieres = ["Mathématiques", "Physique", "Chimie", "SVT"];
+  const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
   // --- Fonction pour afficher le contenu central ---
   const renderCenterContent = () => {
@@ -55,7 +55,7 @@ if (section === "concours") {
     // 📚 SECTION QCE PAR MATIÈRE
     if (section === "matiere" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
-        Mathématiques: mathsImg,
+        Mathématique: mathsImg,
         Physique: physiqueImg,
         Chimie: chimieImg,
         SVT: svtImg,
@@ -94,7 +94,7 @@ if (section === "concours") {
     // 💡 SECTION SOUTIEN
     if (section === "soutien" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
-        Mathématiques: mathsImg,
+        Mathématique: mathsImg,
         Physique: physiqueImg,
         Chimie: chimieImg,
         SVT: svtImg,

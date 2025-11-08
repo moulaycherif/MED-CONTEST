@@ -43,7 +43,7 @@ export default function AstucePage() {
 
   const titre =
     matiere === "math"
-      ? "Mathématiques"
+      ? "Mathématique"
       : matiere === "physique"
       ? "Physique"
       : matiere === "chimie"
