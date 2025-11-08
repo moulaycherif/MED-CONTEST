@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+// ✅ Importation des images (depuis src/assets)
 import concoursImg from "../assets/CONCOURS.jfif";
 import mathsImg from "../assets/MATHS.jfif";
 import physiqueImg from "../assets/PHYSIQUE.jfif";
 import chimieImg from "../assets/CHIMIE.jfif";
 import svtImg from "../assets/SVT.jfif";
-import bgImage from "/Image3.jfif";
+import bgImage from "/Image3.jfif"; // image d’arrière-plan (dans public)
 
 export default function StudentPage() {
   const navigate = useNavigate();
@@ -16,40 +17,42 @@ export default function StudentPage() {
 
   const matieres = ["Mathématiques", "Physique", "Chimie", "SVT"];
 
-  const handleExamClick = async (exam: string) => {
-    navigate(`/exam/${exam}`); // 🔹 Redirige vers la page du concours sélectionné
-  };
-
-  // --- Fonction centrale pour afficher le contenu
+  // --- Fonction pour afficher le contenu central ---
   const renderCenterContent = () => {
-    // 🏆 Section Concours
-    if (section === "concours") {
-      const annees = ["2025", "2024", "2023", "2022"];
+    // 🏆 SECTION CONCOURS
+if (section === "concours") {
+  const annees = ["2025", "2024", "2023", "2022"];
 
-      return (
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-wrap gap-6 justify-start items-start min-h-full"
+    >
+      {annees.map((year) => (
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-start items-start"
+          key={year}
+          whileHover={{ scale: 1.05 }}
+          className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+          onClick={() => navigate(`/exam/${encodeURIComponent(`MEDECINE ${year}`)}`)}
         >
-          {annees.map((year) => (
-            <motion.div
-              key={year}
-              whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => handleExamClick(year)}
-            >
-              <img src={concoursImg} alt={`Concours ${year}`} className="w-48 h-48 object-cover" />
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2 font-semibold">
-                Concours {year}
-              </div>
-            </motion.div>
-          ))}
+          <img
+            src={concoursImg}
+            alt={`Concours ${year}`}
+            className="w-48 h-48 object-cover"
+          />
+          {/* 🔹 Titre superposé */}
+          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2 font-semibold">
+            MEDECINE {year}
+          </div>
         </motion.div>
-      );
-    }
+      ))}
+    </motion.div>
+  );
+}
 
-    // 📚 Section Matière
+
+    // 📚 SECTION QCE PAR MATIÈRE
     if (section === "matiere" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
         Mathématiques: mathsImg,
@@ -57,6 +60,7 @@ export default function StudentPage() {
         Chimie: chimieImg,
         SVT: svtImg,
       };
+
       const matiereImage = matiereImages[selectedMatiere];
       const annees = ["2025", "2024", "2023"];
 
@@ -64,18 +68,22 @@ export default function StudentPage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6"
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
         >
           {annees.map((year) => (
             <motion.div
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => navigate(`/matiere/${selectedMatiere.toLowerCase()}/${year}`)}
+              onClick={() => navigate(`/matiere/${selectedMatiere.toLowerCase()}`)}
             >
-              <img src={matiereImage} alt={`${selectedMatiere} ${year}`} className="w-48 h-48 object-cover" />
+              <img
+                src={matiereImage}
+                alt={`${selectedMatiere} ${year}`}
+                className="w-48 h-48 object-cover"
+              />
               <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-white text-center py-2 font-semibold">
-                {selectedMatiere} — {year}
+                {selectedMatiere} — Concours {year}
               </div>
             </motion.div>
           ))}
@@ -83,6 +91,42 @@ export default function StudentPage() {
       );
     }
 
+    // 💡 SECTION SOUTIEN
+    if (section === "soutien" && selectedMatiere) {
+      const matiereImages: Record<string, string> = {
+        Mathématiques: mathsImg,
+        Physique: physiqueImg,
+        Chimie: chimieImg,
+        SVT: svtImg,
+      };
+
+      const matiereImage = matiereImages[selectedMatiere];
+
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+            onClick={() => navigate(`/soutien/${selectedMatiere.toLowerCase()}`)}
+          >
+            <img
+              src={matiereImage}
+              alt={`${selectedMatiere} soutien`}
+              className="w-48 h-48 object-cover"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-purple-700/60 text-white text-center py-2 font-semibold">
+              Soutien — {selectedMatiere}
+            </div>
+          </motion.div>
+        </motion.div>
+      );
+    }
+
+    // 🕹️ PAR DÉFAUT
     return (
       <motion.p
         initial={{ opacity: 0, y: 20 }}
@@ -94,7 +138,7 @@ export default function StudentPage() {
     );
   };
 
-  // --- Structure générale
+  // --- STRUCTURE GLOBALE ---
   return (
     <div
       className="h-screen w-screen flex text-white"
@@ -104,13 +148,18 @@ export default function StudentPage() {
         backgroundPosition: "center",
       }}
     >
-      {/* Sidebar */}
+      {/* ✅ COLONNE GAUCHE */}
       <motion.div
         className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl"
         initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
-        {/* QCE par concours */}
+        {/* LOGO */}
+       {/* <div className="text-center mb-4 font-extrabold text-yellow-400 text-xl">
+       //   MED-CONTEST
+       // </div>*/}
+
+        {/* 🎯 QCE PAR CONCOURS */}
         <div>
           <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>
           <button
@@ -124,7 +173,7 @@ export default function StudentPage() {
           </button>
         </div>
 
-        {/* QCE par matière */}
+        {/* 📚 QCE PAR MATIÈRE */}
         <div>
           <h3 className="font-bold text-lg mb-3 text-yellow-300">📚 QCE par Matière</h3>
           <div className="flex flex-col gap-2">
@@ -142,9 +191,28 @@ export default function StudentPage() {
             ))}
           </div>
         </div>
+
+        {/* 💡 SOUTIEN */}
+        <div>
+          <h3 className="font-bold text-lg mb-3 text-yellow-300">💡 Soutien</h3>
+          <div className="flex flex-col gap-2">
+            {matieres.map((m) => (
+              <button
+                key={m}
+                onClick={() => {
+                  setSection("soutien");
+                  setSelectedMatiere(m);
+                }}
+                className="py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition"
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
       </motion.div>
 
-      {/* Contenu central */}
+      {/* ✅ COLONNE CENTRALE */}
       <motion.div
         className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto"
         initial={{ opacity: 0 }}
