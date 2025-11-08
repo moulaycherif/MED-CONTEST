@@ -1,6 +1,8 @@
-// src/pages/StudentQuiz.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { useParams } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 interface Question {
   _id: string;
@@ -10,155 +12,118 @@ interface Question {
   note: number;
 }
 
-interface Props {
-  questions: Question[];
-  answers: { [id: string]: string };
-  onAnswerChange?: (id: string, value: string) => void;
-  submitted: boolean;
-  setSubmitted: (val: boolean) => void;
-  score: number | null;
-  setScore: (val: number) => void;
-}
+export default function StudentQuiz() {
+  const { exam } = useParams<{ exam: string }>();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [answers, setAnswers] = useState<{ [id: string]: string }>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState<number | null>(null);
+  const [index, setIndex] = useState(0);
 
-export default function StudentQuiz({
-  questions,
-  answers,
-  onAnswerChange,
-  submitted,
-  setSubmitted,
-  score,
-  setScore,
-}: Props) {
-  const [validated, setValidated] = useState<{ [id: string]: boolean }>({});
-  const [questionScores, setQuestionScores] = useState<{ [id: string]: number }>({});
-  const [currentIndex, setCurrentIndex] = useState(0);
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/api/questions?exam=${exam}`)
+      .then((res) => setQuestions(res.data))
+      .catch(() => setQuestions([]));
+  }, [exam]);
 
-  const currentQuestion = questions[currentIndex];
-
-  const handleAnswerChange = (qId: string, value: string) => {
-    if (onAnswerChange) onAnswerChange(qId, value);
-  };
-
-  const handleValidate = (q: Question) => {
-    if (!answers[q._id]) return;
-    setValidated((prev) => ({ ...prev, [q._id]: true }));
-    setQuestionScores((prev) => ({
-      ...prev,
-      [q._id]: answers[q._id] === q.reponseCorrecte ? q.note : 0,
-    }));
+  const handleAnswerChange = (id: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleFinish = () => {
-    const newValidated = { ...validated };
-    const newScores = { ...questionScores };
-
+    let total = 0;
     questions.forEach((q) => {
-      if (!newValidated[q._id]) {
-        newValidated[q._id] = true;
-        newScores[q._id] = answers[q._id] === q.reponseCorrecte ? q.note : 0;
-      }
+      if (answers[q._id] === q.reponseCorrecte) total += q.note;
     });
-
-    setValidated(newValidated);
-    setQuestionScores(newScores);
-
-    const total = Object.values(newScores).reduce((sum, val) => sum + val, 0);
     setScore(total);
     setSubmitted(true);
   };
 
-  if (!currentQuestion) return <p>Aucune question disponible.</p>;
+  const current = questions[index];
+
+  if (questions.length === 0)
+    return <p className="text-center mt-20 text-gray-600">Aucune question trouvée.</p>;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-8 max-w-3xl mx-auto">
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentQuestion._id}
+          key={current._id}
           initial={{ x: 300, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -300, opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="p-6 border rounded-2xl shadow bg-white"
+          transition={{ duration: 0.4 }}
+          className="p-6 bg-white border rounded-2xl shadow"
         >
-          <p className="font-bold text-xl mb-2">
-            Q{currentIndex + 1}) {currentQuestion.texte}{" "}
-            <span className="text-purple-600">({currentQuestion.note} pt)</span>
-          </p>
+          <h2 className="font-bold text-xl mb-4">
+            Q{index + 1}) {current.texte}{" "}
+            <span className="text-purple-600">({current.note} pt)</span>
+          </h2>
 
-          <div className="space-y-2">
-            {currentQuestion.options.map((opt, i) => (
-              <label
-                key={i}
-                className={`block p-3 border rounded-lg cursor-pointer transition ${
-                  validated[currentQuestion._id]
-                    ? opt === currentQuestion.reponseCorrecte
-                      ? "bg-green-100 border-green-400"
-                      : answers[currentQuestion._id] === opt
-                      ? "bg-red-100 border-red-400"
-                      : "opacity-60"
-                    : "hover:bg-gray-100"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={currentQuestion._id}
-                  checked={answers[currentQuestion._id] === opt}
-                  onChange={() => handleAnswerChange(currentQuestion._id, opt)}
-                  disabled={validated[currentQuestion._id] || submitted}
-                  className="mr-2"
-                />
-                {opt}
-              </label>
-            ))}
-          </div>
-
-          {!validated[currentQuestion._id] && !submitted && (
-            <button
-              onClick={() => handleValidate(currentQuestion)}
-              disabled={!answers[currentQuestion._id]}
-              className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50"
+          {current.options.map((opt, i) => (
+            <label
+              key={i}
+              className={`block p-3 border rounded-lg cursor-pointer mb-2 ${
+                submitted
+                  ? opt === current.reponseCorrecte
+                    ? "bg-green-100 border-green-400"
+                    : answers[current._id] === opt
+                    ? "bg-red-100 border-red-400"
+                    : ""
+                  : "hover:bg-gray-100"
+              }`}
             >
-              Valider
-            </button>
-          )}
+              <input
+                type="radio"
+                name={current._id}
+                checked={answers[current._id] === opt}
+                onChange={() => handleAnswerChange(current._id, opt)}
+                disabled={submitted}
+                className="mr-2"
+              />
+              {opt}
+            </label>
+          ))}
 
-          {validated[currentQuestion._id] && (
-            <div className="mt-3">
-              <p className="font-semibold text-gray-800">
-                🏅 Note obtenue : {questionScores[currentQuestion._id] ?? 0} pt
-              </p>
-              <p className="text-sm text-gray-700 mt-1">
-                ✅ Bonne réponse : {currentQuestion.reponseCorrecte}
-              </p>
-            </div>
-          )}
+          <div className="flex justify-between mt-6">
+            <button
+              onClick={() => setIndex((i) => Math.max(i - 1, 0))}
+              disabled={index === 0}
+              className="px-4 py-2 bg-gray-400 text-white rounded disabled:opacity-50"
+            >
+              Précédent
+            </button>
+
+            {index < questions.length - 1 ? (
+              <button
+                onClick={() => setIndex((i) => i + 1)}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Suivant
+              </button>
+            ) : (
+              <button
+                onClick={handleFinish}
+                className="px-4 py-2 bg-green-600 text-white rounded"
+              >
+                Soumettre
+              </button>
+            )}
+          </div>
         </motion.div>
       </AnimatePresence>
 
-      <div className="flex justify-between mt-6">
-        <button
-          onClick={() => setCurrentIndex((i) => Math.max(i - 1, 0))}
-          disabled={currentIndex === 0}
-          className="px-4 py-2 bg-gray-400 text-white rounded disabled:opacity-50"
+      {submitted && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-6 text-center text-lg font-semibold text-blue-700"
         >
-          Précédent
-        </button>
-        {currentIndex < questions.length - 1 ? (
-          <button
-            onClick={() => setCurrentIndex((i) => i + 1)}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            Suivant
-          </button>
-        ) : (
-          <button
-            onClick={handleFinish}
-            className="px-4 py-2 bg-green-500 text-white rounded"
-          >
-            Soumettre
-          </button>
-        )}
-      </div>
+          ✅ Score final : {score} /{" "}
+          {questions.reduce((sum, q) => sum + q.note, 0)}
+        </motion.div>
+      )}
     </div>
   );
 }
