@@ -1,7 +1,8 @@
+// src/pages/StudentQuiz.tsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 
 interface Question {
@@ -13,7 +14,8 @@ interface Question {
 }
 
 export default function StudentQuiz() {
-  const { exam } = useParams<{ exam: string }>();
+  const { examName, subject } = useParams<{ examName?: string; subject?: string }>();
+  const location = useLocation();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<{ [id: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
@@ -21,11 +23,18 @@ export default function StudentQuiz() {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    let url = "";
+    if (location.pathname.startsWith("/exam/")) {
+      url = `${API_BASE_URL}/api/questions?exam=${encodeURIComponent(examName || "")}`;
+    } else if (location.pathname.startsWith("/matiere/")) {
+      url = `${API_BASE_URL}/api/questions?subject=${encodeURIComponent(subject || "")}`;
+    }
+
     axios
-      .get(`${API_BASE_URL}/api/questions?exam=${exam}`)
+      .get(url)
       .then((res) => setQuestions(res.data))
       .catch(() => setQuestions([]));
-  }, [exam]);
+  }, [examName, subject]);
 
   const handleAnswerChange = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -40,13 +49,19 @@ export default function StudentQuiz() {
     setSubmitted(true);
   };
 
-  const current = questions[index];
-
   if (questions.length === 0)
     return <p className="text-center mt-20 text-gray-600">Aucune question trouvée.</p>;
 
+  const current = questions[index];
+
   return (
     <div className="p-8 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6 text-center text-blue-700">
+        {examName
+          ? `QCM - ${decodeURIComponent(examName)}`
+          : `QCM - ${decodeURIComponent(subject || "")}`}
+      </h1>
+
       <AnimatePresence mode="wait">
         <motion.div
           key={current._id}
@@ -103,10 +118,7 @@ export default function StudentQuiz() {
                 Suivant
               </button>
             ) : (
-              <button
-                onClick={handleFinish}
-                className="px-4 py-2 bg-green-600 text-white rounded"
-              >
+              <button onClick={handleFinish} className="px-4 py-2 bg-green-600 text-white rounded">
                 Soumettre
               </button>
             )}
@@ -120,8 +132,7 @@ export default function StudentQuiz() {
           animate={{ opacity: 1 }}
           className="mt-6 text-center text-lg font-semibold text-blue-700"
         >
-          ✅ Score final : {score} /{" "}
-          {questions.reduce((sum, q) => sum + q.note, 0)}
+          ✅ Score final : {score} / {questions.reduce((sum, q) => sum + q.note, 0)}
         </motion.div>
       )}
     </div>

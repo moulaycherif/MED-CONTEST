@@ -1,14 +1,15 @@
+// src/pages/StudentPage.tsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-// ✅ Importation des images (depuis src/assets)
+// ✅ Import des images
 import concoursImg from "../assets/CONCOURS.jfif";
 import mathsImg from "../assets/MATHS.jfif";
 import physiqueImg from "../assets/PHYSIQUE.jfif";
 import chimieImg from "../assets/CHIMIE.jfif";
 import svtImg from "../assets/SVT.jfif";
-import bgImage from "/Image3.jfif"; // image d’arrière-plan (dans public)
+import bgImage from "/Image3.jfif";
 
 export default function StudentPage() {
   const navigate = useNavigate();
@@ -17,40 +18,34 @@ export default function StudentPage() {
 
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
-  // --- Fonction pour afficher le contenu central ---
+  // --- Affichage du contenu central ---
   const renderCenterContent = () => {
     // 🏆 SECTION CONCOURS
-if (section === "concours") {
-  const annees = ["2025", "2024", "2023", "2022"];
+    if (section === "concours") {
+      const annees = ["2025", "2024", "2023", "2022"];
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-wrap gap-6 justify-start items-start min-h-full"
-    >
-      {annees.map((year) => (
+      return (
         <motion.div
-          key={year}
-          whileHover={{ scale: 1.05 }}
-          className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-          onClick={() => navigate(`/exam/${encodeURIComponent(`MEDECINE ${year}`)}`)}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
         >
-          <img
-            src={concoursImg}
-            alt={`Concours ${year}`}
-            className="w-48 h-48 object-cover"
-          />
-          {/* 🔹 Titre superposé */}
-          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2 font-semibold">
-            MEDECINE {year}
-          </div>
+          {annees.map((year) => (
+            <motion.div
+              key={year}
+              whileHover={{ scale: 1.05 }}
+              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+              onClick={() => navigate(`/exam/${encodeURIComponent(`MEDECINE ${year}`)}`)} // ✅ correction
+            >
+              <img src={concoursImg} alt={`Concours ${year}`} className="w-48 h-48 object-cover" />
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2 font-semibold">
+                MEDECINE {year}
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
-      ))}
-    </motion.div>
-  );
-}
-
+      );
+    }
 
     // 📚 SECTION QCE PAR MATIÈRE
     if (section === "matiere" && selectedMatiere) {
@@ -75,7 +70,7 @@ if (section === "concours") {
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => navigate(`/matiere/${selectedMatiere.toLowerCase()}`)}
+              onClick={() => navigate(`/matiere/${encodeURIComponent(selectedMatiere)}`)} // ✅ encodage correct
             >
               <img
                 src={matiereImage}
@@ -111,13 +106,9 @@ if (section === "concours") {
           <motion.div
             whileHover={{ scale: 1.05 }}
             className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-            onClick={() => navigate(`/soutien/${selectedMatiere.toLowerCase()}`)}
+            onClick={() => navigate(`/soutien/${encodeURIComponent(selectedMatiere)}`)}
           >
-            <img
-              src={matiereImage}
-              alt={`${selectedMatiere} soutien`}
-              className="w-48 h-48 object-cover"
-            />
+            <img src={matiereImage} alt={`${selectedMatiere} soutien`} className="w-48 h-48 object-cover" />
             <div className="absolute bottom-0 left-0 right-0 bg-purple-700/60 text-white text-center py-2 font-semibold">
               Soutien — {selectedMatiere}
             </div>
@@ -154,11 +145,6 @@ if (section === "concours") {
         initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
-        {/* LOGO */}
-       {/* <div className="text-center mb-4 font-extrabold text-yellow-400 text-xl">
-       //   MED-CONTEST
-       // </div>*/}
-
         {/* 🎯 QCE PAR CONCOURS */}
         <div>
           <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>

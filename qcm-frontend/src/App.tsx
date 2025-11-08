@@ -6,8 +6,9 @@ import StudentQuiz from "./pages/StudentQuiz";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
-
+import StudentPage from "./pages/StudentPage"; // ✅ ajout
 import { API_BASE_URL } from "./config";
+
 console.log("🌍 API_BASE_URL =", API_BASE_URL);
 
 export default function App() {
@@ -17,8 +18,12 @@ export default function App() {
       <main className="pt-16 min-h-screen">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/exam/:examName" element={<StudentQuiz />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/dashboard" element={<StudentPage />} />
+
+          {/* ✅ Routes QCM */}
+          <Route path="/exam/:examName" element={<StudentQuiz />} />
+          <Route path="/matiere/:subject" element={<StudentQuiz />} />
 
           {/* Pages à venir */}
           <Route path="/demo" element={<div className="p-10 text-center">Page Démo</div>} />
