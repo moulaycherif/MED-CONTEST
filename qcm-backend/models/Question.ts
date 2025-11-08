@@ -14,11 +14,12 @@ const QuestionSchema: Schema = new Schema(
     texte: { type: String, required: true },
     options: { type: [String], required: true },
     reponseCorrecte: { type: String, required: true },
-    subject: { type: String, required: false },
-    exam: { type: String, required: false },
+    subject: { type: String, required: true },
+    exam: { type: String, required: true },
     note: { type: Number, default: 1 },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Question || mongoose.model<IQuestion>("Question", QuestionSchema);
+export default mongoose.models.Question ||
+  mongoose.model<IQuestion>("Question", QuestionSchema);
