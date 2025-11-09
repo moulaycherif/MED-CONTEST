@@ -98,7 +98,7 @@ export default function StudentPage() {
       </aside>
 
       {/* 🎯 Colonne centrale */}
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 overflow-y-auto">
         {/* Liste des matières */}
         {mode === "matiere" && !currentExam && (
           <div>
@@ -127,7 +127,6 @@ export default function StudentPage() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {exams.map((exam) => {
-                // Affiche seulement les examens MEDECINE XXXX
                 const year = exam.replace("MEDECINE ", "");
                 return (
                   <div
@@ -153,7 +152,9 @@ export default function StudentPage() {
             {loading ? (
               <p className="text-center text-gray-500">Chargement des questions...</p>
             ) : questions.length === 0 ? (
-              <p className="text-center text-red-500 font-medium">Aucune question trouvée.</p>
+              <p className="text-center text-red-500 font-medium">
+                Aucune question trouvée.
+              </p>
             ) : (
               <div className="space-y-6">
                 {questions.map((q, index) => (
