@@ -1,12 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IExam extends Document {
-  nom: string;
+  title: string;
   date?: Date;
 }
 
 const examSchema = new Schema<IExam>({
-  nom: { type: String, required: true, unique: true, trim: true },
+  title: { type: String, required: true, unique: true, trim: true },
   date: { type: Date, default: Date.now },
 });
 
