@@ -84,7 +84,7 @@ export default function StudentPage() {
               key={q._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 mb-4 bg-black rounded-xl shadow"
+              className="p-4 mb-4 bg-white rounded-xl shadow"
             >
               <h3 className="font-semibold mb-2">
                 Q{idx + 1}) {q.texte}{" "}
@@ -160,7 +160,7 @@ export default function StudentPage() {
             <motion.div
               key={year}
               whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-black/90 hover:bg-black transition-all"
+              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => setCurrentExam(`MEDECINE ${year}`)}
             >
               <img
@@ -168,7 +168,7 @@ export default function StudentPage() {
                 alt={`Concours ${year}`}
                 className="w-48 h-48 object-cover"
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-black text-center py-2 font-semibold">
+              <div className="absolute bottom-0 left-0 right-0 bg-white/60 text-black text-center py-2 font-semibold">
                 MEDECINE {year}
               </div>
             </motion.div>
@@ -199,7 +199,7 @@ export default function StudentPage() {
             <motion.div
               key={year}
               whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-black/90 hover:bg-black transition-all"
+              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => setCurrentExam(`${selectedMatiere} ${year}`)}
             >
               <img
@@ -307,7 +307,7 @@ export default function StudentPage() {
 
       {/* ✅ Colonne centrale */}
       <motion.div
-        className="flex-1 bg-black/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto"
+        className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
