@@ -66,7 +66,7 @@ export default function StudentPage() {
             <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
             <button
               onClick={() => setCurrentExam(null)}
-              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg"
+              className="mt-4 px-4 py-2 bg-gray-600 text-black rounded-lg"
             >
               🔙 Retour
             </button>
@@ -84,7 +84,7 @@ export default function StudentPage() {
               key={q._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 mb-4 bg-white rounded-xl shadow"
+              className="p-4 mb-4 bg-black rounded-xl shadow"
             >
               <h3 className="font-semibold mb-2">
                 Q{idx + 1}) {q.texte}{" "}
@@ -121,7 +121,7 @@ export default function StudentPage() {
           {!submitted ? (
             <button
               onClick={handleFinish}
-              className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg"
+              className="mt-4 px-6 py-2 bg-green-600 text-black rounded-lg"
             >
               ✅ Soumettre
             </button>
@@ -138,7 +138,7 @@ export default function StudentPage() {
               setSubmitted(false);
               setAnswers({});
             }}
-            className="mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg"
+            className="mt-6 px-4 py-2 bg-gray-600 text-black rounded-lg"
           >
             🔙 Retour
           </button>
@@ -160,7 +160,7 @@ export default function StudentPage() {
             <motion.div
               key={year}
               whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-black/90 hover:bg-black transition-all"
               onClick={() => setCurrentExam(`MEDECINE ${year}`)}
             >
               <img
@@ -168,7 +168,7 @@ export default function StudentPage() {
                 alt={`Concours ${year}`}
                 className="w-48 h-48 object-cover"
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2 font-semibold">
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-black text-center py-2 font-semibold">
                 MEDECINE {year}
               </div>
             </motion.div>
@@ -199,7 +199,7 @@ export default function StudentPage() {
             <motion.div
               key={year}
               whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-black/90 hover:bg-black transition-all"
               onClick={() => setCurrentExam(`${selectedMatiere} ${year}`)}
             >
               <img
@@ -207,14 +207,14 @@ export default function StudentPage() {
                 alt={`${selectedMatiere} ${year}`}
                 className="w-48 h-48 object-cover"
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-white text-center py-2 font-semibold">
+              <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-black text-center py-2 font-semibold">
                 {selectedMatiere} — {year}
               </div>
             </motion.div>
           ))}
           <button
             onClick={() => setSelectedMatiere(null)}
-            className="mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg"
+            className="mt-6 px-4 py-2 bg-gray-600 text-black rounded-lg"
           >
             🔙 Retour
           </button>
@@ -237,7 +237,7 @@ export default function StudentPage() {
   // --- Structure principale ---
   return (
     <div
-      className="h-screen w-screen flex text-white"
+      className="h-screen w-screen flex text-black"
       style={{
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
@@ -307,7 +307,7 @@ export default function StudentPage() {
 
       {/* ✅ Colonne centrale */}
       <motion.div
-        className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto"
+        className="flex-1 bg-black/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
