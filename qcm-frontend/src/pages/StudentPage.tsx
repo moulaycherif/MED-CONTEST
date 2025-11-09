@@ -30,14 +30,25 @@ export default function StudentPage() {
 
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
-  // 🔹 Chargement des questions selon currentExam
+  // 🔹 Liste des chapitres de soutien pour Mathématique
+  const chapitresMaths = [
+    "Chapitre I : Suites & Sommes",
+    "Chapitre II : Limites, Continuité & Dérivabilité",
+    "Chapitre III : Étude de fonctions",
+    "Chapitre IV : Nombres complexes",
+    "Chapitre V : Intégrales",
+    "Chapitre VI : Géométrie dans l'espace",
+    "Chapitre VII : Probabilités",
+  ];
+
+  // --- Chargement des questions selon matière / concours ---
   useEffect(() => {
     if (!currentExam) return;
 
     let subjectParam = selectedMatiere;
     let examParam = currentExam;
 
-    // 🧩 Si le format est "Mathématique — MEDECINE 2024"
+    // 🧩 Format : "Mathématique — MEDECINE 2024"
     if (currentExam.includes("—")) {
       const parts = currentExam.split("—").map((p) => p.trim());
       subjectParam = parts[0];
@@ -54,12 +65,11 @@ export default function StudentPage() {
       .catch(() => setQuestions([]));
   }, [currentExam, selectedMatiere]);
 
-  // 🔹 Gestion des réponses
+  // --- Gestion réponses ---
   const handleAnswerChange = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
   };
 
-  // 🔹 Correction locale
   const handleFinish = () => {
     let total = 0;
     questions.forEach((q) => {
@@ -69,9 +79,33 @@ export default function StudentPage() {
     setSubmitted(true);
   };
 
-  // --- Rendu principal (colonne centrale) ---
+  // --- Bouton retour global ---
+  const renderTopRightButton = () => {
+    if (section || currentExam || selectedMatiere)
+      return (
+        <button
+          onClick={() => {
+            if (currentExam) {
+              setCurrentExam(null);
+              setSubmitted(false);
+              setAnswers({});
+            } else if (selectedMatiere) {
+              setSelectedMatiere(null);
+            } else if (section) {
+              setSection(null);
+            }
+          }}
+          className="absolute top-4 right-6 px-4 py-2 bg-gray-600 text-black font-semibold rounded-lg hover:bg-gray-700 transition"
+        >
+          🔙 Retour
+        </button>
+      );
+    return null;
+  };
+
+  // --- Contenu principal (colonne centrale) ---
   const renderCenterContent = () => {
-    // 🧩 Cas 1 : affichage des questions
+    // 🧩 Cas : Questions
     if (currentExam) {
       if (questions.length === 0)
         return (
@@ -79,12 +113,6 @@ export default function StudentPage() {
             <p className="text-gray-700 text-lg">
               Aucune question trouvée pour {currentExam}.
             </p>
-            <button
-              onClick={() => setCurrentExam(null)}
-              className="mt-4 px-4 py-2 bg-gray-600 text-black rounded-lg"
-            >
-              🔙 Retour
-            </button>
           </div>
         );
 
@@ -146,31 +174,15 @@ export default function StudentPage() {
               {questions.reduce((sum, q) => sum + q.note, 0)}
             </div>
           )}
-
-          <button
-            onClick={() => {
-              setCurrentExam(null);
-              setSubmitted(false);
-              setAnswers({});
-            }}
-            className="mt-6 px-4 py-2 bg-gray-600 text-black rounded-lg"
-          >
-            🔙 Retour
-          </button>
         </div>
       );
     }
 
-    // 🧩 Cas 2 : affichage des concours
+    // 🧩 Cas : Concours
     if (section === "concours") {
       const annees = ["2025", "2024", "2023", "2022"];
-
       return (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
-        >
+        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
           {annees.map((year) => (
             <motion.div
               key={year}
@@ -188,11 +200,11 @@ export default function StudentPage() {
               </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       );
     }
 
-    // 🧩 Cas 3 : affichage des années par matière
+    // 🧩 Cas : QCE par matière
     if (section === "matiere" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
         Mathématique: mathsImg,
@@ -201,15 +213,9 @@ export default function StudentPage() {
         SVT: svtImg,
       };
 
-      const matiereImage = matiereImages[selectedMatiere];
       const annees = ["2025", "2024", "2023"];
-
       return (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
-        >
+        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
           {annees.map((year) => (
             <motion.div
               key={year}
@@ -218,7 +224,7 @@ export default function StudentPage() {
               onClick={() => setCurrentExam(`${selectedMatiere} — MEDECINE ${year}`)}
             >
               <img
-                src={matiereImage}
+                src={matiereImages[selectedMatiere]}
                 alt={`${selectedMatiere} — MEDECINE ${year}`}
                 className="w-48 h-48 object-cover"
               />
@@ -227,32 +233,46 @@ export default function StudentPage() {
               </div>
             </motion.div>
           ))}
-          <button
-            onClick={() => setSelectedMatiere(null)}
-            className="mt-6 px-4 py-2 bg-gray-600 text-black rounded-lg"
-          >
-            🔙 Retour
-          </button>
-        </motion.div>
+        </div>
       );
     }
 
-    // 🧩 Cas 4 : affichage initial
+    // 🧩 Cas : Soutien
+    if (section === "soutien" && selectedMatiere === "Mathématique") {
+      return (
+        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
+          {chapitresMaths.map((chapitre, index) => (
+            <motion.div
+              key={index}
+              whileHover={{ scale: 1.05 }}
+              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+            >
+              <img
+                src={mathsImg}
+                alt={chapitre}
+                className="w-48 h-48 object-cover"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
+                {chapitre}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      );
+    }
+
+    // 🧩 Cas par défaut
     return (
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-gray-700 text-lg text-center mt-20"
-      >
+      <p className="text-gray-700 text-lg text-center mt-20">
         👈 Sélectionnez une section à gauche pour commencer.
-      </motion.p>
+      </p>
     );
   };
 
   // --- Structure principale ---
   return (
     <div
-      className="h-screen w-screen flex text-black"
+      className="h-screen w-screen flex text-black relative"
       style={{
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
@@ -260,11 +280,7 @@ export default function StudentPage() {
       }}
     >
       {/* ✅ Colonne gauche */}
-      <motion.div
-        className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl"
-        initial={{ x: -40, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-      >
+      <div className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl">
         {/* 🎯 QCE par concours */}
         <div>
           <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>
@@ -318,16 +334,13 @@ export default function StudentPage() {
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ✅ Colonne centrale */}
-      <motion.div
-        className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
+      <div className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative">
+        {renderTopRightButton()}
         {renderCenterContent()}
-      </motion.div>
+      </div>
     </div>
   );
 }
