@@ -1,4 +1,3 @@
-// src/pages/StudentPage.tsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -31,17 +30,31 @@ export default function StudentPage() {
 
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
-  // 🔹 Charger les questions quand currentExam change
+  // 🔹 Chargement des questions selon currentExam
   useEffect(() => {
-    if (currentExam) {
-      axios
-        .get(`${API_BASE_URL}/api/questions?exam=${encodeURIComponent(currentExam)}`)
-        .then((res) => setQuestions(res.data))
-        .catch(() => setQuestions([]));
-    }
-  }, [currentExam]);
+    if (!currentExam) return;
 
-  // 🔹 Changement de réponse
+    let subjectParam = selectedMatiere;
+    let examParam = currentExam;
+
+    // 🧩 Si le format est "Mathématique — MEDECINE 2024"
+    if (currentExam.includes("—")) {
+      const parts = currentExam.split("—").map((p) => p.trim());
+      subjectParam = parts[0];
+      examParam = parts[1];
+    }
+
+    axios
+      .get(
+        `${API_BASE_URL}/api/questions?subject=${encodeURIComponent(
+          subjectParam || ""
+        )}&exam=${encodeURIComponent(examParam)}`
+      )
+      .then((res) => setQuestions(res.data))
+      .catch(() => setQuestions([]));
+  }, [currentExam, selectedMatiere]);
+
+  // 🔹 Gestion des réponses
   const handleAnswerChange = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
   };
@@ -56,14 +69,16 @@ export default function StudentPage() {
     setSubmitted(true);
   };
 
-  // --- Rendu principal au centre ---
+  // --- Rendu principal (colonne centrale) ---
   const renderCenterContent = () => {
     // 🧩 Cas 1 : affichage des questions
     if (currentExam) {
       if (questions.length === 0)
         return (
           <div className="text-center mt-10">
-            <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
+            <p className="text-gray-700 text-lg">
+              Aucune question trouvée pour {currentExam}.
+            </p>
             <button
               onClick={() => setCurrentExam(null)}
               className="mt-4 px-4 py-2 bg-gray-600 text-black rounded-lg"
@@ -200,15 +215,15 @@ export default function StudentPage() {
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => setCurrentExam(`${selectedMatiere} - MEDECINE ${year}`)}
+              onClick={() => setCurrentExam(`${selectedMatiere} — MEDECINE ${year}`)}
             >
               <img
                 src={matiereImage}
-                alt={`${selectedMatiere} ${year}`}
+                alt={`${selectedMatiere} — MEDECINE ${year}`}
                 className="w-48 h-48 object-cover"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-black text-center py-2 font-semibold">
-                {selectedMatiere} — {year}
+                {selectedMatiere} — MEDECINE {year}
               </div>
             </motion.div>
           ))}
@@ -222,7 +237,7 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 4 : par défaut
+    // 🧩 Cas 4 : affichage initial
     return (
       <motion.p
         initial={{ opacity: 0, y: 20 }}
