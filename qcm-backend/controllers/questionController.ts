@@ -6,15 +6,14 @@ import XLSX from "xlsx";
 
 /**
  * Récupérer toutes les questions (avec filtres facultatifs)
- * GET /api/questions?exam=2025&subject=Mathématique
  */
 export const getQuestions = async (req: Request, res: Response) => {
   try {
     const { exam, subject } = req.query;
     const query: any = {};
 
-    if (exam) query.exam = String(exam);
-    if (subject) query.subject = String(subject);
+    if (exam) query.exam = String(exam).trim();
+    if (subject) query.subject = String(subject).trim();
 
     const questions = await Question.find(query);
     res.json(questions);
@@ -26,7 +25,6 @@ export const getQuestions = async (req: Request, res: Response) => {
 
 /**
  * Importer les questions depuis Excel (multer fournit req.file)
- * POST /api/questions/import
  */
 export const importExcel = async (req: Request, res: Response) => {
   try {
@@ -43,10 +41,10 @@ export const importExcel = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Fichier Excel vide ou mal formé" });
     }
 
-    // Mapping des colonnes du template
+    // 🔹 Mapping des colonnes du template
     const questions = (data as any[])
       .map((row) => ({
-        texte: String(row["Texte de la question"] || row["texte"] || "").trim(),
+        texte: String(row["Texte de la question"] || "").trim(),
         options: [
           row["Option 1"],
           row["Option 2"],
@@ -56,40 +54,33 @@ export const importExcel = async (req: Request, res: Response) => {
         ]
           .filter(Boolean)
           .map((o: any) => String(o).trim()),
-        reponseCorrecte: String(row["Réponse correcte"] || row["reponseCorrecte"] || "").trim(),
-        subject: String(row["Matière"] || row["subject"] || "").trim(),
-        exam: String(row["Concours / Examen"] || row["exam"] || "").trim(),
-        note: Number(row["Note"] ?? row["note"] ?? 1),
+        reponseCorrecte: String(row["Réponse correcte"] || "").trim(),
+        subject: String(row["Matière"] || "").trim(),
+        exam: String(row["Concours / Examen"] || "").trim(),
+        note: Number(row["Note"] ?? 1),
       }))
       .filter(
         (q) =>
           q.texte &&
-          q.texte !== "" &&
-          Array.isArray(q.options) &&
           q.options.length > 0 &&
           q.reponseCorrecte &&
-          q.exam // on exige exam
+          q.exam &&
+          q.subject
       );
 
     if (questions.length === 0) {
       return res.status(400).json({ error: "Aucune question valide trouvée dans le fichier" });
     }
 
-    // Unicité par texte+exam pour éviter dupes
-    const uniqueQuestions = [
-      ...new Map(questions.map((q) => [q.texte + "|" + q.exam, q])).values(),
-    ];
-
-    const exams = [...new Set(uniqueQuestions.map((q) => q.exam))];
-
-    // Modes : replace-global => supprime tout ; replace => supprime questions des exams importés ; append => ajout
+    // 🔹 Supprimer selon le mode
+    const exams = [...new Set(questions.map((q) => q.exam))];
     if (mode === "replace-global") {
       await Question.deleteMany({});
     } else if (mode === "replace") {
       await Question.deleteMany({ exam: { $in: exams } });
     }
 
-    // Créer les exam si n'existent pas (on stocke le titre dans `title`)
+    // 🔹 Créer les examens manquants
     for (const ex of exams) {
       const existing = await Exam.findOne({ title: ex });
       if (!existing) {
@@ -97,17 +88,17 @@ export const importExcel = async (req: Request, res: Response) => {
       }
     }
 
-    // InsertMany — ignoreOrdered false pour laisser throw en cas d'erreur de duplicate si besoin
-    const inserted = await Question.insertMany(uniqueQuestions, { ordered: false });
+    // 🔹 Insertion
+    const inserted = await Question.insertMany(questions, { ordered: false });
 
     res.json({
       message: "✅ Import réussi",
-      inserted: Array.isArray(inserted) ? inserted.length : 0,
+      inserted: inserted.length,
       exams,
+      subjects: [...new Set(questions.map((q) => q.subject))],
     });
   } catch (err: any) {
     console.error("Erreur importExcel :", err);
-    // si erreur de duplicate key, renvoyer message friendly
     if (err.code === 11000) {
       return res.status(400).json({
         error: "⚠️ Certaines questions existent déjà pour ce concours.",
@@ -118,7 +109,7 @@ export const importExcel = async (req: Request, res: Response) => {
 };
 
 /**
- * Liste des examens existants (renvoie les titres)
+ * Liste des examens existants
  */
 export const getExams = async (_req: Request, res: Response) => {
   try {
@@ -132,7 +123,6 @@ export const getExams = async (_req: Request, res: Response) => {
 
 /**
  * Liste des matières d’un examen donné
- * GET /api/questions/subjects/:exam
  */
 export const getSubjectsByExam = async (req: Request, res: Response) => {
   try {
@@ -162,5 +152,5 @@ export const deleteAllQuestions = async (_req: Request, res: Response) => {
   }
 };
 
-// Alias pour rétro-compatibilité
+// Alias
 export const importQuestions = importExcel;

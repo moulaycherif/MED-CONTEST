@@ -2,12 +2,13 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
-import StudentPage from "./pages/StudentPage"; // ✅ utilise StudentPage au lieu de StudentQuiz
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
-
+import StudentPage from "./pages/StudentPage";
+import AdminDashboard from "./pages/AdminDashboard";
 import { API_BASE_URL } from "./config";
+
 console.log("🌍 API_BASE_URL =", API_BASE_URL);
 
 export default function App() {
@@ -16,17 +17,25 @@ export default function App() {
       <Navbar />
       <main className="pt-16 min-h-screen">
         <Routes>
+          {/* 🏠 Page d’accueil */}
           <Route path="/" element={<HomePage />} />
 
-          {/* ✅ On garde une seule page StudentPage */}
-          <Route path="/student" element={<StudentPage />} />
-
+          {/* 🔐 Connexion */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Pages à venir */}
+          {/* 👩‍🎓 Espace étudiant */}
+          <Route path="/student" element={<StudentPage />} />
+
+          {/* 👨‍💼 Espace admin */}
+          <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* 🧩 Pages futures */}
           <Route path="/demo" element={<div className="p-10 text-center">Page Démo</div>} />
           <Route path="/abonnement" element={<div className="p-10 text-center">Page Abonnement</div>} />
           <Route path="/contact" element={<div className="p-10 text-center">Page Contact</div>} />
+
+          {/* 🚫 404 */}
+          <Route path="*" element={<div className="p-10 text-center text-red-600 font-semibold">Page non trouvée</div>} />
         </Routes>
       </main>
       <Footer />
