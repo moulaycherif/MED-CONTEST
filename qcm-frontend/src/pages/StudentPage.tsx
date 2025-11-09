@@ -200,7 +200,7 @@ export default function StudentPage() {
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => setCurrentExam(`${selectedMatiere} ${year}`)}
+              onClick={() => setCurrentExam(`${selectedMatiere} - MEDECINE ${year}`)}
             >
               <img
                 src={matiereImage}
