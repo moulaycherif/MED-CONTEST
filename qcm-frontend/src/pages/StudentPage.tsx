@@ -23,6 +23,7 @@ export default function StudentPage() {
   const [section, setSection] = useState<"concours" | "matiere" | "soutien" | null>(null);
   const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null);
   const [currentExam, setCurrentExam] = useState<string | null>(null);
+  const [selectedChapitre, setSelectedChapitre] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<{ [id: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
@@ -30,7 +31,7 @@ export default function StudentPage() {
 
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
-  // 🔹 Liste des chapitres de soutien pour Mathématique
+  // 🔹 Chapitres de soutien pour Mathématique
   const chapitresMaths = [
     "Chapitre I : Suites & Sommes",
     "Chapitre II : Limites, Continuité & Dérivabilité",
@@ -41,14 +42,13 @@ export default function StudentPage() {
     "Chapitre VII : Probabilités",
   ];
 
-  // --- Chargement des questions selon matière / concours ---
+  // --- Chargement des questions ---
   useEffect(() => {
     if (!currentExam) return;
 
     let subjectParam = selectedMatiere;
     let examParam = currentExam;
 
-    // 🧩 Format : "Mathématique — MEDECINE 2024"
     if (currentExam.includes("—")) {
       const parts = currentExam.split("—").map((p) => p.trim());
       subjectParam = parts[0];
@@ -81,7 +81,7 @@ export default function StudentPage() {
 
   // --- Bouton retour global ---
   const renderTopRightButton = () => {
-    if (section || currentExam || selectedMatiere)
+    if (section || currentExam || selectedMatiere || selectedChapitre)
       return (
         <button
           onClick={() => {
@@ -89,6 +89,8 @@ export default function StudentPage() {
               setCurrentExam(null);
               setSubmitted(false);
               setAnswers({});
+            } else if (selectedChapitre) {
+              setSelectedChapitre(null);
             } else if (selectedMatiere) {
               setSelectedMatiere(null);
             } else if (section) {
@@ -103,9 +105,9 @@ export default function StudentPage() {
     return null;
   };
 
-  // --- Contenu principal (colonne centrale) ---
+  // --- Contenu principal ---
   const renderCenterContent = () => {
-    // 🧩 Cas : Questions
+    // 🧩 Cas 1 : Questions
     if (currentExam) {
       if (questions.length === 0)
         return (
@@ -178,7 +180,7 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas : Concours
+    // 🧩 Cas 2 : Concours
     if (section === "concours") {
       const annees = ["2025", "2024", "2023", "2022"];
       return (
@@ -190,11 +192,7 @@ export default function StudentPage() {
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => setCurrentExam(`MEDECINE ${year}`)}
             >
-              <img
-                src={concoursImg}
-                alt={`Concours ${year}`}
-                className="w-48 h-48 object-cover"
-              />
+              <img src={concoursImg} alt={`Concours ${year}`} className="w-48 h-48 object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-white/60 text-black text-center py-2 font-semibold">
                 MEDECINE {year}
               </div>
@@ -204,7 +202,7 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas : QCE par matière
+    // 🧩 Cas 3 : QCE par matière
     if (section === "matiere" && selectedMatiere) {
       const matiereImages: Record<string, string> = {
         Mathématique: mathsImg,
@@ -237,8 +235,36 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas : Soutien
+    // 🧩 Cas 4 : Soutien
     if (section === "soutien" && selectedMatiere === "Mathématique") {
+      // Sous-cas : Chapitre sélectionné → affiche les 3 boutons
+      if (selectedChapitre) {
+        const actions = [
+          { label: "💡 Astuces", color: "bg-yellow-400" },
+          { label: "📘 Résumé", color: "bg-blue-400" },
+          { label: "🧩 Exercices", color: "bg-green-400" },
+        ];
+
+        return (
+          <div className="flex flex-col items-center justify-center gap-8 mt-20">
+            <h2 className="text-2xl font-bold text-gray-800">{selectedChapitre}</h2>
+            <div className="flex gap-8">
+              {actions.map((action, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`${action.color} text-black font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
+                >
+                  {action.label}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      // Sinon, afficher les chapitres
       return (
         <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
           {chapitresMaths.map((chapitre, index) => (
@@ -246,12 +272,9 @@ export default function StudentPage() {
               key={index}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+              onClick={() => setSelectedChapitre(chapitre)}
             >
-              <img
-                src={mathsImg}
-                alt={chapitre}
-                className="w-48 h-48 object-cover"
-              />
+              <img src={mathsImg} alt={chapitre} className="w-48 h-48 object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
                 {chapitre}
               </div>
