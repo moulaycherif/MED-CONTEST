@@ -23,15 +23,17 @@ export default function StudentPage() {
   const [section, setSection] = useState<"concours" | "matiere" | "soutien" | null>(null);
   const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null);
   const [currentExam, setCurrentExam] = useState<string | null>(null);
-  const [selectedChapitre, setSelectedChapitre] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<{ [id: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
 
+  // Pour le soutien
+  const [selectedChapitre, setSelectedChapitre] = useState<string | null>(null);
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
-  // 🔹 Chapitres de soutien pour Mathématique
   const chapitresMaths = [
     "Chapitre I : Suites & Sommes",
     "Chapitre II : Limites, Continuité & Dérivabilité",
@@ -39,37 +41,34 @@ export default function StudentPage() {
     "Chapitre IV : Nombres complexes",
     "Chapitre V : Intégrales",
     "Chapitre VI : Géométrie dans l'espace",
-    "Chapitre VII : Probabilités",
+    "Chapitre VII : Probabilité",
   ];
 
-  // --- Chargement des questions ---
+  // 🔹 Charger les questions quand currentExam change
   useEffect(() => {
-    if (!currentExam) return;
-
-    let subjectParam = selectedMatiere;
-    let examParam = currentExam;
-
-    if (currentExam.includes("—")) {
-      const parts = currentExam.split("—").map((p) => p.trim());
-      subjectParam = parts[0];
-      examParam = parts[1];
+    if (currentExam && selectedMatiere) {
+      axios
+        .get(
+          `${API_BASE_URL}/api/questions?subject=${encodeURIComponent(
+            selectedMatiere
+          )}&exam=${encodeURIComponent(currentExam)}`
+        )
+        .then((res) => setQuestions(res.data))
+        .catch(() => setQuestions([]));
+    } else if (currentExam) {
+      axios
+        .get(`${API_BASE_URL}/api/questions?exam=${encodeURIComponent(currentExam)}`)
+        .then((res) => setQuestions(res.data))
+        .catch(() => setQuestions([]));
     }
-
-    axios
-      .get(
-        `${API_BASE_URL}/api/questions?subject=${encodeURIComponent(
-          subjectParam || ""
-        )}&exam=${encodeURIComponent(examParam)}`
-      )
-      .then((res) => setQuestions(res.data))
-      .catch(() => setQuestions([]));
   }, [currentExam, selectedMatiere]);
 
-  // --- Gestion réponses ---
+  // 🔹 Changement de réponse
   const handleAnswerChange = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
   };
 
+  // 🔹 Correction locale
   const handleFinish = () => {
     let total = 0;
     questions.forEach((q) => {
@@ -79,42 +78,14 @@ export default function StudentPage() {
     setSubmitted(true);
   };
 
-  // --- Bouton retour global ---
-  const renderTopRightButton = () => {
-    if (section || currentExam || selectedMatiere || selectedChapitre)
-      return (
-        <button
-          onClick={() => {
-            if (currentExam) {
-              setCurrentExam(null);
-              setSubmitted(false);
-              setAnswers({});
-            } else if (selectedChapitre) {
-              setSelectedChapitre(null);
-            } else if (selectedMatiere) {
-              setSelectedMatiere(null);
-            } else if (section) {
-              setSection(null);
-            }
-          }}
-          className="absolute top-4 right-6 px-4 py-2 bg-gray-600 text-black font-semibold rounded-lg hover:bg-gray-700 transition"
-        >
-          🔙 Retour
-        </button>
-      );
-    return null;
-  };
-
-  // --- Contenu principal ---
+  // --- Rendu principal ---
   const renderCenterContent = () => {
-    // 🧩 Cas 1 : Questions
+    // 🧩 Cas 1 : affichage des questions (QCE)
     if (currentExam) {
       if (questions.length === 0)
         return (
           <div className="text-center mt-10">
-            <p className="text-gray-700 text-lg">
-              Aucune question trouvée pour {currentExam}.
-            </p>
+            <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
           </div>
         );
 
@@ -180,11 +151,15 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 2 : Concours
+    // 🧩 Cas 2 : QCE par concours
     if (section === "concours") {
       const annees = ["2025", "2024", "2023", "2022"];
       return (
-        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
+        >
           {annees.map((year) => (
             <motion.div
               key={year}
@@ -198,7 +173,7 @@ export default function StudentPage() {
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       );
     }
 
@@ -210,41 +185,95 @@ export default function StudentPage() {
         Chimie: chimieImg,
         SVT: svtImg,
       };
-
+      const matiereImage = matiereImages[selectedMatiere];
       const annees = ["2025", "2024", "2023"];
+
       return (
-        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
+        >
           {annees.map((year) => (
             <motion.div
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => setCurrentExam(`${selectedMatiere} — MEDECINE ${year}`)}
+              onClick={() => setCurrentExam(`MEDECINE ${year}`)}
             >
-              <img
-                src={matiereImages[selectedMatiere]}
-                alt={`${selectedMatiere} — MEDECINE ${year}`}
-                className="w-48 h-48 object-cover"
-              />
+              <img src={matiereImage} alt={`${selectedMatiere} — MEDECINE ${year}`} className="w-48 h-48 object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-black text-center py-2 font-semibold">
                 {selectedMatiere} — MEDECINE {year}
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       );
     }
 
-    // 🧩 Cas 4 : Soutien
+    // 🧩 Cas 4 : Soutien (Mathématiques)
     if (section === "soutien" && selectedMatiere === "Mathématique") {
-      // Sous-cas : Chapitre sélectionné → affiche les 3 boutons
+      // ✅ PDF ou Quiz
+      if (selectedChapitre && selectedAction) {
+        if (selectedAction === "Résumé") {
+          return (
+            <div className="flex flex-col items-center justify-center gap-6 mt-10">
+              <h2 className="text-2xl font-bold mb-4">{selectedChapitre} — Résumé</h2>
+              <iframe
+                src={`/pdf/${selectedChapitre.replace(/[:&]/g, '').replace(/\s+/g, '_')}.pdf`}
+                className="w-3/4 h-[80vh] border-2 border-gray-400 rounded-xl shadow-lg"
+                title="Résumé PDF"
+              />
+            </div>
+          );
+        }
+
+        // ✅ Mini Quiz
+        const quiz = [
+          {
+            question: "Quelle est la définition d'une suite arithmétique ?",
+            options: [
+              "Chaque terme est le carré du précédent",
+              "Chaque terme est la somme du précédent et d’une constante",
+              "Chaque terme est le produit du précédent par une constante",
+              "Chaque terme est aléatoire",
+            ],
+            correct: "Chaque terme est la somme du précédent et d’une constante",
+          },
+        ];
+
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold text-center mb-6">
+              {selectedChapitre} — {selectedAction}
+            </h2>
+            {quiz.map((q, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 mb-4 bg-white rounded-xl shadow"
+              >
+                <h3 className="font-semibold mb-2">{q.question}</h3>
+                {q.options.map((opt, i) => (
+                  <label key={i} className="block p-2 border rounded-lg cursor-pointer mb-2 hover:bg-gray-100">
+                    <input type="radio" name={`q-${idx}`} className="mr-2" />
+                    {opt}
+                  </label>
+                ))}
+              </motion.div>
+            ))}
+          </div>
+        );
+      }
+
+      // ✅ Chapitre sélectionné → 3 boutons
       if (selectedChapitre) {
         const actions = [
           { label: "💡 Astuces", color: "bg-yellow-400" },
           { label: "📘 Résumé", color: "bg-blue-400" },
           { label: "🧩 Exercices", color: "bg-green-400" },
         ];
-
         return (
           <div className="flex flex-col items-center justify-center gap-8 mt-20">
             <h2 className="text-2xl font-bold text-gray-800">{selectedChapitre}</h2>
@@ -254,6 +283,7 @@ export default function StudentPage() {
                   key={index}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedAction(action.label.replace(/[💡📘🧩]/g, "").trim())}
                   className={`${action.color} text-black font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
                 >
                   {action.label}
@@ -264,7 +294,7 @@ export default function StudentPage() {
         );
       }
 
-      // Sinon, afficher les chapitres
+      // ✅ Liste des chapitres
       return (
         <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
           {chapitresMaths.map((chapitre, index) => (
@@ -284,18 +314,22 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas par défaut
+    // 🧩 Par défaut
     return (
-      <p className="text-gray-700 text-lg text-center mt-20">
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-gray-700 text-lg text-center mt-20"
+      >
         👈 Sélectionnez une section à gauche pour commencer.
-      </p>
+      </motion.p>
     );
   };
 
   // --- Structure principale ---
   return (
     <div
-      className="h-screen w-screen flex text-black relative"
+      className="h-screen w-screen flex text-black"
       style={{
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
@@ -303,7 +337,11 @@ export default function StudentPage() {
       }}
     >
       {/* ✅ Colonne gauche */}
-      <div className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl">
+      <motion.div
+        className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl"
+        initial={{ x: -40, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+      >
         {/* 🎯 QCE par concours */}
         <div>
           <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>
@@ -349,6 +387,8 @@ export default function StudentPage() {
                 onClick={() => {
                   setSection("soutien");
                   setSelectedMatiere(m);
+                  setSelectedChapitre(null);
+                  setSelectedAction(null);
                 }}
                 className="py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition"
               >
@@ -357,13 +397,32 @@ export default function StudentPage() {
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ✅ Colonne centrale */}
-      <div className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative">
-        {renderTopRightButton()}
+      <motion.div
+        className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        {/* 🔙 Bouton Retour en haut à droite */}
+        {(section || currentExam || selectedChapitre || selectedAction) && (
+          <button
+            onClick={() => {
+              if (selectedAction) setSelectedAction(null);
+              else if (selectedChapitre) setSelectedChapitre(null);
+              else if (currentExam) setCurrentExam(null);
+              else if (selectedMatiere) setSelectedMatiere(null);
+              else setSection(null);
+            }}
+            className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"
+          >
+            🔙 Retour
+          </button>
+        )}
+
         {renderCenterContent()}
-      </div>
+      </motion.div>
     </div>
   );
 }
