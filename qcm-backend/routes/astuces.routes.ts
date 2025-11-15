@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAstucesByChapitre } from "../controllers/astuces.controller";
+import { getAstucesByChapitre } from "../controllers/astucescontroller";
 
 const router = Router();
 
