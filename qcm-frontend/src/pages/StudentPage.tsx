@@ -11,6 +11,9 @@ import chimieImg from "../assets/CHIMIE.jfif";
 import svtImg from "../assets/SVT.jfif";
 import bgImage from "/Image3.jfif";
 
+import AnimatedQaViewer from "../components/AnimatedQaViewer";
+
+
 interface Question {
   _id: string;
   texte: string;
@@ -44,6 +47,9 @@ export default function StudentPage() {
     "Chapitre VII : Probabilité",
   ];
 
+  const [astuces, setAstuces] = useState<{ question: string; answer: string }[]>([]);
+
+
   // 🔹 Charger les questions quand currentExam change
   useEffect(() => {
     if (currentExam && selectedMatiere) {
@@ -62,6 +68,17 @@ export default function StudentPage() {
         .catch(() => setQuestions([]));
     }
   }, [currentExam, selectedMatiere]);
+
+  // Charger les astuces quand on clique sur le bouton "Astuces"
+useEffect(() => {
+  if (selectedAction === "Astuces" && selectedChapitre) {
+    axios
+      .get(`${API_BASE_URL}/api/astuces/${encodeURIComponent(selectedChapitre)}`)
+      .then((res) => setAstuces(res.data))
+      .catch(() => setAstuces([]));
+  }
+}, [selectedAction, selectedChapitre]);
+
 
   // 🔹 Changement de réponse
   const handleAnswerChange = (id: string, value: string) => {
@@ -215,6 +232,24 @@ export default function StudentPage() {
     if (section === "soutien" && selectedMatiere === "Mathématique") {
       // ✅ PDF ou Quiz
       if (selectedChapitre && selectedAction) {
+
+// 📌 ASTUCES — QUESTIONS/RÉPONSES ANIMÉES
+if (selectedAction === "Astuces") {
+  return (
+    <div className="p-6">
+      <h2 className="text-3xl font-bold text-center mb-6">
+        💡 {selectedChapitre} — Astuces
+      </h2>
+
+      {astuces.length === 0 ? (
+        <p className="text-center text-gray-500">Aucune astuce trouvée…</p>
+      ) : (
+        <AnimatedQaViewer qas={astuces} />
+      )}
+    </div>
+  );
+}
+
         if (selectedAction === "Résumé") {
           return (
             <div className="flex flex-col items-center justify-center gap-6 mt-10">
