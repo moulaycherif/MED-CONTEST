@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
+// Résumé
+const [subject, setSubject] = useState("");
+const [chapter, setChapter] = useState("");
+const [resumeContent, setResumeContent] = useState("");
+const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
+
 // ✅ Fonction universelle de déconnexion
 function logout() {
   try {
@@ -40,8 +46,9 @@ interface ImportResult {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"students" | "import">("students");
-
+ 
+  const [activeTab, setActiveTab] = useState<"students" | "import" | "summary">("students");
+ 
   // ---------- Gestion Étudiants ----------
   const [students, setStudents] = useState<Student[]>([]);
   const [name, setName] = useState("");
@@ -163,6 +170,30 @@ const AdminDashboard: React.FC = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = details.slice(startIndex, startIndex + itemsPerPage);
 
+  const handleGeneratePdf = async () => {
+  if (!subject || !chapter || !resumeContent) {
+    alert("Veuillez remplir toutes les informations.");
+    return;
+  }
+
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/api/resume/generate`,
+      { subject, chapter, content: resumeContent }
+    );
+
+    if (res.data.pdfUrl) {
+      setGeneratedPdf(res.data.pdfUrl);
+    } else {
+      alert("Erreur : PDF non généré.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Erreur lors de la génération du PDF.");
+  }
+};
+
+
   // ===============================================
   // 🧩 Rendu principal
   // ===============================================
@@ -202,6 +233,17 @@ const AdminDashboard: React.FC = () => {
         >
           📂 Import des questions
         </button>
+
+        <button
+  onClick={() => setActiveTab("summary")}
+  className={`px-4 py-2 rounded ${
+    activeTab === "summary" ? "bg-blue-600 text-white" : "bg-gray-200"
+  }`}
+>
+  📝 Résumés
+</button>
+
+{activeTab === "summary" && <SummaryEditor />}
       </div>
 
       {/* ----------- Onglet Étudiants ----------- */}
@@ -383,6 +425,63 @@ const AdminDashboard: React.FC = () => {
           )}
         </div>
       )}
+
+      {activeTab === "summary" && (
+  <div className="mt-6">
+
+    <h2 className="text-2xl font-bold mb-4">📝 Éditeur de Résumés</h2>
+
+    <div className="mb-4">
+      <label className="font-semibold">Nom de la matière :</label>
+      <input
+        type="text"
+        placeholder="ex: Mathématiques"
+        className="border px-2 py-1 ml-2"
+        value={subject}
+        onChange={e => setSubject(e.target.value)}
+      />
+    </div>
+
+    <div className="mb-4">
+      <label className="font-semibold">Chapitre :</label>
+      <input
+        type="text"
+        placeholder="ex: Dérivation"
+        className="border px-2 py-1 ml-2"
+        value={chapter}
+        onChange={e => setChapter(e.target.value)}
+      />
+    </div>
+
+    <textarea
+      placeholder="Rédige ton résumé ici..."
+      className="border w-full h-64 p-3"
+      value={resumeContent}
+      onChange={e => setResumeContent(e.target.value)}
+    ></textarea>
+
+    <button
+      onClick={handleGeneratePdf}
+      className="bg-green-600 text-white px-4 py-2 rounded mt-4 hover:bg-green-700"
+    >
+      📄 Générer PDF
+    </button>
+
+    {generatedPdf && (
+      <div className="mt-4">
+        <p className="font-semibold">PDF généré :</p>
+        <a
+          href={generatedPdf}
+          target="_blank"
+          className="text-blue-600 underline"
+        >
+          📥 Télécharger / Voir le PDF
+        </a>
+      </div>
+    )}
+  </div>
+)}
+
     </div>
   );
 };

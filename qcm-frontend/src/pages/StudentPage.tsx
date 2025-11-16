@@ -12,6 +12,7 @@ import svtImg from "../assets/SVT.jfif";
 import bgImage from "/Image3.jfif";
 
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
+import { fetchAstucesByChapitre, Astuce } from "../api/api";
 
 
 interface Question {
@@ -47,7 +48,9 @@ export default function StudentPage() {
     "Chapitre VII : Probabilité",
   ];
 
-  const [astuces, setAstuces] = useState<{ question: string; answer: string }[]>([]);
+  // const [astuces, setAstuces] = useState<{ question: string; answer: string }[]>([]);
+  const [astuces, setAstuces] = useState<Astuce[]>([]);
+
 
 
   // 🔹 Charger les questions quand currentExam change
@@ -78,6 +81,15 @@ useEffect(() => {
       .catch(() => setAstuces([]));
   }
 }, [selectedAction, selectedChapitre]);
+
+useEffect(() => {
+  if (selectedAction === "Astuces" && selectedChapitre) {
+    fetchAstucesByChapitre(selectedChapitre)
+      .then((data) => setAstuces(data))
+      .catch(() => setAstuces([]));
+  }
+}, [selectedAction, selectedChapitre]);
+
 
 
   // 🔹 Changement de réponse
