@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
-import authRoutes from "../routes/authRoutes";
-import questionRoutes from "../routes/questionRoutes";
-import resultRoutes from "../routes/answerRoutes";
-import adminRoutes from "../routes/adminRoutes";  // ✅ AJOUT ICI
+import authRoutes from "./routes/authRoutes";
+import questionRoutes from "./routes/questionRoutes";
+import resultRoutes from "./routes/answerRoutes";
+import adminRoutes from "./routes/adminRoutes";  // ✅ AJOUT ICI
 
-import studentRoutes from "../routes/studentRoutes";
+import studentRoutes from "./routes/studentRoutes";
 
 import dotenv from "dotenv";
 
