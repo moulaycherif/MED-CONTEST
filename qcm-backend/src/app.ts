@@ -5,6 +5,8 @@ import questionRoutes from "./routes/questionRoutes";
 import resultRoutes from "./routes/answerRoutes";
 import adminRoutes from "./routes/adminRoutes";  // ✅ AJOUT ICI
 
+import resumeRoutes from "./routes/resumeRoutes";
+
 import studentRoutes from "./routes/studentRoutes";
 
 import dotenv from "dotenv";
@@ -38,6 +40,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
 
 app.use("/api/ranking", rankingRoutes);
+
+app.use("/api/resume", resumeRoutes);
 
 // ✅ Route test
 app.get("/", (req, res) => {

@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import app from "./app";
 import astucesRoutes from "./routes/astuces.routes";  // 👈 AJOUT
 
+import resumeRoutes from "./routes/resumeRoutes";
+
 import http from "http";
 import { initRankingSocket } from "./websocket/rankingSocket";
 
@@ -22,7 +24,7 @@ console.log("✅ MONGO_URI utilisé :", MONGO_URI);
 
 // 👈 AJOUT : montage des routes
 app.use("/api/astuces", astucesRoutes);
-app.use("/api/resume", require("./routes/resumeRoutes"));
+app.use("/api/resume", resumeRoutes);
 
 mongoose
   .connect(MONGO_URI)
