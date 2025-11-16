@@ -9,6 +9,7 @@ import studentRoutes from "./routes/studentRoutes";
 
 import dotenv from "dotenv";
 
+import rankingRoutes from "./routes/rankingRoutes";
 
 dotenv.config({ path: "./.env" });
 
@@ -35,6 +36,8 @@ app.use("/api/results", resultRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.use("/api/student", studentRoutes);
+
+app.use("/api/ranking", rankingRoutes);
 
 // ✅ Route test
 app.get("/", (req, res) => {
