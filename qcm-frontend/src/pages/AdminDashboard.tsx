@@ -2,11 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
-// Résumé
-const [subject, setSubject] = useState("");
-const [chapter, setChapter] = useState("");
-const [resumeContent, setResumeContent] = useState("");
-const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
+
 
 // ✅ Fonction universelle de déconnexion
 function logout() {
@@ -46,6 +42,12 @@ interface ImportResult {
 }
 
 const AdminDashboard: React.FC = () => {
+
+  // Résumé
+const [subject, setSubject] = useState("");
+const [chapter, setChapter] = useState("");
+const [resumeContent, setResumeContent] = useState("");
+const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
  
   const [activeTab, setActiveTab] = useState<"students" | "import" | "summary">("students");
  
