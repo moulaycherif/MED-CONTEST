@@ -13,7 +13,7 @@ console.log("🌍 API_BASE_URL =", API_BASE_URL);
 
 export default function App() {
   return (
-    <Router>
+      <Router>
       <Navbar />
       <main className="pt-16 min-h-screen">
         <Routes>
