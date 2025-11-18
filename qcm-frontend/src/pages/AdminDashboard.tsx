@@ -246,8 +246,8 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
   📝 Résumés
 </button>
 
-{activeTab === "summary" && <SummaryEditor />}
-      </div>
+</div>
+     
 
       {/* ----------- Onglet Étudiants ----------- */}
       {activeTab === "students" && (
@@ -430,7 +430,7 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
       )}
 
    {/* ----------- Onglet Summary ----------- */}
-      {activeTab === "summary" && (
+{activeTab === "summary" && (
   <div>
     <h2 className="text-2xl font-bold mb-4">📝 Résumés</h2>
 
@@ -479,13 +479,21 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
 
       {generatedPdf && (
         <div className="mt-4">
-          <a href={generatedPdf} target="_blank" className="text-blue-600 underline">
+          <a
+            href={generatedPdf}
+            target="_blank"
+            className="text-blue-600 underline"
+          >
             📥 Télécharger le PDF
           </a>
         </div>
       )}
+       </div>
+        </div>
+  )}
+
     </div>
-  </div>
-)};
+  );
+};
 
 export default AdminDashboard;
