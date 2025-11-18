@@ -486,6 +486,6 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
       )}
     </div>
   </div>
-)}
+)};
 
 export default AdminDashboard;
