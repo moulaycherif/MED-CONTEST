@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
+import SummaryList from "./SummaryList";
 
 
 
@@ -428,64 +429,63 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
         </div>
       )}
 
+   {/* ----------- Onglet Summary ----------- */}
       {activeTab === "summary" && (
-  <div className="mt-6">
+  <div>
+    <h2 className="text-2xl font-bold mb-4">📝 Résumés</h2>
 
-    <h2 className="text-2xl font-bold mb-4">📝 Éditeur de Résumés</h2>
+    {/* === 1. Liste des résumés === */}
+    <SummaryList />
 
-    <div className="mb-4">
-      <label className="font-semibold">Nom de la matière :</label>
-      <input
-        type="text"
-        placeholder="ex: Mathématiques"
-        className="border px-2 py-1 ml-2"
-        value={subject}
-        onChange={e => setSubject(e.target.value)}
-      />
-    </div>
+    <hr className="my-6" />
 
-    <div className="mb-4">
-      <label className="font-semibold">Chapitre :</label>
-      <input
-        type="text"
-        placeholder="ex: Dérivation"
-        className="border px-2 py-1 ml-2"
-        value={chapter}
-        onChange={e => setChapter(e.target.value)}
-      />
-    </div>
+    {/* === 2. Éditeur de nouveaux résumés === */}
+    <div className="mt-6">
+      <h3 className="text-xl font-bold mb-4">➕ Créer un nouveau résumé</h3>
 
-    <textarea
-      placeholder="Rédige ton résumé ici..."
-      className="border w-full h-64 p-3"
-      value={resumeContent}
-      onChange={e => setResumeContent(e.target.value)}
-    ></textarea>
-
-    <button
-      onClick={handleGeneratePdf}
-      className="bg-green-600 text-white px-4 py-2 rounded mt-4 hover:bg-green-700"
-    >
-      📄 Générer PDF
-    </button>
-
-    {generatedPdf && (
-      <div className="mt-4">
-        <p className="font-semibold">PDF généré :</p>
-        <a
-          href={generatedPdf}
-          target="_blank"
-          className="text-blue-600 underline"
-        >
-          📥 Télécharger / Voir le PDF
-        </a>
+      <div className="mb-4">
+        <label className="font-semibold">Matière :</label>
+        <input
+          type="text"
+          className="border px-2 py-1 ml-2"
+          value={subject}
+          onChange={e => setSubject(e.target.value)}
+        />
       </div>
-    )}
+
+      <div className="mb-4">
+        <label className="font-semibold">Chapitre :</label>
+        <input
+          type="text"
+          className="border px-2 py-1 ml-2"
+          value={chapter}
+          onChange={e => setChapter(e.target.value)}
+        />
+      </div>
+
+      <textarea
+        placeholder="Contenu du résumé..."
+        className="border w-full h-60 p-3"
+        value={resumeContent}
+        onChange={e => setResumeContent(e.target.value)}
+      ></textarea>
+
+      <button
+        onClick={handleGeneratePdf}
+        className="bg-green-600 text-white px-4 py-2 rounded mt-4 hover:bg-green-700"
+      >
+        📄 Générer PDF
+      </button>
+
+      {generatedPdf && (
+        <div className="mt-4">
+          <a href={generatedPdf} target="_blank" className="text-blue-600 underline">
+            📥 Télécharger le PDF
+          </a>
+        </div>
+      )}
+    </div>
   </div>
 )}
-
-    </div>
-  );
-};
 
 export default AdminDashboard;
