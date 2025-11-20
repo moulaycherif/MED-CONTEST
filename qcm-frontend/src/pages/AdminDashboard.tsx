@@ -181,20 +181,22 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
 
   try {
     const res = await axios.post(
-      `${API_BASE_URL}/api/resume/generate`,
+      `${API_BASE_URL}/api/resumes/generate-pdf`,   // <-- CORRECTION ICI
       { subject, chapter, content: resumeContent }
     );
 
     if (res.data.pdfUrl) {
       setGeneratedPdf(res.data.pdfUrl);
+      alert("PDF généré avec succès !");
     } else {
       alert("Erreur : PDF non généré.");
     }
   } catch (err) {
-    console.error(err);
+    console.error("Erreur PDF:", err);
     alert("Erreur lors de la génération du PDF.");
   }
 };
+
 
 
   // ===============================================
