@@ -43,6 +43,9 @@ app.use("/api/ranking", rankingRoutes);
 
 app.use("/api/resume", resumeRoutes);
 
+app.use("/uploads", express.static("uploads"));
+
+
 // ✅ Route test
 app.get("/", (req, res) => {
   res.send("✅ API MED-CONTEST backend en ligne ! Utilisez /api/questions ou /api/auth pour interagir.");

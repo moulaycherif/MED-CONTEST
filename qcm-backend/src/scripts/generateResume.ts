@@ -1,8 +1,8 @@
-const PDFDocument = require("pdfkit");
-const fs = require("fs");
-const path = require("path");
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
 
-module.exports = function generateResume(subject, chapter, content) {
+export default function generateResume(subject: string, chapter: string, content: string): string {
   const fileName = `${subject}_${chapter}_${Date.now()}.pdf`;
   const filePath = path.join(__dirname, "..", "uploads", fileName);
 
@@ -18,4 +18,4 @@ module.exports = function generateResume(subject, chapter, content) {
   doc.end();
 
   return "/uploads/" + fileName;
-};
+}
