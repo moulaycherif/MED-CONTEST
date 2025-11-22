@@ -7,7 +7,7 @@ const ResumeSchema = new mongoose.Schema(
     pdfUrl: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
   },
-  { collection: "resumes" }
+  { collection: "resumes" },
 );
 
 export default mongoose.model("Resume", ResumeSchema);
