@@ -13,17 +13,20 @@ router.post("/generate", async (req, res) => {
     }
 
     // Générer le PDF
-    const pdfUrl = generateResume(subject, chapter, content);
-    const fullUrl = `${req.protocol}://${req.get("host")}${pdfUrl}`;
+const pdfUrl = generateResume(subject, chapter, content);
 
-    // Sauvegarder en base
-    const resume = await Resume.create({
-      subject,
-      chapter,
-      pdfUrl
-    });
+// Construire l'URL complète accessible depuis le frontend
+// req.get("host") retourne l’host Render
+const fullUrl = `${req.protocol}://${req.get("host")}${pdfUrl}`;
 
-    res.json({ pdfUrl: fullUrl, resume });
+   // Sauvegarder en base
+const resume = await Resume.create({
+  subject,
+  chapter,
+  pdfUrl: fullUrl  // ⚠ stocker l’URL complète
+});
+
+res.json({ pdfUrl: fullUrl, resume });
 
   } catch (err) {
     console.error("Erreur génération résumé :", err);

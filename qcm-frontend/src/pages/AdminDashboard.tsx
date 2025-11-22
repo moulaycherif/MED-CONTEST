@@ -173,31 +173,32 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = details.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleGeneratePdf = async () => {
+ const handleGeneratePdf = async () => {
   if (!subject || !chapter || !resumeContent) {
     alert("Veuillez remplir toutes les informations.");
     return;
   }
 
   try {
+    // 🔥 Appel backend pour générer le PDF
     const res = await axios.post(
-      `${API_BASE_URL}/api/resumes/generate-pdf`,   // <-- CORRECTION ICI
-      { subject, chapter, content: resumeContent }
+      `${API_BASE_URL}/api/resume/generate`,
+      { subject, chapter, content: resumeContent },
+      { responseType: "blob" }   // OBLIGATOIRE pour recevoir un PDF
     );
 
-    if (res.data.pdfUrl) {
-      setGeneratedPdf(res.data.pdfUrl);
-      alert("PDF généré avec succès !");
-    } else {
-      alert("Erreur : PDF non généré.");
-    }
+    // 🔥 Créer un lien Blob pour afficher/télécharger le PDF
+    const pdfBlob = new Blob([res.data], { type: "application/pdf" });
+    const pdfUrl = window.URL.createObjectURL(pdfBlob);
+
+    setGeneratedPdf(pdfUrl);
+
+    alert("PDF généré avec succès !");
   } catch (err) {
     console.error("Erreur PDF:", err);
     alert("Erreur lors de la génération du PDF.");
   }
 };
-
-
 
   // ===============================================
   // 🧩 Rendu principal

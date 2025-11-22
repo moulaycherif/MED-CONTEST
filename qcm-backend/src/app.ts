@@ -13,9 +13,17 @@ import dotenv from "dotenv";
 
 import rankingRoutes from "./routes/rankingRoutes";
 
+
 dotenv.config({ path: "./.env" });
 
 const app = express();
+
+import fs from "fs";
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
 
 // ✅ Middleware CORS
 
