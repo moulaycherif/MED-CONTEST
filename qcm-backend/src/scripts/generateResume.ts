@@ -1,40 +1,44 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 
-export default async function generateResumeBuffer(subject: string, chapter: string, content: string) {
+export default async function generateResumeBuffer(
+  subject: string,
+  chapter: string,
+  content: string
+): Promise<Uint8Array> {
+
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage();
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const { width, height } = page.getSize();
 
-  const fontSizeTitle = 22;
-  const fontSizeHeader = 18;
-  const fontSizeText = 14;
+  let y = page.getHeight() - 40;
 
   page.drawText(subject, {
-    x: 50,
-    y: height - 50,
-    size: fontSizeTitle,
+    x: 40,
+    y,
+    size: 22,
     font,
-    color: rgb(0, 0, 0)
   });
+
+  y -= 40;
 
   page.drawText(`Chapitre : ${chapter}`, {
-    x: 50,
-    y: height - 100,
-    size: fontSizeHeader,
+    x: 40,
+    y,
+    size: 18,
     font,
   });
+
+  y -= 50;
 
   page.drawText(content, {
-    x: 50,
-    y: height - 150,
-    size: fontSizeText,
+    x: 40,
+    y,
+    size: 12,
     font,
-    maxWidth: width - 100,
-    lineHeight: 16,
+    lineHeight: 14,
+    maxWidth: page.getWidth() - 80
   });
 
-  const pdfBytes = await pdfDoc.save();
-  return Buffer.from(pdfBytes);
+  return await pdfDoc.save();
 }
