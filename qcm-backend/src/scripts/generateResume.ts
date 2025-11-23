@@ -4,7 +4,7 @@ export default async function generateResumeBuffer(
   subject: string,
   chapter: string,
   content: string
-): Promise<Uint8Array> {
+): Promise<Buffer> {
 
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage();
@@ -40,5 +40,7 @@ export default async function generateResumeBuffer(
     maxWidth: page.getWidth() - 80
   });
 
-  return await pdfDoc.save();
+  // 👉 pdfDoc.save() renvoie un Uint8Array → on convertit en Buffer
+  const uint8 = await pdfDoc.save();
+  return Buffer.from(uint8);
 }

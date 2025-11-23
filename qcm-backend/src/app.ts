@@ -13,6 +13,7 @@ import dotenv from "dotenv";
 
 import rankingRoutes from "./routes/rankingRoutes";
 
+import path from "path";
 
 dotenv.config({ path: "./.env" });
 
@@ -52,6 +53,8 @@ app.use("/api/ranking", rankingRoutes);
 app.use("/api/resume", resumeRoutes);
 
 app.use("/uploads", express.static("uploads"));
+
+app.use("/uploads/resumes", express.static(path.join(__dirname, "uploads/resumes")));
 
 
 // ✅ Route test
