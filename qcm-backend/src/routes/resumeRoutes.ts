@@ -25,7 +25,7 @@ router.post("/generate", async (req, res) => {
 
     // Génération du PDF
     const pdfBuffer = await generateResumeBuffer(subject, chapter, content);
-    const pdfBase64 = pdfBuffer.toString("base64");
+    const pdfBase64 = Buffer.from(pdfBuffer).toString("base64");
 
     // Sauvegarde
     const resume = await Resume.create({
