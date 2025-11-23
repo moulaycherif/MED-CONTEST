@@ -5,15 +5,15 @@ const ResumeSchema = new mongoose.Schema(
     subject: { type: String, required: true },
     chapter: { type: String, required: true },
 
-    // Stockage PDF
+    // PDF encodé en base64
     pdfBase64: { type: String, required: true },
 
-    // URL pour "📄 Ouvrir"
+    // URL pour Ouvrir PDF dans React
     pdfUrl: { type: String, required: true },
 
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
   },
-  { collection: "resumes" },
+  { collection: "resumes" }
 );
 
 export default mongoose.model("Resume", ResumeSchema);

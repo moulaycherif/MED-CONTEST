@@ -5,7 +5,7 @@ import Resume from "../models/resume";
 const router = express.Router();
 
 // =====================================================
-// 🔥 1. Générer et stocker le PDF (base64)
+// 🔥 1. Générer PDF + stocker en base64
 // =====================================================
 router.post("/generate", async (req, res) => {
   try {
@@ -15,7 +15,7 @@ router.post("/generate", async (req, res) => {
       return res.status(400).json({ error: "Champs manquants." });
     }
 
-    // Empêcher les doublons
+    // Empêcher les doublons (matière + chapitre)
     const exists = await Resume.findOne({ subject, chapter });
     if (exists) {
       return res.status(400).json({
@@ -23,11 +23,11 @@ router.post("/generate", async (req, res) => {
       });
     }
 
-    // Générer le PDF en mémoire
+    // Génération du PDF
     const pdfBuffer = await generateResumeBuffer(subject, chapter, content);
     const pdfBase64 = pdfBuffer.toString("base64");
 
-    // Enregistrer en base
+    // Sauvegarde
     const resume = await Resume.create({
       subject,
       chapter,
@@ -35,20 +35,20 @@ router.post("/generate", async (req, res) => {
       pdfUrl: `/api/resume/download/${subject}_${chapter}`,
     });
 
-    return res.json({
+    res.json({
       message: "PDF généré avec succès",
-      _id: resume._id,
+      id: resume._id,
       pdfUrl: resume.pdfUrl,
     });
 
   } catch (err) {
-    console.error("Erreur génération résumé :", err);
-    res.status(500).json({ error: "Erreur génération du PDF." });
+    console.error("Erreur génération PDF :", err);
+    res.status(500).json({ error: "Erreur lors de la génération du PDF." });
   }
 });
 
 // =====================================================
-// 🔥 2. Route : Télécharger PDF depuis le base64
+// 🔥 2. Télécharger PDF (depuis base64)
 // =====================================================
 router.get("/download/:key", async (req, res) => {
   try {
@@ -56,7 +56,6 @@ router.get("/download/:key", async (req, res) => {
     const [subject, chapter] = key.split("_");
 
     const resume = await Resume.findOne({ subject, chapter });
-
     if (!resume || !resume.pdfBase64) {
       return res.status(404).json({ error: "PDF introuvable." });
     }
@@ -68,11 +67,11 @@ router.get("/download/:key", async (req, res) => {
       "Content-Disposition": `inline; filename=${subject}_${chapter}.pdf`,
     });
 
-    return res.send(pdfBuffer);
+    res.send(pdfBuffer);
 
   } catch (err) {
     console.error("Erreur /download :", err);
-    res.status(500).json({ error: "Erreur téléchargement PDF." });
+    res.status(500).json({ error: "Erreur lors du téléchargement." });
   }
 });
 
@@ -85,7 +84,7 @@ router.get("/list", async (req, res) => {
     res.json(resumes);
   } catch (err) {
     console.error("Erreur /list :", err);
-    res.status(500).json({ error: "Erreur chargement résumés." });
+    res.status(500).json({ error: "Erreur chargement des résumés." });
   }
 });
 
