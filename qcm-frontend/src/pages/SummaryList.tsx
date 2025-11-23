@@ -41,7 +41,7 @@ const SummaryList: React.FC = () => {
               <td className="border px-2 py-1">{r.subject}</td>
               <td className="border px-2 py-1">{r.chapter}</td>
               <td className="border px-2 py-1">
-                <a href={r.pdfUrl} target="_blank" className="text-blue-600 underline">📄 Ouvrir</a>
+                <a href={`${API_BASE_URL}${r.pdfUrl}`} target="_blank" className="text-blue-600 underline">📄 Ouvrir</a>
               </td>
               <td className="border px-2 py-1">
                 {new Date(r.createdAt).toLocaleString()}
