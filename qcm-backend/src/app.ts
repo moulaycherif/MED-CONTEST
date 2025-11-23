@@ -25,6 +25,10 @@ if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
+if (!fs.existsSync("uploads/resumes")) {
+  fs.mkdirSync("uploads/resumes", { recursive: true });
+}
+
 
 // ✅ Middleware CORS
 

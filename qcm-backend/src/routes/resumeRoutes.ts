@@ -1,12 +1,15 @@
 import express from "express";
+import { Buffer } from "buffer";
+import fs from "fs";
+import path from "path";
 import generateResumeBuffer from "../scripts/generateResume";
 import Resume from "../models/resume";
 
 const router = express.Router();
 
-// =====================================================
-// 🔥 1. Générer PDF + stocker en base64
-// =====================================================
+// ================================================
+// 1️⃣ Générer PDF et le sauvegarder physiquement
+// ================================================
 router.post("/generate", async (req, res) => {
   try {
     const { subject, chapter, content } = req.body;
@@ -15,31 +18,27 @@ router.post("/generate", async (req, res) => {
       return res.status(400).json({ error: "Champs manquants." });
     }
 
-    // Empêcher les doublons (matière + chapitre)
-    const exists = await Resume.findOne({ subject, chapter });
-    if (exists) {
-      return res.status(400).json({
-        error: "Un résumé pour cette matière et ce chapitre existe déjà.",
-      });
-    }
-
-    // Génération du PDF
+    // PDF buffer
     const pdfBuffer = await generateResumeBuffer(subject, chapter, content);
-    const pdfBase64 = Buffer.from(pdfBuffer).toString("base64");
 
-    // Sauvegarde
-    const resume = await Resume.create({
+    // Nom fichier
+    const safeName = `${subject}_${chapter}`.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const filePath = path.join(process.cwd(), "uploads/resumes", `${safeName}.pdf`);
+
+    // Sauvegarde physique
+    fs.writeFileSync(filePath, pdfBuffer);
+
+    // URL accessible via frontend
+    const pdfUrl = `/uploads/resumes/${safeName}.pdf`;
+
+    // Sauvegarde en base
+    await Resume.create({
       subject,
       chapter,
-      pdfBase64,
-      pdfUrl: `/api/resume/download/${subject}_${chapter}`,
+      pdfUrl,
     });
 
-    res.json({
-      message: "PDF généré avec succès",
-      id: resume._id,
-      pdfUrl: resume.pdfUrl,
-    });
+    res.json({ success: true, pdfUrl });
 
   } catch (err) {
     console.error("Erreur génération PDF :", err);
@@ -47,45 +46,25 @@ router.post("/generate", async (req, res) => {
   }
 });
 
-// =====================================================
-// 🔥 2. Télécharger PDF (depuis base64)
-// =====================================================
-router.get("/download/:key", async (req, res) => {
+// ================================================
+// 2️⃣ Liste des résumés
+// ================================================
+router.get("/list", async (req, res) => {
   try {
-    const key = req.params.key;
-    const [subject, chapter] = key.split("_");
-
-    const resume = await Resume.findOne({ subject, chapter });
-    if (!resume || !resume.pdfBase64) {
-      return res.status(404).json({ error: "PDF introuvable." });
-    }
-
-    const pdfBuffer = Buffer.from(resume.pdfBase64, "base64");
-
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename=${subject}_${chapter}.pdf`,
-    });
-
-    res.send(pdfBuffer);
-
+    const items = await Resume.find().sort({ createdAt: -1 });
+    res.json(items);
   } catch (err) {
-    console.error("Erreur /download :", err);
-    res.status(500).json({ error: "Erreur lors du téléchargement." });
+    console.error("Erreur /list :", err);
+    res.status(500).json({ error: "Erreur lors du chargement des résumés." });
   }
 });
 
-// =====================================================
-// 🔥 3. Liste des résumés
-// =====================================================
-router.get("/list", async (req, res) => {
-  try {
-    const resumes = await Resume.find().sort({ createdAt: -1 });
-    res.json(resumes);
-  } catch (err) {
-    console.error("Erreur /list :", err);
-    res.status(500).json({ error: "Erreur chargement des résumés." });
-  }
+// ================================================
+// 3️⃣ Télécharger un PDF
+// ================================================
+router.get("/download/:filename", (req, res) => {
+  const file = path.join(__dirname, "../uploads/resumes", req.params.filename);
+  res.download(file);
 });
 
 export default router;
