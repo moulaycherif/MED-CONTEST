@@ -15,7 +15,9 @@ import rankingRoutes from "./routes/rankingRoutes";
 
 import path from "path";
 
-dotenv.config({ path: "./.env" });
+dotenv.config();
+
+// dotenv.config({ path: "./.env" });
 
 const app = express();
 
