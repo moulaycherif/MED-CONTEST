@@ -51,5 +51,14 @@ router.post("/generate", async (req, res) => {
     return res.status(500).json({ error: "Erreur lors de la génération du PDF." });
   }
 });
+router.get("/all", async (req, res) => {
+  try {
+    const resumes = await Resume.find().sort({ createdAt: -1 });
+    return res.json(resumes);
+  } catch (err) {
+    console.error("Erreur fetch resumes :", err);
+    return res.status(500).json({ error: "Erreur lors du chargement des résumés." });
+  }
+});
 
 export default router;
