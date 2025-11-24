@@ -14,7 +14,7 @@ const SummaryList: React.FC = () => {
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
 
   const fetchResumes = async () => {
-    const res = await axios.get(`${API_BASE_URL}/api/resume/list`);
+    const res = await axios.get(`${API_BASE_URL}/api/resume/all`);
     setResumes(res.data);
   };
 
@@ -36,12 +36,19 @@ const SummaryList: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {resumes.map(r => (
+          {resumes.map((r) => (
             <tr key={r._id} className="text-sm">
               <td className="border px-2 py-1">{r.subject}</td>
               <td className="border px-2 py-1">{r.chapter}</td>
               <td className="border px-2 py-1">
-                <a href={`${API_BASE_URL}${r.pdfUrl}`} target="_blank" className="text-blue-600 underline">📄 Ouvrir</a>
+                <a
+                  href={r.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  📄 Ouvrir
+                </a>
               </td>
               <td className="border px-2 py-1">
                 {new Date(r.createdAt).toLocaleString()}
