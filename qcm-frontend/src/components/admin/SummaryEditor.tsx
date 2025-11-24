@@ -13,8 +13,15 @@ export default function SummaryEditor() {
       return;
     }
 
-    const url = await generateResumePDF(subject, chapter, content);
-    setPdfUrl(url);
+    const generatedUrl = await generateResumePDF(subject, chapter, content);
+
+    if (!generatedUrl) {
+      alert("Erreur lors de la génération du PDF.");
+      return;
+    }
+
+    setPdfUrl(generatedUrl);
+    alert("PDF généré avec succès !");
   };
 
   return (
@@ -58,8 +65,24 @@ export default function SummaryEditor() {
       {pdfUrl && (
         <div className="mt-4">
           <p className="font-semibold">PDF généré :</p>
-          <a href={pdfUrl} className="text-blue-600 underline" target="_blank">
-            📥 Télécharger / Voir le PDF
+
+          {/* Ouvrir */}
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline mr-4"
+          >
+            📄 Ouvrir le PDF
+          </a>
+
+          {/* Télécharger */}
+          <a
+            href={pdfUrl}
+            download
+            className="text-green-600 underline"
+          >
+            📥 Télécharger
           </a>
         </div>
       )}

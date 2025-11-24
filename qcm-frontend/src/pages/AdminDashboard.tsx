@@ -437,12 +437,12 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
   <div>
     <h2 className="text-2xl font-bold mb-4">📝 Résumés</h2>
 
-    {/* === 1. Liste des résumés === */}
+    {/* 1. Liste des résumés */}
     <SummaryList />
 
     <hr className="my-6" />
 
-    {/* === 2. Éditeur de nouveaux résumés === */}
+    {/* 2. Création d’un nouveau résumé */}
     <div className="mt-6">
       <h3 className="text-xl font-bold mb-4">➕ Créer un nouveau résumé</h3>
 
@@ -474,7 +474,32 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
       ></textarea>
 
       <button
-        onClick={handleGeneratePdf}
+        onClick={async () => {
+          if (!subject || !chapter || !resumeContent) {
+            alert("Veuillez remplir toutes les informations.");
+            return;
+          }
+
+          try {
+            const res = await axios.post(
+              `${API_BASE_URL}/api/resume/generate`,
+              { subject, chapter, content: resumeContent }
+            );
+
+            const finalUrl = res.data?.url;
+
+            if (!finalUrl) {
+              alert("Erreur : URL non reçue.");
+              return;
+            }
+
+            setGeneratedPdf(finalUrl);
+            alert("PDF généré avec succès !");
+          } catch (err) {
+            console.error("Erreur PDF:", err);
+            alert("Erreur lors de la génération du PDF.");
+          }
+        }}
         className="bg-green-600 text-white px-4 py-2 rounded mt-4 hover:bg-green-700"
       >
         📄 Générer PDF
@@ -482,18 +507,28 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
 
       {generatedPdf && (
         <div className="mt-4">
+          {/* Ouvrir */}
           <a
             href={generatedPdf}
             target="_blank"
-            className="text-blue-600 underline"
+            className="text-blue-600 underline mr-4"
           >
-            📥 Télécharger le PDF
+            📄 Ouvrir le PDF
+          </a>
+
+          {/* Télécharger */}
+          <a
+            href={generatedPdf}
+            download
+            className="text-green-600 underline"
+          >
+            📥 Télécharger
           </a>
         </div>
       )}
-       </div>
-        </div>
-  )}
+    </div>
+  </div>
+)}
 
     </div>
   );
