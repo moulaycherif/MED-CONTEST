@@ -42,7 +42,7 @@ const SummaryList: React.FC = () => {
               <td className="border px-2 py-1">{r.chapter}</td>
               <td className="border px-2 py-1">
                 <a
-                  href={r.pdfUrl}
+                  href={r.pdfUrl + "?v=" + Date.now()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline"
