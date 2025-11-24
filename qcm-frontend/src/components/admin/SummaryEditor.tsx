@@ -13,14 +13,25 @@ export default function SummaryEditor() {
       return;
     }
 
-    const generatedUrl = await generateResumePDF(subject, chapter, content);
+   const generatedUrl = await generateResumePDF(subject, chapter, content);
 
-    if (!generatedUrl) {
-      alert("Erreur lors de la génération du PDF.");
-      return;
-    }
+// debug : log la réponse retournée par ta fonction API
+console.log("generateResumePDF returned:", generatedUrl);
 
-    setPdfUrl(generatedUrl);
+// generatedUrl doit être soit une string, soit un objet selon ton implémentation.
+// Si generateResumePDF renvoie l'objet axios.res.data, adapte ainsi :
+const finalUrl =
+  typeof generatedUrl === "string"
+    ? generatedUrl
+    : generatedUrl?.pdfUrl || generatedUrl?.url || null;
+
+if (!finalUrl) {
+  alert("Erreur lors de la génération du PDF : URL non reçue.");
+  return;
+}
+
+setPdfUrl(finalUrl);
+
     alert("PDF généré avec succès !");
   };
 
