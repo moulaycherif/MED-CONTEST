@@ -493,10 +493,17 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
               { subject, chapter, content: resumeContent }
             );
 
-            const finalUrl = res.data?.url;
+            console.log("Backend response:", res.data);
+
+            // Le backend renvoie => pdfUrl
+            const finalUrl =
+              res.data?.pdfUrl ||  // priorité
+              res.data?.url ||     // fallback
+              null;
 
             if (!finalUrl) {
               alert("Erreur : URL non reçue.");
+              console.error("Données renvoyées:", res.data);
               return;
             }
 
@@ -513,16 +520,19 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
       </button>
 
       {generatedPdf && (
-  <div className="mt-4">
-    <a href={generatedPdf} target="_blank" className="text-blue-600 underline mr-4">📄 Ouvrir le PDF</a>
-    <a href={generatedPdf} download className="text-green-600 underline">📥 Télécharger</a>
-  </div>
-)}
+        <div className="mt-4">
+          <a href={generatedPdf} target="_blank" className="text-blue-600 underline mr-4">
+            📄 Ouvrir le PDF
+          </a>
+          <a href={generatedPdf} download className="text-green-600 underline">
+            📥 Télécharger
+          </a>
+        </div>
+      )}
 
     </div>
   </div>
 )}
-
     </div>
   );
 };
