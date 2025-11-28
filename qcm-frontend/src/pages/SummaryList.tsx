@@ -14,12 +14,26 @@ const SummaryList: React.FC = () => {
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
 
   const fetchResumes = async () => {
-    const res = await axios.get(`${API_BASE_URL}/api/resume/all`);
-    setResumes(res.data);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/resume/all`);
+      setResumes(res.data);
+    } catch (err) {
+      console.error("Erreur lors du chargement des résumés :", err);
+    }
   };
 
   useEffect(() => {
+    // Initial load
     fetchResumes();
+
+    // Auto-refresh on global event
+    const onUpdated = () => fetchResumes();
+    window.addEventListener("resumesUpdated", onUpdated);
+
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener("resumesUpdated", onUpdated);
+    };
   }, []);
 
   return (
