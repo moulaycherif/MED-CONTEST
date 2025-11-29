@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
-interface Summary {
+interface ResumeItem {
   _id: string;
-  title: string;
   subject: string;
   chapter: string;
   pdfUrl: string;
@@ -12,130 +11,50 @@ interface Summary {
 }
 
 const SummaryList: React.FC = () => {
-  const [summaries, setSummaries] = useState<Summary[]>([]);
-  const [filtered, setFiltered] = useState<Summary[]>([]);
-  const [subjects, setSubjects] = useState<string[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [resumes, setResumes] = useState<ResumeItem[]>([]);
+
+  const fetchResumes = async () => {
+    const res = await axios.get(`${API_BASE_URL}/api/resume/all`);
+    setResumes(res.data);
+  };
 
   useEffect(() => {
-    fetchSummaries();
+    fetchResumes();
   }, []);
 
-  // Charger tous les résumés
-  const fetchSummaries = async () => {
-    try {
-      const response = await axios.get("https://med-contest-backend.onrender.com/api/summary");
-      const allSummaries = response.data;
-
-      setSummaries(allSummaries);
-      setFiltered(allSummaries);
-
-      // Extraire les matières uniques
-      const uniqueSubjects = [...new Set(allSummaries.map((s: Summary) => s.subject))];
-      setSubjects(uniqueSubjects);
-    } catch (err) {
-      console.error("Erreur chargement résumés:", err);
-    }
-  };
-
-  // Appliquer filtre
-  const filterBySubject = (subject: string) => {
-    setSelectedSubject(subject);
-
-    if (subject === "") {
-      setFiltered(summaries);
-    } else {
-      setFiltered(summaries.filter((s) => s.subject === subject));
-    }
-  };
-
-  // Supprimer un résumé
-  const deleteSummary = async (id: string) => {
-    if (!window.confirm("Confirmer la suppression ?")) return;
-
-    try {
-      await axios.delete(`https://med-contest-backend.onrender.com/api/summary/${id}`);
-      setSummaries(summaries.filter((s) => s._id !== id));
-      setFiltered(filtered.filter((s) => s._id !== id));
-    } catch (err) {
-      console.error("Erreur suppression:", err);
-    }
-  };
-
   return (
-    <div className="p-6">
+    <div>
+      <h2 className="text-2xl font-bold mb-4">📚 Liste des Résumés Générés</h2>
 
-      <h1 className="text-2xl font-bold mb-4 text-center">Liste des Résumés (ADMIN)</h1>
-
-      {/* FILTRE PAR MATIÈRE */}
-      <div className="mb-5 w-full flex justify-center">
-        <select
-          value={selectedSubject}
-          onChange={(e) => filterBySubject(e.target.value)}
-          className="border border-gray-400 p-2 rounded-lg bg-white shadow-sm"
-        >
-          <option value="">Toutes les matières</option>
-          {subjects.map((subj) => (
-            <option key={subj} value={subj}>
-              {subj}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* TABLEAU */}
-      <table className="w-full border-collapse border border-gray-300">
+      <table className="w-full border border-gray-300">
         <thead className="bg-gray-200">
           <tr>
-            <th className="border p-2">Titre</th>
-            <th className="border p-2">Matière</th>
-            <th className="border p-2">Chapitre</th>
-            <th className="border p-2">PDF</th>
-            <th className="border p-2">Date</th>
-            <th className="border p-2">Actions</th>
+            <th className="border px-2 py-1">Matière</th>
+            <th className="border px-2 py-1">Chapitre</th>
+            <th className="border px-2 py-1">PDF</th>
+            <th className="border px-2 py-1">Date</th>
           </tr>
         </thead>
-
         <tbody>
-          {filtered.map((s) => (
-            <tr key={s._id} className="text-center">
-              <td className="border p-2">{s.title}</td>
-              <td className="border p-2">{s.subject}</td>
-              <td className="border p-2">{s.chapter}</td>
-
-              <td className="border p-2">
+          {resumes.map((r) => (
+            <tr key={r._id} className="text-sm">
+              <td className="border px-2 py-1">{r.subject}</td>
+              <td className="border px-2 py-1">{r.chapter}</td>
+              <td className="border px-2 py-1">
                 <a
-                  href={s.pdfUrl}
+                  href={r.pdfUrl + "?v=" + Date.now()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline"
                 >
-                  Ouvrir PDF
+                  📄 Ouvrir
                 </a>
               </td>
-
-              <td className="border p-2">
-                {new Date(s.createdAt).toLocaleDateString()}
-              </td>
-
-              <td className="border p-2">
-                <button
-                  onClick={() => deleteSummary(s._id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                >
-                  Supprimer
-                </button>
+              <td className="border px-2 py-1">
+                {new Date(r.createdAt).toLocaleString()}
               </td>
             </tr>
           ))}
-
-          {filtered.length === 0 && (
-            <tr>
-              <td colSpan={6} className="text-center p-4 text-gray-500">
-                Aucun résumé trouvé pour cette matière
-              </td>
-            </tr>
-          )}
         </tbody>
       </table>
     </div>
