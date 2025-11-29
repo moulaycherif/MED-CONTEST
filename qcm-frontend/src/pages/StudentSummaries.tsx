@@ -10,73 +10,45 @@ interface ResumeItem {
   createdAt: string;
 }
 
-interface Props {
-  subject: string; // 👉 Matière déjà sélectionnée dans StudentPage
-}
-
-const StudentSummaries: React.FC<Props> = ({ subject }) => {
+const StudentSummaries: React.FC = () => {
+  const [subject, setSubject] = useState("");
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
-  const [filtered, setFiltered] = useState<ResumeItem[]>([]);
-  const [filterOption, setFilterOption] = useState("ALL");
 
-  const fetchBySubject = async () => {
-    if (!subject) return;
+  const fetchBySubject = async (sub: string) => {
+    if (!sub) return;
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/resume/by-subject/${subject}`);
+      const res = await axios.get(`${API_BASE_URL}/api/resume/by-subject/${sub}`);
       setResumes(res.data);
-      setFiltered(res.data);
     } catch (err) {
-      console.error("Erreur fetch résumés étudiant :", err);
+      console.error("Erreur fetch by subject :", err);
     }
   };
 
   useEffect(() => {
-    fetchBySubject();
+    if (subject) fetchBySubject(subject);
   }, [subject]);
 
-  // 🔍 Filtrage A / B / C / ALL
-  useEffect(() => {
-    if (filterOption === "ALL") {
-      setFiltered(resumes);
-    } else {
-      setFiltered(resumes.filter((r) => r.chapter.includes(filterOption)));
-    }
-  }, [filterOption, resumes]);
-
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-3">📘 Résumés — {subject}</h2>
+    <div>
+      <h2 className="text-xl font-bold mb-3">📘 Résumés par matière</h2>
 
-      {/* Filtres A B C */}
-      <div className="flex gap-3 mb-4">
-        <button
-          onClick={() => setFilterOption("ALL")}
-          className={`px-4 py-2 rounded-lg ${filterOption === "ALL" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-        >
-          Tous
-        </button>
+      <select
+        className="border px-3 py-2 mb-4"
+        onChange={(e) => setSubject(e.target.value)}
+      >
+        <option value="">-- Choisir une matière --</option>
+        <option value="Mathématique">Mathématique</option>
+        <option value="Physique">Physique</option>
+        <option value="Chimie">Chimie</option>
+        <option value="SVT">SVT</option>
+        {/* ajoute toutes tes matières */}
+      </select>
 
-        <button
-          onClick={() => setFilterOption("A")}
-          className={`px-4 py-2 rounded-lg ${filterOption === "A" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-        >
-          A
-        </button>
-
-        <button
-          onClick={() => setFilterOption("B")}
-          className={`px-4 py-2 rounded-lg ${filterOption === "B" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-        >
-          B
-        </button>
-
-        <button
-          onClick={() => setFilterOption("C")}
-          className={`px-4 py-2 rounded-lg ${filterOption === "C" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-        >
-          C
-        </button>
-      </div>
+      {subject && (
+        <h3 className="text-lg font-semibold mb-2">
+          Résumés disponibles : {subject}
+        </h3>
+      )}
 
       <table className="w-full border border-gray-300">
         <thead className="bg-gray-200">
@@ -88,7 +60,7 @@ const StudentSummaries: React.FC<Props> = ({ subject }) => {
         </thead>
 
         <tbody>
-          {filtered.map((r) => (
+          {resumes.map((r) => (
             <tr key={r._id} className="text-sm">
               <td className="border px-2 py-1">{r.chapter}</td>
               <td className="border px-2 py-1">
@@ -97,7 +69,7 @@ const StudentSummaries: React.FC<Props> = ({ subject }) => {
                   target="_blank"
                   className="text-blue-600 underline"
                 >
-                  📄 Voir
+                  📄 Ouvrir
                 </a>
               </td>
               <td className="border px-2 py-1">
@@ -106,10 +78,10 @@ const StudentSummaries: React.FC<Props> = ({ subject }) => {
             </tr>
           ))}
 
-          {filtered.length === 0 && (
+          {resumes.length === 0 && subject && (
             <tr>
               <td className="border px-2 py-3 text-center" colSpan={3}>
-                Aucun résumé disponible.
+                Aucun résumé disponible pour cette matière.
               </td>
             </tr>
           )}

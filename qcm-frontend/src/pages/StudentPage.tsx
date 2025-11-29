@@ -14,8 +14,6 @@ import bgImage from "/Image3.jfif";
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
 import { fetchAstucesByChapitre, Astuce } from "../api/api";
 
-import StudentResumeList from "../components/StudentResumeList";
-
 
 interface Question {
   _id: string;
@@ -265,17 +263,17 @@ if (selectedAction === "Astuces") {
 }
 
         if (selectedAction === "Résumé") {
-  return (
-    <div className="p-6">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        📘 {selectedChapitre} — Résumés disponibles
-      </h2>
-
-      <StudentResumeList selectedSubject={selectedMatiere} selectedChapitre={selectedChapitre} />
-    </div>
-  );
-}
-
+          return (
+            <div className="flex flex-col items-center justify-center gap-6 mt-10">
+              <h2 className="text-2xl font-bold mb-4">{selectedChapitre} — Résumé</h2>
+              <iframe
+                src={`/pdf/${selectedChapitre.replace(/[:&]/g, '').replace(/\s+/g, '_')}.pdf`}
+                className="w-3/4 h-[80vh] border-2 border-gray-400 rounded-xl shadow-lg"
+                title="Résumé PDF"
+              />
+            </div>
+          );
+        }
 
         // ✅ Mini Quiz
         const quiz = [
