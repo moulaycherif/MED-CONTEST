@@ -439,7 +439,7 @@ const AdminDashboard: React.FC = () => {
 
           <hr className="my-6" />
 
-          <h3 className="text-xl font-bold mb-4">➕ Créer un résumé</h3>
+          <h3 className="text-xl font-bold mb-4">➕ Créer un résumé PDF</h3>
 
           <div className="mb-4">
             <label className="mr-4">
