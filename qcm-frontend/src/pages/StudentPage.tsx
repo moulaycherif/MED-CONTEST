@@ -14,11 +14,7 @@ import bgImage from "/Image3.jfif";
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
 import { fetchAstucesByChapitre, Astuce } from "../api/api";
 
-<<<<<<< HEAD
 import StudentSummaries from "./StudentSummaries";
-=======
-import StudentResumeList from "../components/StudentResumeList";
->>>>>>> 4b100c7d774e2bcc479d33dc15816faa6b01b07a
 
 
 interface Question {
@@ -275,11 +271,7 @@ if (selectedAction === "Astuces") {
         📘 {selectedChapitre} — Résumés disponibles
       </h2>
 
-<<<<<<< HEAD
       <StudentSummaries selectedSubject={selectedMatiere} selectedChapitre={selectedChapitre} />
-=======
-      <StudentResumeList selectedSubject={selectedMatiere} selectedChapitre={selectedChapitre} />
->>>>>>> 4b100c7d774e2bcc479d33dc15816faa6b01b07a
     </div>
   );
 }
