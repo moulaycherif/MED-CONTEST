@@ -3,12 +3,10 @@ import generateResumeBuffer from "../scripts/generateResume";
 import Resume from "../models/resume";
 import { supabase } from "../utils/supabase";
 import dotenv from "dotenv";
+import { upload } from "../utils/multerConfig";
 
 dotenv.config();
 const router = express.Router();
-
-
-import { upload } from "../utils/multerConfig";
 
 router.post("/generate", upload.single("file"), async (req, res) => {
 
