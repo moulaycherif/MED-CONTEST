@@ -1,65 +1,46 @@
-import React, { useState, useEffect } from "react";
+// src/pages/AdminDashboard.tsx
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import SummaryList from "./SummaryList";
 
-
-
-// ✅ Fonction universelle de déconnexion
+// Déconnexion
 function logout() {
-  try {
-    // 🔹 Supprime tous les tokens potentiels
-    localStorage.removeItem("token");
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("studentToken");
-
-    // 🔹 (Optionnel) vider tout le localStorage
-    // localStorage.clear();
-
-    // 🔹 Supprimer les cookies auth éventuels
-    document.cookie.split(";").forEach(function (c) {
-      document.cookie =
-        c.trim().split("=")[0] +
-        "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-    });
-
-    // 🔹 Redirection vers la page d’accueil
-    window.location.href = "/";
-  } catch (err) {
-    console.error("Erreur pendant la déconnexion :", err);
-  }
-}
-
-interface Student {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface ImportResult {
-  question: string;
-  status: "✅" | "❌";
-  details?: string[];
+  localStorage.removeItem("token");
+  localStorage.removeItem("adminToken");
+  localStorage.removeItem("studentToken");
+  document.cookie.split(";").forEach(function (c) {
+    document.cookie =
+      c.trim().split("=")[0] +
+      "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+  });
+  window.location.href = "/";
 }
 
 const AdminDashboard: React.FC = () => {
+  
+  // Résumés
+  const [subject, setSubject] = useState("");
+  const [chapter, setChapter] = useState("");
+  const [resumeContent, setResumeContent] = useState("");
+  const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
 
-  // Résumé
-const [subject, setSubject] = useState("");
-const [chapter, setChapter] = useState("");
-const [resumeContent, setResumeContent] = useState("");
-const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
- 
-  const [activeTab, setActiveTab] = useState<"students" | "import" | "summary">("students");
- 
-  // ---------- Gestion Étudiants ----------
-  const [students, setStudents] = useState<Student[]>([]);
+  const [uploadPdfFile, setUploadPdfFile] = useState<File | null>(null);
+  const [creationMode, setCreationMode] = useState<"text" | "upload">("text");
+
+   // Onglets
+  const [activeTab, setActiveTab] = useState<
+    "students" | "import" | "summary"
+  >("students");
+
+  // Étudiants
+  const [students, setStudents] = useState<any[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  // ---------- Import Questions ----------
+  // Import
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<"append" | "replace" | "replace-global">("append");
   const [importMessage, setImportMessage] = useState<string>("");
@@ -75,6 +56,7 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
   // 📘 SECTION : ÉTUDIANTS
   // ===============================================
 
+  // Chargement étudiants
   const fetchStudents = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/admin/students`, {
@@ -87,6 +69,7 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
     }
   };
 
+  // Création étudiant
   const handleCreateStudent = async () => {
     if (!name || !email || !password) {
       setMessage("⚠️ Veuillez remplir tous les champs");
@@ -110,6 +93,7 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
     }
   };
 
+  // Supprimer étudiant
   const handleDeleteStudent = async (id: string) => {
     if (!confirm("Supprimer cet étudiant ?")) return;
     try {
@@ -128,6 +112,7 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
   // 📘 SECTION : IMPORT DES QUESTIONS
   // ===============================================
 
+  // Chargement examens
   const fetchExams = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/questions/exams`);
@@ -137,6 +122,7 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
     }
   };
 
+  // Import Excel
   const handleUpload = async () => {
     if (!file) {
       setImportMessage("⚠️ Veuillez choisir un fichier Excel");
@@ -173,48 +159,77 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = details.slice(startIndex, startIndex + itemsPerPage);
 
- const handleGeneratePdf = async () => {
-  if (!subject || !chapter || !resumeContent) {
-    alert("Veuillez remplir toutes les informations.");
+  // ----------------------------------------------
+  // 🔥 Système complet pour créer un résumé
+  // ----------------------------------------------
+
+  const createResumeFromText = async () => {
+    if (!subject || !chapter || !resumeContent) {
+      alert("Veuillez remplir tous les champs.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/resume/generate`, {
+        subject,
+        chapter,
+        content: resumeContent,
+      }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined },
+      });
+
+      const finalUrl = res.data?.pdfUrl || res.data?.url;
+      if (!finalUrl) return alert("Erreur : URL manquante.");
+
+      setGeneratedPdf(finalUrl);
+      alert(res.data?.alreadyExists ? "Résumé déjà existant, URL renvoyée." : "PDF généré et uploadé !");
+      // informer les listes pour rafraîchir
+      window.dispatchEvent(new Event("resumesUpdated"));
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la génération.");
+    }
+  };
+
+  const createResumeFromUpload = async () => {
+  if (!subject || !chapter || !uploadPdfFile) {
+    alert("Veuillez remplir tous les champs.");
     return;
   }
 
   try {
-    // NOTE: ne pas demander responseType: 'blob' — on veut la JSON qui contient l'URL
-    const res = await axios.post(`${API_BASE_URL}/api/resume/generate`, {
-      subject,
-      chapter,
-      content: resumeContent
-    });
+    const formData = new FormData();
+    formData.append("file", uploadPdfFile);
+    formData.append("subject", subject);
+    formData.append("chapter", chapter);
 
-    console.log("backend response for generate:", res.data);
+    const res = await axios.post(
+      `${API_BASE_URL}/api/resume/upload`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data", Authorization: token ? `Bearer ${token}` : undefined } }
+    );
 
-    // backend renvoie pdfUrl et url (on prend pdfUrl d'abord)
-    const finalUrl = res.data?.pdfUrl || res.data?.url || null;
+    const finalUrl = res.data?.pdfUrl || res.data?.url;
 
     if (!finalUrl) {
-      alert("Erreur : URL non reçue.");
-      console.error("Response data missing url:", res.data);
+      alert("Erreur : URL non reçue après upload.");
       return;
     }
 
     setGeneratedPdf(finalUrl);
-    alert("PDF généré avec succès !");
+    alert(res.data?.alreadyExists ? "Le PDF existe déjà (URL récupérée)." : "PDF uploadé avec succès !");
+    window.dispatchEvent(new Event("resumesUpdated"));
+
   } catch (err) {
-    console.error("Erreur PDF:", err);
-    alert("Erreur lors de la génération du PDF.");
+    console.error(err);
+    alert("Erreur upload PDF.");
   }
 };
 
 
-  // ===============================================
-  // 🧩 Rendu principal
-  // ===============================================
-
   return (
     <div className="p-6 max-w-6xl mx-auto">
-
-      {/* ✅ Header avec bouton de déconnexion */}
+      {/* header / onglets (inchangés) */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-center flex-1">
           👩‍🏫 Tableau de bord Enseignant
@@ -228,36 +243,12 @@ const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
         </button>
       </div>
 
-      {/* Onglets */}
+      {/* onglets (simplifié pour la démonstration) */}
       <div className="flex justify-center gap-4 mb-8">
-        <button
-          onClick={() => setActiveTab("students")}
-          className={`px-4 py-2 rounded ${
-            activeTab === "students" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
-        >
-          🧑‍🎓 Gestion des étudiants
-        </button>
-        <button
-          onClick={() => setActiveTab("import")}
-          className={`px-4 py-2 rounded ${
-            activeTab === "import" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
-        >
-          📂 Import des questions
-        </button>
-
-        <button
-  onClick={() => setActiveTab("summary")}
-  className={`px-4 py-2 rounded ${
-    activeTab === "summary" ? "bg-blue-600 text-white" : "bg-gray-200"
-  }`}
->
-  📝 Résumés
-</button>
-
-</div>
-     
+        <button onClick={() => setActiveTab("students")} className={`px-4 py-2 rounded ${activeTab === "students" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>🧑‍🎓 Étudiants</button>
+        <button onClick={() => setActiveTab("import")} className={`px-4 py-2 rounded ${activeTab === "import" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>📂 Import Questions</button>
+        <button onClick={() => setActiveTab("summary")} className={`px-4 py-2 rounded ${activeTab === "summary" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>📝 Résumés</button>
+      </div>
 
       {/* ----------- Onglet Étudiants ----------- */}
       {activeTab === "students" && (
