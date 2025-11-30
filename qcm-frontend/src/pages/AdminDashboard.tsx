@@ -245,9 +245,9 @@ const AdminDashboard: React.FC = () => {
 
       {/* onglets (simplifié pour la démonstration) */}
       <div className="flex justify-center gap-4 mb-8">
-        <button onClick={() => setActiveTab("students")} className={`px-4 py-2 rounded ${activeTab === "students" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>🧑‍🎓 Étudiants</button>
+        <button onClick={() => setActiveTab("students")} className={`px-4 py-2 rounded ${activeTab === "students" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>🧑‍🎓 Gestion des étudiants</button>
         <button onClick={() => setActiveTab("import")} className={`px-4 py-2 rounded ${activeTab === "import" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>📂 Import Questions</button>
-        <button onClick={() => setActiveTab("summary")} className={`px-4 py-2 rounded ${activeTab === "summary" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>📝 Résumés</button>
+        <button onClick={() => setActiveTab("summary")} className={`px-4 py-2 rounded ${activeTab === "summary" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>📝 Gestion des résumés</button>
       </div>
 
       {/* ----------- Onglet Étudiants ----------- */}
