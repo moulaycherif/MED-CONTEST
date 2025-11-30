@@ -432,95 +432,56 @@ const AdminDashboard: React.FC = () => {
 
    {/* ----------- Onglet Summary ----------- */}
 {activeTab === "summary" && (
-  <div>
-    <h2 className="text-2xl font-bold mb-4">📝 Résumés</h2>
+        <div>
+          <h2 className="text-2xl font-bold mb-4">📝 Gestion des résumés</h2>
 
-    {/* 1. Liste des résumés */}
-    <SummaryList />
+          <SummaryList />
 
-    <hr className="my-6" />
+          <hr className="my-6" />
 
-    {/* 2. Création d’un nouveau résumé */}
-    <div className="mt-6">
-      <h3 className="text-xl font-bold mb-4">➕ Créer un nouveau résumé</h3>
+          <h3 className="text-xl font-bold mb-4">➕ Créer un résumé</h3>
 
-      <div className="mb-4">
-        <label className="font-semibold">Matière :</label>
-        <input
-          type="text"
-          className="border px-2 py-1 ml-2"
-          value={subject}
-          onChange={e => setSubject(e.target.value)}
-        />
-      </div>
+          <div className="mb-4">
+            <label className="mr-4">
+              <input type="radio" checked={creationMode === "text"} onChange={() => setCreationMode("text")} /> Saisir contenu (générer PDF)
+            </label>
+            <label className="ml-4">
+              <input type="radio" checked={creationMode === "upload"} onChange={() => setCreationMode("upload")} /> Importer un PDF existant
+            </label>
+          </div>
 
-      <div className="mb-4">
-        <label className="font-semibold">Chapitre :</label>
-        <input
-          type="text"
-          className="border px-2 py-1 ml-2"
-          value={chapter}
-          onChange={e => setChapter(e.target.value)}
-        />
-      </div>
+          <div className="mb-4">
+            <label className="font-semibold">Matière :</label>
+            <input type="text" className="border px-2 py-1 ml-2" value={subject} onChange={(e) => setSubject(e.target.value)} />
+          </div>
 
-      <textarea
-        placeholder="Contenu du résumé..."
-        className="border w-full h-60 p-3"
-        value={resumeContent}
-        onChange={e => setResumeContent(e.target.value)}
-      ></textarea>
+          <div className="mb-4">
+            <label className="font-semibold">Chapitre :</label>
+            <input type="text" className="border px-2 py-1 ml-2" value={chapter} onChange={(e) => setChapter(e.target.value)} />
+          </div>
 
-      <button
-        onClick={async () => {
-          if (!subject || !chapter || !resumeContent) {
-            alert("Veuillez remplir toutes les informations.");
-            return;
-          }
+          {creationMode === "text" && (
+            <>
+              <textarea placeholder="Contenu du résumé..." className="border w-full h-60 p-3" value={resumeContent} onChange={(e) => setResumeContent(e.target.value)} />
+              <button onClick={createResumeFromText} className="bg-green-600 text-white px-4 py-2 rounded mt-4 hover:bg-green-700">📄 Générer PDF</button>
+            </>
+          )}
 
-          try {
-            const res = await axios.post(
-              `${API_BASE_URL}/api/resume/generate`,
-              { subject, chapter, content: resumeContent }
-            );
+          {creationMode === "upload" && (
+            <>
+              <input type="file" accept="application/pdf" onChange={(e) => setUploadPdfFile(e.target.files?.[0] || null)} className="mt-2" />
+              <button onClick={createResumeFromUpload} className="bg-purple-600 text-white px-4 py-2 rounded mt-4 hover:bg-purple-700">📤 Importer PDF</button>
+            </>
+          )}
 
-            console.log("Backend response:", res.data);
-
-            // Le backend renvoie => pdfUrl
-            const finalUrl =
-              res.data?.pdfUrl ||  // priorité
-              res.data?.url ||     // fallback
-              null;
-
-            if (!finalUrl) {
-              alert("Erreur : URL non reçue.");
-              console.error("Données renvoyées:", res.data);
-              return;
-            }
-
-            setGeneratedPdf(finalUrl);
-            alert("PDF généré avec succès !");
-          } catch (err) {
-            console.error("Erreur PDF:", err);
-            alert("Erreur lors de la génération du PDF.");
-          }
-        }}
-        className="bg-green-600 text-white px-4 py-2 rounded mt-4 hover:bg-green-700"
-      >
-        📄 Générer PDF
-      </button>
-
-      {generatedPdf && (
-        <div className="mt-4">
-          <a href={generatedPdf} download className="text-green-600 underline">
-            📥 Télécharger
-          </a>
+          {generatedPdf && (
+            <div className="mt-4">
+              <a href={generatedPdf} target="_blank" rel="noreferrer" className="text-blue-600 underline mr-4">📄 Ouvrir le PDF</a>
+              <a href={generatedPdf} download className="text-green-600 underline">📥 Télécharger</a>
+            </div>
+          )}
         </div>
       )}
-
-    </div>
-  </div>
-)}
     </div>
   );
 };
