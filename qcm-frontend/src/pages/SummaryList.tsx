@@ -24,7 +24,7 @@ const SummaryList: React.FC = () => {
   // Charger tous les résumés
   const fetchSummaries = async () => {
     try {
-      const response = await axios.get("https://med-contest-backend.onrender.com/api/summary");
+      const response = await axios.get("https://med-contest-backend.onrender.com/api/resume");
       const allSummaries = response.data;
 
       setSummaries(allSummaries);
@@ -54,7 +54,7 @@ const SummaryList: React.FC = () => {
     if (!window.confirm("Confirmer la suppression ?")) return;
 
     try {
-      await axios.delete(`https://med-contest-backend.onrender.com/api/summary/${id}`);
+      await axios.delete(`https://med-contest-backend.onrender.com/api/resume/${id}`);
       setSummaries(summaries.filter((s) => s._id !== id));
       setFiltered(filtered.filter((s) => s._id !== id));
     } catch (err) {
