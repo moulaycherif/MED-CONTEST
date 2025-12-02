@@ -21,12 +21,12 @@ export interface Astuce {
   answer: string
 }
 
-export async function fetchAstucesByChapitre(chapitre: string): Promise<Astuce[]> {
-  const url = `${API_BASE_URL}/api/astuces/${encodeURIComponent(chapitre)}`
+export async function fetchAstucesByChapter(chapter: string): Promise<Astuce[]> {
+  const url = `${API_BASE_URL}/api/astuces/${encodeURIComponent(chapter)}`
   const res = await fetch(url)
 
   if (!res.ok) {
-    throw new Error(`Erreur de récupération des astuces pour le chapitre : ${chapitre}`)
+    throw new Error(`Erreur de récupération des astuces pour le chapitre : ${chapter}`)
   }
 
   return res.json()

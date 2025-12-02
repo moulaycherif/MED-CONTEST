@@ -81,7 +81,7 @@ const StudentSummaries: React.FC<Props> = ({ subject }) => {
       <table className="w-full border border-gray-300">
         <thead className="bg-gray-200">
           <tr>
-            <th className="border px-2 py-1">Chapitre</th>
+            <th className="border px-2 py-1">Chapter</th>
             <th className="border px-2 py-1">PDF</th>
             <th className="border px-2 py-1">Date</th>
           </tr>

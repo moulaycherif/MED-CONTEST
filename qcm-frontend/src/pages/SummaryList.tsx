@@ -24,7 +24,7 @@ const SummaryList: React.FC = () => {
   // Charger tous les résumés
   const fetchSummaries = async () => {
     try {
-      const response = await axios.get("https://med-contest-backend.onrender.com/api/resume");
+      const response = await axios.get("https://med-contest-backend.onrender.com/api/resume/all");
       const allSummaries = response.data;
 
       setSummaries(allSummaries);
@@ -89,7 +89,7 @@ const SummaryList: React.FC = () => {
           <tr>
             <th className="border p-2">Titre</th>
             <th className="border p-2">Matière</th>
-            <th className="border p-2">Chapitre</th>
+            <th className="border p-2">Chapter</th>
             <th className="border p-2">PDF</th>
             <th className="border p-2">Date</th>
             <th className="border p-2">Actions</th>

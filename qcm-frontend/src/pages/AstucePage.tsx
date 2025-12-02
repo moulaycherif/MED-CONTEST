@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
 
 // Exemple de données (tu pourras remplacer par API plus tard)
-const ASTUCES: Record<string, { chapitre: string; qas: { question: string; answer: string }[] }[]> = {
+const ASTUCES: Record<string, { chapter: string; qas: { question: string; answer: string }[] }[]> = {
   math: [
     {
       chapitre: "Les suites",
@@ -51,7 +51,7 @@ export default function AstucePage() {
   const navigate = useNavigate();
 
   const data = ASTUCES[matiere || ""] || [];
-  const [selectedChapitre, setSelectedChapitre] = useState<string | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
 
   const titre =
     matiere === "math"
@@ -62,7 +62,7 @@ export default function AstucePage() {
       ? "Chimie"
       : "SVT";
 
-  const chapitreData = data.find((d) => d.chapitre === selectedChapitre);
+  const chapterData = data.find((d) => d.chapter === selectedChapter);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-indigo-50 p-6">
@@ -78,35 +78,35 @@ export default function AstucePage() {
       </h1>
 
       {/* Si aucun chapitre sélectionné → afficher la liste */}
-      {!selectedChapitre && (
+      {!selectedChapter && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {data.map((item, i) => (
             <button
               key={i}
-              onClick={() => setSelectedChapitre(item.chapitre)}
+              onClick={() => setSelectedChapter(item.chapter)}
               className="bg-white border shadow rounded-xl p-4 text-center font-semibold hover:bg-indigo-50 transition"
             >
-              {item.chapitre}
+              {item.chapter}
             </button>
           ))}
         </div>
       )}
 
       {/* Si un chapitre est sélectionné → afficher l’Animated Viewer */}
-      {selectedChapitre && chapitreData && (
+      {selectedChapter && chapterData && (
         <div className="max-w-2xl mx-auto mt-8">
           <button
-            onClick={() => setSelectedChapitre(null)}
+            onClick={() => setSelectedChapter(null)}
             className="mb-4 bg-indigo-200 hover:bg-indigo-300 px-4 py-2 rounded"
           >
             ← Retour aux chapitres
           </button>
 
           <h2 className="text-2xl font-bold mb-4 text-indigo-600 text-center">
-            📘 {selectedChapitre}
+            📘 {selectedChapter}
           </h2>
 
-          <AnimatedQaViewer qas={chapitreData.qas} />
+          <AnimatedQaViewer qas={chapterData.qas} />
         </div>
       )}
     </div>

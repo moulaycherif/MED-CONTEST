@@ -50,7 +50,7 @@ setPdfUrl(finalUrl);
       </div>
 
       <div className="mb-3">
-        <label className="font-semibold">Chapitre :</label>
+        <label className="font-semibold">Chapter :</label>
         <input
           type="text"
           className="border px-2 py-1 ml-2"

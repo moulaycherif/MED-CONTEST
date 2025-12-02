@@ -12,7 +12,7 @@ import svtImg from "../assets/SVT.jfif";
 import bgImage from "/Image3.jfif";
 
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
-import { fetchAstucesByChapitre, Astuce } from "../api/api";
+import { fetchAstucesByChapter, Astuce } from "../api/api";
 
 import StudentSummaries from "./StudentSummaries";
 
@@ -35,12 +35,12 @@ export default function StudentPage() {
   const [score, setScore] = useState<number | null>(null);
 
   // Pour le soutien
-  const [selectedChapitre, setSelectedChapitre] = useState<string | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
 
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
-  const chapitresMaths = [
+  const chapterMaths = [
     "Chapitre I : Suites & Sommes",
     "Chapitre II : Limites, Continuité & Dérivabilité",
     "Chapitre III : Étude de fonctions",
@@ -76,21 +76,21 @@ export default function StudentPage() {
 
   // Charger les astuces quand on clique sur le bouton "Astuces"
 useEffect(() => {
-  if (selectedAction === "Astuces" && selectedChapitre) {
+  if (selectedAction === "Astuces" && selectedChapter) {
     axios
-      .get(`${API_BASE_URL}/api/astuces/${encodeURIComponent(selectedChapitre)}`)
+      .get(`${API_BASE_URL}/api/astuces/${encodeURIComponent(selectedChapter)}`)
       .then((res) => setAstuces(res.data))
       .catch(() => setAstuces([]));
   }
-}, [selectedAction, selectedChapitre]);
+}, [selectedAction, selectedChapter]);
 
 useEffect(() => {
-  if (selectedAction === "Astuces" && selectedChapitre) {
-    fetchAstucesByChapitre(selectedChapitre)
+  if (selectedAction === "Astuces" && selectedChapter) {
+    fetchAstucesByChapter(selectedChapter)
       .then((data) => setAstuces(data))
       .catch(() => setAstuces([]));
   }
-}, [selectedAction, selectedChapitre]);
+}, [selectedAction, selectedChapter]);
 
 
 
@@ -245,14 +245,14 @@ useEffect(() => {
     // 🧩 Cas 4 : Soutien (Mathématiques)
     if (section === "soutien" && selectedMatiere === "Mathématique") {
       // ✅ PDF ou Quiz
-      if (selectedChapitre && selectedAction) {
+      if (selectedChapter && selectedAction) {
 
 // 📌 ASTUCES — QUESTIONS/RÉPONSES ANIMÉES
 if (selectedAction === "Astuces") {
   return (
     <div className="p-6">
       <h2 className="text-3xl font-bold text-center mb-6">
-        💡 {selectedChapitre} — Astuces
+        💡 {selectedChapter} — Astuces
       </h2>
 
       {astuces.length === 0 ? (
@@ -268,10 +268,10 @@ if (selectedAction === "Astuces") {
   return (
     <div className="p-6">
       <h2 className="text-3xl font-bold text-center mb-6">
-        📘 {selectedChapitre} — Résumés disponibles
+        📘 {selectedChapter} — Résumés disponibles
       </h2>
 
-      <StudentSummaries selectedSubject={selectedMatiere} selectedChapitre={selectedChapitre} />
+      <StudentSummaries selectedSubject={selectedMatiere} selectedChapter={selectedChapter} />
     </div>
   );
 }
@@ -294,7 +294,7 @@ if (selectedAction === "Astuces") {
         return (
           <div className="p-6">
             <h2 className="text-2xl font-bold text-center mb-6">
-              {selectedChapitre} — {selectedAction}
+              {selectedChapter} — {selectedAction}
             </h2>
             {quiz.map((q, idx) => (
               <motion.div
@@ -317,7 +317,7 @@ if (selectedAction === "Astuces") {
       }
 
       // ✅ Chapitre sélectionné → 3 boutons
-      if (selectedChapitre) {
+      if (selectedChapter) {
         const actions = [
           { label: "💡 Astuces", color: "bg-yellow-400" },
           { label: "📘 Résumé", color: "bg-blue-400" },
@@ -346,16 +346,16 @@ if (selectedAction === "Astuces") {
       // ✅ Liste des chapitres
       return (
         <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
-          {chapitresMaths.map((chapitre, index) => (
+          {chapterMaths.map((chapter, index) => (
             <motion.div
               key={index}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => setSelectedChapitre(chapitre)}
+              onClick={() => setSelectedChapter(chapter)}
             >
-              <img src={mathsImg} alt={chapitre} className="w-48 h-48 object-cover" />
+              <img src={mathsImg} alt={chapter} className="w-48 h-48 object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
-                {chapitre}
+                {chapter}
               </div>
             </motion.div>
           ))}
@@ -436,7 +436,7 @@ if (selectedAction === "Astuces") {
                 onClick={() => {
                   setSection("soutien");
                   setSelectedMatiere(m);
-                  setSelectedChapitre(null);
+                  setSelectedChapter(null);
                   setSelectedAction(null);
                 }}
                 className="py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition"
@@ -455,11 +455,11 @@ if (selectedAction === "Astuces") {
         animate={{ opacity: 1 }}
       >
         {/* 🔙 Bouton Retour en haut à droite */}
-        {(section || currentExam || selectedChapitre || selectedAction) && (
+        {(section || currentExam || selectedChapter || selectedAction) && (
           <button
             onClick={() => {
               if (selectedAction) setSelectedAction(null);
-              else if (selectedChapitre) setSelectedChapitre(null);
+              else if (selectedChapter) setSelectedChapter(null);
               else if (currentExam) setCurrentExam(null);
               else if (selectedMatiere) setSelectedMatiere(null);
               else setSection(null);

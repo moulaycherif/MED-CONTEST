@@ -27,7 +27,7 @@ export default function ResumeUploader() {
   return (
     <div>
       <input placeholder="Matière" onChange={(e) => setSubject(e.target.value)} />
-      <input placeholder="Chapitre" onChange={(e) => setChapter(e.target.value)} />
+      <input placeholder="Chapter" onChange={(e) => setChapter(e.target.value)} />
       <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
 
       <button onClick={handleUpload}>Uploader</button>
