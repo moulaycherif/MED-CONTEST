@@ -8,8 +8,12 @@ import { upload } from "../utils/multerConfig";
 dotenv.config();
 const router = express.Router();
 
-router.post("/generate", upload.single("file"), async (req, res) => {
+const bucket = process.env.SUPABASE_BUCKET!;
 
+// ------------------------------------------------------
+// 🟦  GÉNÉRER un PDF → upload Supabase → enregistrer Mongo
+// ------------------------------------------------------
+router.post("/generate", upload.none(), async (req, res) => {
   try {
     const { subject, chapter, content } = req.body;
 
@@ -17,30 +21,30 @@ router.post("/generate", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "Champs manquants." });
     }
 
-    const safeName =
-      `${subject}_${chapter}`
-        .replace(/[^a-zA-Z0-9_-]/g, "_") + ".pdf";
+    const safeName = `${subject}_${chapter}`
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .trim() + ".pdf";
 
-    const bucket = process.env.SUPABASE_BUCKET!;
-
-    // 👉 1. Vérifier si le fichier existe dans Supabase AVANT de le générer
-    const { data: existingFile } = await supabase.storage
+    // Vérifier si le fichier existe sur Supabase
+    const { data: existing, error: listError } = await supabase.storage
       .from(bucket)
       .list("", { search: safeName });
 
-    if (existingFile && existingFile.length > 0) {
-      console.log("📌 PDF existe déjà → pas de génération");
+    if (listError) {
+      console.error("❌ Erreur list Supabase :", listError);
+    }
 
+    // Si le PDF existe déjà → on renvoie directement l'URL
+    if (existing && existing.some((f) => f.name === safeName)) {
       const pdfUrl =
         `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${safeName}`;
 
-      // 👉 Vérifier si entrée existe en base sinon la créer
       let resume = await Resume.findOne({ subject, chapter });
       if (!resume) {
         resume = await Resume.create({ subject, chapter, pdfUrl });
       }
 
-      return res.status(200).json({
+      return res.json({
         success: true,
         pdfUrl,
         id: resume._id,
@@ -48,29 +52,25 @@ router.post("/generate", upload.single("file"), async (req, res) => {
       });
     }
 
-    // 👉 2. Générer le PDF
+    // Générer PDF
     const pdfBuffer = await generateResumeBuffer(subject, chapter, content);
 
-    // 👉 3. Upload vers Supabase
+    // Upload vers Supabase (IMPORTANT : upsert=true)
     const { error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(safeName, pdfBuffer, {
         contentType: "application/pdf",
-        cacheControl: "3600",
+        upsert: true,
       });
 
     if (uploadError) {
-      console.error("Erreur upload Supabase:", uploadError);
-      return res.status(500).json({
-        error: "Erreur upload Supabase",
-        details: uploadError,
-      });
+      console.error("❌ Erreur upload Supabase :", uploadError);
+      return res.status(500).json({ error: uploadError.message });
     }
 
     const pdfUrl =
       `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${safeName}`;
 
-    // 👉 4. Sauvegarder en base (éviter doublons)
     let resume = await Resume.findOne({ subject, chapter });
     if (!resume) {
       resume = await Resume.create({ subject, chapter, pdfUrl });
@@ -83,26 +83,84 @@ router.post("/generate", upload.single("file"), async (req, res) => {
       success: true,
       pdfUrl,
       id: resume._id,
-      alreadyExists: false,
     });
 
   } catch (err) {
     console.error("Erreur génération PDF :", err);
-    return res.status(500).json({
-      error: "Erreur lors de la génération du PDF",
-      details: err instanceof Error ? err.message : err,
-    });
+    return res.status(500).json({ error: "Erreur interne" });
   }
 });
 
+// ------------------------------------------------------
+// 🟦  UPLOAD d’un PDF existant
+// ------------------------------------------------------
+router.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    const { subject, chapter } = req.body;
+    const file = req.file;
 
+    if (!subject || !chapter || !file) {
+      return res.status(400).json({ error: "Champs requis manquants" });
+    }
+
+    const safeName = `${subject}_${chapter}`
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .trim() + ".pdf";
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(safeName, file.buffer, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("❌ Erreur upload Supabase :", uploadError);
+      return res.status(500).json({ error: uploadError.message });
+    }
+
+    const pdfUrl =
+      `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${safeName}`;
+
+    let resume = await Resume.findOne({ subject, chapter });
+    if (!resume) {
+      resume = await Resume.create({ subject, chapter, pdfUrl });
+    } else {
+      resume.pdfUrl = pdfUrl;
+      await resume.save();
+    }
+
+    return res.json({ success: true, pdfUrl });
+
+  } catch (err) {
+    console.error("Erreur upload PDF :", err);
+    res.status(500).json({ error: "Erreur interne" });
+  }
+});
+
+// ------------------------------------------------------
+// 🟦  Liste de tous les résumés
+// ------------------------------------------------------
 router.get("/all", async (req, res) => {
   try {
     const resumes = await Resume.find().sort({ createdAt: -1 });
     return res.json(resumes);
   } catch (err) {
     console.error("Erreur fetch resumes :", err);
-    return res.status(500).json({ error: "Erreur lors du chargement des résumés." });
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// ------------------------------------------------------
+// 🟦  Supprimer un résumé
+// ------------------------------------------------------
+router.delete("/:id", async (req, res) => {
+  try {
+    await Resume.findByIdAndDelete(req.params.id);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Erreur suppression résumé :", err);
+    return res.status(500).json({ error: "Erreur serveur" });
   }
 });
 

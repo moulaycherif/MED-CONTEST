@@ -6,13 +6,9 @@ import resultRoutes from "./routes/answerRoutes";
 import adminRoutes from "./routes/adminRoutes";  // ✅ AJOUT ICI
 
 import resumeRoutes from "./routes/resumeRoutes";
-
 import studentRoutes from "./routes/studentRoutes";
-
 import dotenv from "dotenv";
-
 import rankingRoutes from "./routes/rankingRoutes";
-
 import path from "path";
 
 dotenv.config();
