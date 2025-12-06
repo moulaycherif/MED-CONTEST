@@ -7,14 +7,14 @@ dotenv.config();
 if (!process.env.SUPABASE_URL) {
   console.error("❌ Variable d'environnement SUPABASE_URL manquante !");
 }
-if (!process.env.SUPABASE_ANON_KEY) {
-  console.error("❌ Variable d'environnement SUPABASE_ANON_KEY manquante !");
+if (!process.env.SUPABASE_KEY) {
+  console.error("❌ Variable d'environnement SUPABASE_KEY manquante !");
 }
 
 export const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!,
+  process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY!,
   {
-    auth: { persistSession: false },
+    auth: { persistSession: false }
   }
 );
