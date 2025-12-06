@@ -325,7 +325,7 @@ if (selectedAction === "Astuces") {
         ];
         return (
           <div className="flex flex-col items-center justify-center gap-8 mt-20">
-            <h2 className="text-2xl font-bold text-gray-800">{selectedChapitre}</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{selectedChapter}</h2>
             <div className="flex gap-8">
               {actions.map((action, index) => (
                 <motion.button
