@@ -11,84 +11,70 @@ interface ResumeItem {
 }
 
 interface Props {
-  subject: string; // 👉 Matière déjà sélectionnée dans StudentPage
+  selectedSubject: string | null;   // 🔥 Aligné avec StudentPage
+  selectedChapter: string | null;  // 🔥 Aligné avec StudentPage
 }
 
-const StudentSummaries: React.FC<Props> = ({ subject }) => {
+const StudentSummaries: React.FC<Props> = ({ selectedSubject, selectedChapter }) => {
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
-  const [filtered, setFiltered] = useState<ResumeItem[]>([]);
-  const [filterOption, setFilterOption] = useState("ALL");
-
-  const fetchBySubject = async () => {
-    if (!subject) return;
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/resume/by-subject/${subject}`);
-      setResumes(res.data);
-      setFiltered(res.data);
-    } catch (err) {
-      console.error("Erreur fetch résumés étudiant :", err);
-    }
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBySubject();
-  }, [subject]);
+    const load = async () => {
+      if (!selectedSubject || !selectedChapter) return;
 
-  // 🔍 Filtrage A / B / C / ALL
-  useEffect(() => {
-    if (filterOption === "ALL") {
-      setFiltered(resumes);
-    } else {
-      setFiltered(resumes.filter((r) => r.chapter.includes(filterOption)));
-    }
-  }, [filterOption, resumes]);
+      setLoading(true);
+
+      try {
+        const res = await axios.get(
+          `${API_BASE_URL}/api/resume/by-subject-and-chapter`,
+          {
+            params: {
+              subject: selectedSubject,
+              chapter: selectedChapter
+            }
+          }
+        );
+
+        setResumes(res.data);
+      } catch (err) {
+        console.error("Erreur fetch résumés étudiant :", err);
+        setResumes([]);
+      }
+
+      setLoading(false);
+    };
+
+    load();
+  }, [selectedSubject, selectedChapter]);
+
+  if (loading)
+    return <p className="text-center my-4">Chargement…</p>;
+
+  if (resumes.length === 0)
+    return (
+      <p className="text-center text-gray-500 my-6">
+        Aucun résumé disponible pour ce chapitre.
+      </p>
+    );
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-3">📘 Résumés — {subject}</h2>
-
-      {/* Filtres A B C */}
-      <div className="flex gap-3 mb-4">
-        <button
-          onClick={() => setFilterOption("ALL")}
-          className={`px-4 py-2 rounded-lg ${filterOption === "ALL" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-        >
-          Tous
-        </button>
-
-        <button
-          onClick={() => setFilterOption("A")}
-          className={`px-4 py-2 rounded-lg ${filterOption === "A" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-        >
-          A
-        </button>
-
-        <button
-          onClick={() => setFilterOption("B")}
-          className={`px-4 py-2 rounded-lg ${filterOption === "B" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-        >
-          B
-        </button>
-
-        <button
-          onClick={() => setFilterOption("C")}
-          className={`px-4 py-2 rounded-lg ${filterOption === "C" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-        >
-          C
-        </button>
-      </div>
+      <h2 className="text-xl font-bold mb-4">
+        📘 Résumés — {selectedSubject} / {selectedChapter}
+      </h2>
 
       <table className="w-full border border-gray-300">
         <thead className="bg-gray-200">
           <tr>
-            <th className="border px-2 py-1">Chapter</th>
+            <th className="border px-2 py-1">Chapitre</th>
             <th className="border px-2 py-1">PDF</th>
             <th className="border px-2 py-1">Date</th>
           </tr>
         </thead>
 
         <tbody>
-          {filtered.map((r) => (
+          {resumes.map((r) => (
             <tr key={r._id} className="text-sm">
               <td className="border px-2 py-1">{r.chapter}</td>
               <td className="border px-2 py-1">
@@ -97,7 +83,7 @@ const StudentSummaries: React.FC<Props> = ({ subject }) => {
                   target="_blank"
                   className="text-blue-600 underline"
                 >
-                  📄 Voir
+                  📄 Voir / Télécharger
                 </a>
               </td>
               <td className="border px-2 py-1">
@@ -105,14 +91,6 @@ const StudentSummaries: React.FC<Props> = ({ subject }) => {
               </td>
             </tr>
           ))}
-
-          {filtered.length === 0 && (
-            <tr>
-              <td className="border px-2 py-3 text-center" colSpan={3}>
-                Aucun résumé disponible.
-              </td>
-            </tr>
-          )}
         </tbody>
       </table>
     </div>
