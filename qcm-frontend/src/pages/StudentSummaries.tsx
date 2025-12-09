@@ -11,88 +11,126 @@ interface ResumeItem {
 }
 
 interface Props {
-  selectedSubject: string | null;   // 🔥 Aligné avec StudentPage
-  selectedChapter: string | null;  // 🔥 Aligné avec StudentPage
+  subject: string;
+  chapters?: string[]; // 👉 Liste des chapitres pour le filtre
 }
 
-const StudentSummaries: React.FC<Props> = ({ selectedSubject, selectedChapter }) => {
+const StudentSummaries: React.FC<Props> = ({ subject, chapters = [] }) => {
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filtered, setFiltered] = useState<ResumeItem[]>([]);
+  const [filterLetter, setFilterLetter] = useState("ALL");
+  const [filterChapter, setFilterChapter] = useState("ALL");
+
+  const fetchBySubject = async () => {
+    if (!subject) return;
+
+    try {
+      const res = await axios.get(
+        `${API_BASE_URL}/api/resume/by-subject/${subject}`
+      );
+      setResumes(res.data);
+      setFiltered(res.data);
+    } catch (err) {
+      console.error("Erreur fetch résumés étudiant :", err);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      if (!selectedSubject || !selectedChapter) return;
+    fetchBySubject();
+  }, [subject]);
 
-      setLoading(true);
+  // 🎯 Filtrage dynamique
+  useEffect(() => {
+    let f = resumes;
 
-      try {
-        const res = await axios.get(
-          `${API_BASE_URL}/api/resume/by-subject-and-chapter`,
-          {
-            params: {
-              subject: selectedSubject,
-              chapter: selectedChapter
-            }
-          }
-        );
+    if (filterLetter !== "ALL") {
+      f = f.filter((r) => r.chapter.includes(filterLetter));
+    }
 
-        setResumes(res.data);
-      } catch (err) {
-        console.error("Erreur fetch résumés étudiant :", err);
-        setResumes([]);
-      }
+    if (filterChapter !== "ALL") {
+      f = f.filter((r) => r.chapter === filterChapter);
+    }
 
-      setLoading(false);
-    };
-
-    load();
-  }, [selectedSubject, selectedChapter]);
-
-  if (loading)
-    return <p className="text-center my-4">Chargement…</p>;
-
-  if (resumes.length === 0)
-    return (
-      <p className="text-center text-gray-500 my-6">
-        Aucun résumé disponible pour ce chapitre.
-      </p>
-    );
+    setFiltered(f);
+  }, [filterLetter, filterChapter, resumes]);
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">
-        📘 Résumés — {selectedSubject} / {selectedChapter}
+
+      {/* TITRE */}
+      <h2 className="text-2xl font-bold mb-4">
+        📘 Résumés — {subject}
       </h2>
 
-      <table className="w-full border border-gray-300">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="border px-2 py-1">Chapitre</th>
-            <th className="border px-2 py-1">PDF</th>
-            <th className="border px-2 py-1">Date</th>
-          </tr>
-        </thead>
+      {/* FILTRES */}
+      <div className="flex flex-wrap gap-4 mb-6">
 
-        <tbody>
-          {resumes.map((r) => (
-            <tr key={r._id} className="text-sm">
-              <td className="border px-2 py-1">{r.chapter}</td>
-              <td className="border px-2 py-1">
-                <a
-                  href={r.pdfUrl}
-                  target="_blank"
-                  className="text-blue-600 underline"
-                >
-                  📄 Voir / Télécharger
-                </a>
-              </td>
-              <td className="border px-2 py-1">
-                {new Date(r.createdAt).toLocaleString()}
-              </td>
-            </tr>
+        {/* Filtre A / B / C */}
+        <div className="flex gap-2">
+          {["ALL", "A", "B", "C"].map((opt) => (
+            <button
+              key={opt}
+              onClick={() => setFilterLetter(opt)}
+              className={`px-4 py-2 rounded-lg ${
+                filterLetter === opt
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200"
+              }`}
+            >
+              {opt === "ALL" ? "Tous" : opt}
+            </button>
           ))}
-        </tbody>
-      </table>
+        </div>
+
+        {/* Filtre Chapitres */}
+        <select
+          value={filterChapter}
+          onChange={(e) => setFilterChapter(e.target.value)}
+          className="px-3 py-2 border rounded-lg"
+        >
+          <option value="ALL">Tous les chapitres</option>
+          {chapters.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+      </div>
+
+      {/* CARDS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        {filtered.map((r) => (
+          <div
+            key={r._id}
+            className="border rounded-xl p-4 shadow hover:shadow-lg transition bg-white"
+          >
+            {/* TITRE */}
+            <h3 className="font-bold text-lg mb-2">{r.chapter}</h3>
+
+            {/* DATE */}
+            <p className="text-sm text-gray-500 mb-3">
+              {new Date(r.createdAt).toLocaleDateString()}
+            </p>
+
+            {/* BUTTON */}
+            <a
+              href={r.pdfUrl}
+              target="_blank"
+              className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              📄 Voir le PDF
+            </a>
+          </div>
+        ))}
+
+        {filtered.length === 0 && (
+          <p className="col-span-full text-center text-gray-500 text-lg">
+            Aucun résumé disponible.
+          </p>
+        )}
+      </div>
     </div>
   );
 };

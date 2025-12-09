@@ -271,7 +271,7 @@ if (selectedAction === "Astuces") {
         📘 {selectedChapter} — Résumés disponibles
       </h2>
 
-      <StudentSummaries selectedSubject={selectedMatiere} selectedChapter={selectedChapter} />
+      <StudentSummaries subject={selectedMatiere} />
     </div>
   );
 }
