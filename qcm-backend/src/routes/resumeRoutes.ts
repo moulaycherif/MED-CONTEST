@@ -4,11 +4,14 @@ import Resume from "../models/resume";
 import { supabase } from "../utils/supabase";
 import dotenv from "dotenv";
 import { upload } from "../utils/multerConfig";
+import { getResumesBySubject } from "../controllers/resumeController";
 
 dotenv.config();
 const router = express.Router();
 
 const bucket = process.env.SUPABASE_BUCKET!;
+
+router.get("/by-subject/:subject", getResumesBySubject);
 
 // ------------------------------------------------------
 // 🟦  GÉNÉRER un PDF → upload Supabase → enregistrer Mongo

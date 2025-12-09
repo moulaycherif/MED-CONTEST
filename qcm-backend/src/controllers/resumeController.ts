@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import Summary from "../models/resume";
 import { uploadToSupabase } from "../services/supabaseUpload";
+import Resume from "../models/resume";
+
 
 export const createSummary = async (req: Request, res: Response) => {
   try {
@@ -76,3 +78,18 @@ export const deleteSummary = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Erreur suppression" });
   }
 };
+
+// 📌 Récupérer les résumés par matière pour l'étudiant
+export const getResumesBySubject = async (req, res) => {
+  try {
+    const { subject } = req.params;
+
+    const resumes = await Resume.find({ subject }).sort({ createdAt: -1 });
+
+    return res.json(resumes);
+  } catch (error) {
+    console.error("❌ Erreur getResumesBySubject :", error);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+};
+
