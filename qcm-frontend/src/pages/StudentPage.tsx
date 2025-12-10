@@ -358,7 +358,7 @@ if (section === "soutien") {
     SVT: svtImg,
   };
 
-  const chapters = chapterMap[selectedMatiere ?? "Mathématique"];
+  const chapters = chapterMap[selectedMatiere ?? "Physique"];
 
   return (
     <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
