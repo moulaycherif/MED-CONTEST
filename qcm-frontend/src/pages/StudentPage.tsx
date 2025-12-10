@@ -242,126 +242,142 @@ useEffect(() => {
       );
     }
 
-    // 🧩 Cas 4 : Soutien (Mathématiques)
-    if (section === "soutien" && selectedMatiere === "Mathématique") {
-      // ✅ PDF ou Quiz
-      if (selectedChapter && selectedAction) {
+// 🧩 Soutien — toutes matières (Math, Physique, Chimie, SVT)
+if (section === "soutien") {
 
-// 📌 ASTUCES — QUESTIONS/RÉPONSES ANIMÉES
-if (selectedAction === "Astuces") {
-  return (
-    <div className="p-6">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        💡 {selectedChapter} — Astuces
-      </h2>
+  // 👉 Cas 1 : Un chapitre + une action (Astuces / Résumé / Exercices)
+  if (selectedChapter && selectedAction) {
 
-      {astuces.length === 0 ? (
-        <p className="text-center text-gray-500">Aucune astuce trouvée…</p>
-      ) : (
-        <AnimatedQaViewer qas={astuces} />
-      )}
-    </div>
-  );
-}
-
-        if (selectedAction === "Résumé") {
-  return (
-    <div className="p-6">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        📘 {selectedChapter} — Résumés disponibles
-      </h2>
-
-      <StudentSummaries subject={selectedMatiere} />
-    </div>
-  );
-}
-
-
-        // ✅ Mini Quiz
-        const quiz = [
-          {
-            question: "Quelle est la définition d'une suite arithmétique ?",
-            options: [
-              "Chaque terme est le carré du précédent",
-              "Chaque terme est la somme du précédent et d’une constante",
-              "Chaque terme est le produit du précédent par une constante",
-              "Chaque terme est aléatoire",
-            ],
-            correct: "Chaque terme est la somme du précédent et d’une constante",
-          },
-        ];
-
-        return (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-center mb-6">
-              {selectedChapter} — {selectedAction}
-            </h2>
-            {quiz.map((q, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 mb-4 bg-white rounded-xl shadow"
-              >
-                <h3 className="font-semibold mb-2">{q.question}</h3>
-                {q.options.map((opt, i) => (
-                  <label key={i} className="block p-2 border rounded-lg cursor-pointer mb-2 hover:bg-gray-100">
-                    <input type="radio" name={`q-${idx}`} className="mr-2" />
-                    {opt}
-                  </label>
-                ))}
-              </motion.div>
-            ))}
-          </div>
-        );
-      }
-
-      // ✅ Chapitre sélectionné → 3 boutons
-      if (selectedChapter) {
-        const actions = [
-          { label: "💡 Astuces", color: "bg-yellow-400" },
-          { label: "📘 Résumé", color: "bg-blue-400" },
-          { label: "🧩 Exercices", color: "bg-green-400" },
-        ];
-        return (
-          <div className="flex flex-col items-center justify-center gap-8 mt-20">
-            <h2 className="text-2xl font-bold text-gray-800">{selectedChapter}</h2>
-            <div className="flex gap-8">
-              {actions.map((action, index) => (
-                <motion.button
-                  key={index}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedAction(action.label.replace(/[💡📘🧩]/g, "").trim())}
-                  className={`${action.color} text-black font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
-                >
-                  {action.label}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        );
-      }
-
-      // ✅ Liste des chapitres
+    // ⭐ ASTUCES
+    if (selectedAction === "Astuces") {
       return (
-        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
-          {chapterMaths.map((chapter, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => setSelectedChapter(chapter)}
-            >
-              <img src={mathsImg} alt={chapter} className="w-48 h-48 object-cover" />
-              <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
-                {chapter}
-              </div>
-            </motion.div>
-          ))}
+        <div className="p-6">
+          <h2 className="text-3xl font-bold text-center mb-6">
+            💡 {selectedChapter} — Astuces
+          </h2>
+
+          {astuces.length === 0 ? (
+            <p className="text-center text-gray-500">Aucune astuce trouvée…</p>
+          ) : (
+            <AnimatedQaViewer qas={astuces} />
+          )}
         </div>
       );
     }
+
+    // ⭐ RÉSUMÉS (PDF Supabase)
+    if (selectedAction === "Résumé") {
+      return (
+        <div className="p-6">
+          <h2 className="text-3xl font-bold text-center mb-6">
+            📘 {selectedChapter} — Résumés disponibles
+          </h2>
+
+          {/* 🔥 On passe la matière + chapitre */}
+          <StudentSummaries subject={selectedMatiere} chapter={selectedChapter} />
+        </div>
+      );
+    }
+
+    // ⭐ EXERCICES
+    if (selectedAction === "Exercices") {
+      return (
+        <div className="p-6">
+          <h2 className="text-3xl font-bold text-center mb-6">
+            🧩 {selectedChapter} — Exercices
+          </h2>
+
+          <p className="text-center text-gray-600">Exercices bientôt disponibles…</p>
+        </div>
+      );
+    }
+  }
+
+  // 👉 Cas 2 : Chapitre sélectionné → afficher les 3 boutons
+  if (selectedChapter) {
+    const actions = [
+      { label: "💡 Astuces", color: "bg-yellow-400" },
+      { label: "📘 Résumé", color: "bg-blue-400" },
+      { label: "🧩 Exercices", color: "bg-green-400" },
+    ];
+
+    return (
+      <div className="flex flex-col items-center justify-center gap-8 mt-20">
+        <h2 className="text-2xl font-bold text-gray-800">{selectedChapter}</h2>
+        <div className="flex gap-8">
+          {actions.map((action, index) => (
+            <motion.button
+              key={index}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSelectedAction(action.label.replace(/[💡📘🧩]/g, "").trim())}
+              className={`${action.color} text-black font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
+            >
+              {action.label}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 👉 Cas 3 : Afficher la liste des chapitres selon la matière
+  const chapterMap: Record<string, string[]> = {
+    Mathématique: [
+      "Chapitre I : Suites & Sommes",
+      "Chapitre II : Limites, Continuité & Dérivabilité",
+      "Chapitre III : Étude de fonctions",
+      "Chapitre IV : Nombres complexes",
+      "Chapitre V : Intégrales",
+      "Chapitre VI : Géométrie dans l'espace",
+      "Chapitre VII : Probabilité",
+    ],
+    Physique: [
+      "Chapitre 1 : Mécanique",
+      "Chapitre 2 : Électricité",
+      "Chapitre 3 : Optique",
+      "Chapitre 4 : Thermodynamique",
+    ],
+    Chimie: [
+      "Chapitre 1 : Atomistique",
+      "Chapitre 2 : Réactions chimiques",
+      "Chapitre 3 : Cinétique",
+      "Chapitre 4 : Acides et bases",
+    ],
+    SVT: [
+      "Chapitre 1 : Génétique",
+      "Chapitre 2 : Biologie cellulaire",
+      "Chapitre 3 : Immunologie",
+    ],
+  };
+
+  const imgMap: Record<string, string> = {
+    Mathématique: mathsImg,
+    Physique: physiqueImg,
+    Chimie: chimieImg,
+    SVT: svtImg,
+  };
+
+  const chapters = chapterMap[selectedMatiere ?? "Mathématique"];
+
+  return (
+    <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
+      {chapters.map((chapter, index) => (
+        <motion.div
+          key={index}
+          whileHover={{ scale: 1.05 }}
+          className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+          onClick={() => setSelectedChapter(chapter)}
+        >
+          <img src={imgMap[selectedMatiere!]} alt={chapter} className="w-48 h-48 object-cover" />
+          <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
+            {chapter}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
 
     // 🧩 Par défaut
     return (
