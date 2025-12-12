@@ -20,26 +20,31 @@ const StudentSummaries: React.FC<Props> = ({ selectedSubject, selectedChapter })
   const [filtered, setFiltered] = useState<ResumeItem[]>([]);
   const [filterOption, setFilterOption] = useState("ALL");
 
-  const fetchBySubjectAndChapter = async () => {
-    if (!selectedSubject || !selectedChapter) return;
+  const normalize = (str: string) =>
+  str.toLowerCase().replace(/chapitre\s*[ivx]+\s*[:\-]*/g, "").trim();
 
-    try {
-      const res = await axios.get(
-        `${API_BASE_URL}/api/resume/by-subject/${selectedSubject}`
-      );
+const fetchBySubjectAndChapter = async () => {
+  if (!selectedSubject || !selectedChapter) return;
 
-      // 🎯 Filtrer uniquement les résumés du CHAPITRE sélectionné
-      const list = res.data.filter(
-        (r: ResumeItem) =>
-          r.chapter.trim().toLowerCase() === selectedChapter.trim().toLowerCase()
-      );
+  try {
+    const res = await axios.get(
+      `${API_BASE_URL}/api/resume/by-subject/${selectedSubject}`
+    );
 
-      setResumes(list);
-      setFiltered(list);
-    } catch (err) {
-      console.error("Erreur fetch résumés étudiant :", err);
-    }
-  };
+    const target = normalize(selectedChapter);
+
+    const list = res.data.filter((r: ResumeItem) => {
+      const chap = normalize(r.chapter);
+      return chap.includes(target) || target.includes(chap);
+    });
+
+    setResumes(list);
+    setFiltered(list);
+  } catch (err) {
+    console.error("Erreur fetch résumés étudiant :", err);
+  }
+};
+
 
   useEffect(() => {
     fetchBySubjectAndChapter();
