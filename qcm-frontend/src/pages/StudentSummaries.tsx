@@ -12,17 +12,18 @@ interface ResumeItem {
 
 interface Props {
   subject: string;
-  chapters?: string[]; // 👉 Liste des chapitres pour le filtre
+  selectedChapterTitle: string[]; // 👉 Liste des chapitres pour le filtre
 }
 
-const StudentSummaries: React.FC<Props> = ({ subject, chapters = [] }) => {
+const StudentSummaries: React.FC<Props> = ({ subject, selectedChapterTitle = [] }) => {
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [filtered, setFiltered] = useState<ResumeItem[]>([]);
   const [filterLetter, setFilterLetter] = useState("ALL");
   const [filterChapter, setFilterChapter] = useState("ALL");
+  const [filterOption, setFilterOption] = useState("ALL");
 
-  const fetchBySubject = async () => {
-    if (!subject) return;
+  const fetchBySubjectAndChapter = async () => {
+    if (!subject || !selectedChapterTitle) return;
 
     try {
       const res = await axios.get(
@@ -36,8 +37,8 @@ const StudentSummaries: React.FC<Props> = ({ subject, chapters = [] }) => {
   };
 
   useEffect(() => {
-    fetchBySubject();
-  }, [subject]);
+    fetchBySubjectAndChapter();
+  }, [subject, selectedChapterTitle]);
 
   // 🎯 Filtrage dynamique
   useEffect(() => {
