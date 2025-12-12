@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
-
 interface ResumeItem {
   id: string;
   subject: string;
   chapter: string;
   url: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 export default function StudentSummaries({
@@ -20,14 +19,6 @@ export default function StudentSummaries({
 }) {
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [filtered, setFiltered] = useState<ResumeItem[]>([]);
-
-  const normalize = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/chapitre\s*[ivx]+\s*[:\-]*/g, "")
-      .trim();
 
   useEffect(() => {
     if (!selectedSubject) return;
@@ -43,30 +34,28 @@ export default function StudentSummaries({
           return;
         }
 
-        const target = normalize(selectedChapter);
+        // 🎯 Filtrage EXACT (pas flou)
+        const cleanedSelected = selectedChapter
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, " ");
 
         const filteredList = all.filter((r: ResumeItem) => {
-          const chap = normalize(r.chapter);
-
-          // 🎯 Filtrage intelligent
-          return chap.includes(target) || target.includes(chap);
+          const cleanedChap = r.chapter
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, " ");
+          return cleanedChap === cleanedSelected;
         });
 
         setFiltered(filteredList);
       })
-      .catch((err) => {
-        console.error("Erreur fetch résumés étudiant :", err);
-      });
+      .catch((err) => console.error("Erreur fetch résumés étudiant :", err));
   }, [selectedSubject, selectedChapter]);
-
-  console.log("🔍 StudentSummaries → selectedSubject:", selectedSubject);
-  console.log("🔍 StudentSummaries → selectedChapter:", selectedChapter);
 
   return (
     <div>
-      <h3 className="text-xl font-bold mb-4">
-        📘 Résumés — {selectedSubject}
-      </h3>
+      <h3 className="text-xl font-bold mb-4">📘 Résumés — {selectedSubject}</h3>
 
       {filtered.length === 0 ? (
         <p className="text-gray-500 text-center">Aucun résumé disponible.</p>
@@ -75,7 +64,10 @@ export default function StudentSummaries({
           {filtered.map((item) => (
             <div key={item.id} className="p-4 bg-white rounded-xl shadow">
               <h4 className="font-semibold">{item.chapter}</h4>
-              <p className="text-sm text-gray-500">{item.created_at.slice(0, 10)}</p>
+
+              <p className="text-sm text-gray-500">
+                {item.created_at ? item.created_at.slice(0, 10) : "Date inconnue"}
+              </p>
 
               <a
                 href={item.url}
@@ -90,5 +82,4 @@ export default function StudentSummaries({
       )}
     </div>
   );
-
 }
