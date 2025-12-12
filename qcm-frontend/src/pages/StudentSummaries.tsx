@@ -11,33 +11,39 @@ interface ResumeItem {
 }
 
 interface Props {
-  subject: string;
-  chapters?: string[]; // 👉 Liste des chapitres pour le filtre
+  selectedSubject: string;
+  selectedChapterTitle: string; // 👉 Titre réel du chapitre
 }
 
-const StudentSummaries: React.FC<Props> = ({ subject, chapters = [] }) => {
+const StudentSummaries: React.FC<Props> = ({ selectedSubject, selectedChapterTitle }) => {
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [filtered, setFiltered] = useState<ResumeItem[]>([]);
-  const [filterLetter, setFilterLetter] = useState("ALL");
-  const [filterChapter, setFilterChapter] = useState("ALL");
+  const [filterOption, setFilterOption] = useState("ALL");
 
-  const fetchBySubject = async () => {
-    if (!subject) return;
+  const fetchBySubjectAndChapter = async () => {
+    if (!selectedSubject || !selectedChapterTitle) return;
 
     try {
       const res = await axios.get(
-        `${API_BASE_URL}/api/resume/by-subject/${subject}`
+        `${API_BASE_URL}/api/resume/by-subject/${selectedSubject}`
       );
-      setResumes(res.data);
-      setFiltered(res.data);
+
+      // 🎯 Garder uniquement les PDF dont le CHAPTER correspond exactement
+      const list = res.data.filter((r: ResumeItem) =>
+        r.chapter.trim().toLowerCase() === selectedChapterTitle.trim().toLowerCase()
+      );
+
+      setResumes(list);
+      setFiltered(list);
     } catch (err) {
       console.error("Erreur fetch résumés étudiant :", err);
     }
   };
 
   useEffect(() => {
-    fetchBySubject();
-  }, [subject]);
+    fetchBySubjectAndChapter();
+  }, [selectedSubject, selectedChapterTitle]);
+
 
   // 🎯 Filtrage dynamique
   useEffect(() => {
