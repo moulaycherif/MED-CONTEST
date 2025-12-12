@@ -310,10 +310,7 @@ if (section === "soutien" && selectedMatiere) {
           📘 {selectedChapter} — Résumés disponibles
         </h2>
 
-        <StudentSummaries
-  selectedSubject={selectedMatiere}
-  selectedChapterTitle={selectedChapter}
-/>
+        <StudentSummaries subject={selectedMatiere} chapter={selectedChapter} />
       </div>
     );
   }
