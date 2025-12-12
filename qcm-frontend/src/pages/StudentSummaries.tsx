@@ -59,6 +59,9 @@ export default function StudentSummaries({
       });
   }, [selectedSubject, selectedChapter]);
 
+  console.log("🔍 StudentSummaries → selectedSubject:", selectedSubject);
+  console.log("🔍 StudentSummaries → selectedChapter:", selectedChapter);
+
   return (
     <div>
       <h3 className="text-xl font-bold mb-4">
@@ -87,6 +90,5 @@ export default function StudentSummaries({
       )}
     </div>
   );
-  console.log("🔍 StudentSummaries → selectedSubject:", selectedSubject);
-console.log("🔍 StudentSummaries → selectedChapter:", selectedChapter);
+
 }
