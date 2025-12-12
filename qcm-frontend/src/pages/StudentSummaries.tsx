@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
+console.log("🔍 StudentSummaries → selectedSubject:", selectedSubject);
+console.log("🔍 StudentSummaries → selectedChapter:", selectedChapter);
+
 interface ResumeItem {
   id: string;
   subject: string;
