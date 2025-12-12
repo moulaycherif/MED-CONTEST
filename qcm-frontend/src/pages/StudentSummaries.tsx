@@ -3,105 +3,87 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 
 interface ResumeItem {
-  _id: string;
+  id: string;
   subject: string;
   chapter: string;
-  pdfUrl: string;
-  createdAt: string;
+  url: string;
+  created_at: string;
 }
 
-interface Props {
-  selectedSubject: string;  // Matière
-  selectedChapter: string;  // Titre du chapitre
-}
-
-const StudentSummaries: React.FC<Props> = ({ selectedSubject, selectedChapter }) => {
+export default function StudentSummaries({
+  selectedSubject,
+  selectedChapter,
+}: {
+  selectedSubject: string | null;
+  selectedChapter: string | null;
+}) {
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [filtered, setFiltered] = useState<ResumeItem[]>([]);
-  const [filterOption, setFilterOption] = useState("ALL");
 
-  const normalize = (str: string) =>
-  str.toLowerCase().replace(/chapitre\s*[ivx]+\s*[:\-]*/g, "").trim();
-
-const fetchBySubjectAndChapter = async () => {
-  if (!selectedSubject || !selectedChapter) return;
-
-  try {
-    const res = await axios.get(
-      `${API_BASE_URL}/api/resume/by-subject/${selectedSubject}`
-    );
-
-    const target = normalize(selectedChapter);
-
-    const list = res.data.filter((r: ResumeItem) => {
-      const chap = normalize(r.chapter);
-      return chap.includes(target) || target.includes(chap);
-    });
-
-    setResumes(list);
-    setFiltered(list);
-  } catch (err) {
-    console.error("Erreur fetch résumés étudiant :", err);
-  }
-};
-
+  const normalize = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/chapitre\s*[ivx]+\s*[:\-]*/g, "")
+      .trim();
 
   useEffect(() => {
-    fetchBySubjectAndChapter();
+    if (!selectedSubject) return;
+
+    axios
+      .get(`${API_BASE_URL}/api/resume/by-subject/${selectedSubject}`)
+      .then((res) => {
+        const all = res.data;
+        setResumes(all);
+
+        if (!selectedChapter) {
+          setFiltered(all);
+          return;
+        }
+
+        const target = normalize(selectedChapter);
+
+        const filteredList = all.filter((r: ResumeItem) => {
+          const chap = normalize(r.chapter);
+
+          // 🎯 Filtrage intelligent
+          return chap.includes(target) || target.includes(chap);
+        });
+
+        setFiltered(filteredList);
+      })
+      .catch((err) => {
+        console.error("Erreur fetch résumés étudiant :", err);
+      });
   }, [selectedSubject, selectedChapter]);
 
-  useEffect(() => {
-    if (filterOption === "ALL") {
-      setFiltered(resumes);
-    } else {
-      setFiltered(resumes.filter((r) => r.chapter.includes(filterOption)));
-    }
-  }, [filterOption, resumes]);
-
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-3">📘 Résumés — {selectedSubject}</h2>
+    <div>
+      <h3 className="text-xl font-bold mb-4">
+        📘 Résumés — {selectedSubject}
+      </h3>
 
-      <p className="text-gray-600 mb-2">Chapitre : {selectedChapter}</p>
+      {filtered.length === 0 ? (
+        <p className="text-gray-500 text-center">Aucun résumé disponible.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {filtered.map((item) => (
+            <div key={item.id} className="p-4 bg-white rounded-xl shadow">
+              <h4 className="font-semibold">{item.chapter}</h4>
+              <p className="text-sm text-gray-500">{item.created_at.slice(0, 10)}</p>
 
-      {/* Filtres A/B/C */}
-      <div className="flex gap-3 mb-4">
-        <button onClick={() => setFilterOption("ALL")}>Tous</button>
-        <button onClick={() => setFilterOption("A")}>A</button>
-        <button onClick={() => setFilterOption("B")}>B</button>
-        <button onClick={() => setFilterOption("C")}>C</button>
-      </div>
-
-      <table className="w-full border border-gray-300">
-        <thead>
-          <tr>
-            <th>Chapitre</th>
-            <th>PDF</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((r) => (
-            <tr key={r._id}>
-              <td>{r.chapter}</td>
-              <td>
-                <a href={r.pdfUrl} target="_blank" className="text-blue-600 underline">
-                  📄 Voir
-                </a>
-              </td>
-              <td>{new Date(r.createdAt).toLocaleString()}</td>
-            </tr>
+              <a
+                href={item.url}
+                target="_blank"
+                className="block mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg text-center"
+              >
+                📄 Voir le PDF
+              </a>
+            </div>
           ))}
-
-          {filtered.length === 0 && (
-            <tr>
-              <td colSpan={3} className="text-center py-3">Aucun résumé disponible.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+        </div>
+      )}
     </div>
   );
-};
-
-export default StudentSummaries;
+}
