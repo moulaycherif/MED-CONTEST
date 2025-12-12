@@ -243,6 +243,14 @@ useEffect(() => {
     }
 
 // 🧩 Cas 4 : Soutien — TOUTES LES MATIÈRES
+
+const subjectImages: Record<string, string> = {
+  Mathématique: mathsImg,
+  Physique: physiqueImg,
+  Chimie: chimieImg,
+  SVT: svtImg,
+};
+
 if (section === "soutien" && selectedMatiere) {
 
   const chaptersBySubject: Record<string, string[]> = {
@@ -362,7 +370,12 @@ if (section === "soutien" && selectedMatiere) {
           className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
           onClick={() => setSelectedChapter(chapter)}
         >
-          <img src={mathsImg} alt={chapter} className="w-48 h-48 object-cover" />
+          <img
+          src={subjectImages[selectedMatiere] || mathsImg}
+          alt={chapter}
+          className="w-48 h-48 object-cover"
+          />
+
           <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
             {chapter}
           </div>
