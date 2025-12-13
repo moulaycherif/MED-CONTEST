@@ -69,13 +69,19 @@ export default function StudentSummaries({
                 {item.created_at ? item.created_at.slice(0, 10) : "Date inconnue"}
               </p>
 
+              {item.url ? (
               <a
-                href={item.url}
-                target="_blank"
-                className="block mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg text-center"
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg text-center"
               >
-                📄 Voir le PDF
+              📄 Voir le PDF
               </a>
+              ) : (
+              <p className="text-red-500 text-sm mt-2">PDF indisponible</p>
+              )}
+
             </div>
           ))}
         </div>
