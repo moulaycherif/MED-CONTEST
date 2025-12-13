@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import Summary from "../models/resume";
 import { uploadToSupabase } from "../services/supabaseUpload";
 import Resume from "../models/resume";
-
-const router = express.Router();
+import { supabase } from "../utils/supabase";
 
 export const createSummary = async (req: Request, res: Response) => {
   try {
@@ -34,25 +33,6 @@ export const createSummary = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Erreur création résumé" });
   }
 };
-
-router.get("/signed/:id", async (req, res) => {
-  try {
-    const resume = await Resume.findById(req.params.id);
-    if (!resume) return res.status(404).json({ error: "Introuvable" });
-
-    const filePath = resume.pdfUrl.split("/").pop(); // nom du fichier
-
-    const { data, error } = await supabase.storage
-      .from(process.env.SUPABASE_BUCKET!)
-      .createSignedUrl(filePath!, 3600); // 1h
-
-    if (error) throw error;
-
-    res.json({ signedUrl: data.signedUrl });
-  } catch (err) {
-    res.status(500).json({ error: "Erreur signed URL" });
-  }
-});
 
 
 export const importPDF = async (req: Request, res: Response) => {
@@ -99,20 +79,19 @@ export const deleteSummary = async (req: Request, res: Response) => {
   }
 };
 
-// 📌 Récupérer les résumés par matière pour l'étudiant
-export const getResumesBySubject = async (req, res) => {
+// 📌 Récupérer les résumés par matière
+export const getResumesBySubject = async (req: Request, res: Response) => {
   try {
     const { subject } = req.params;
 
     const resumes = await Resume.find({ subject }).sort({ createdAt: -1 });
 
-    // 🔥 NORMALISATION POUR LE FRONTEND
     const formatted = resumes.map((r) => ({
       id: r._id,
       subject: r.subject,
       chapter: r.chapter,
-      url: r.pdfUrl,                // ✅ champ attendu par le frontend
-      created_at: r.createdAt,      // ✅ cohérent
+      url: r.pdfUrl,
+      created_at: r.createdAt,
     }));
 
     return res.json(formatted);
@@ -122,4 +101,35 @@ export const getResumesBySubject = async (req, res) => {
   }
 };
 
+  // 📌 Générer une URL signée Supabase
+export const getSignedResumeUrl = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
 
+    const resume = await Resume.findById(id);
+    if (!resume) {
+      return res.status(404).json({ message: "Résumé introuvable" });
+    }
+
+    const bucket = process.env.SUPABASE_BUCKET!;
+    const filePath = resume.pdfUrl.split(`/object/public/${bucket}/`)[1];
+
+    if (!filePath) {
+      return res.status(400).json({ message: "Chemin PDF invalide" });
+    }
+
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(filePath, 60 * 10); // 10 min
+
+    if (error) {
+      console.error("❌ Erreur Supabase :", error);
+      return res.status(500).json({ message: "Erreur Supabase" });
+    }
+
+    return res.json({ signedUrl: data.signedUrl });
+  } catch (err) {
+    console.error("❌ getSignedResumeUrl :", err);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+};
