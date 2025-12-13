@@ -167,4 +167,40 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// ------------------------------------------------------
+// 🟦  Générer une URL signée Supabase pour un PDF
+// ------------------------------------------------------
+router.get("/signed/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const resume = await Resume.findById(id);
+    if (!resume) {
+      return res.status(404).json({ message: "Résumé introuvable" });
+    }
+
+    // Extraire le nom du fichier depuis l'URL publique
+    const filePath = resume.pdfUrl.split(`/object/public/${bucket}/`)[1];
+
+    if (!filePath) {
+      return res.status(400).json({ message: "Chemin PDF invalide" });
+    }
+
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(filePath, 60 * 10); // 10 minutes
+
+    if (error) {
+      console.error("❌ Erreur signed URL :", error);
+      return res.status(500).json({ message: "Erreur Supabase" });
+    }
+
+    return res.json({ signedUrl: data.signedUrl });
+
+  } catch (err) {
+    console.error("❌ Erreur route signed :", err);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 export default router;
