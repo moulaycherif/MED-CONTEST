@@ -11,7 +11,12 @@ if (!process.env.SUPABASE_KEY) {
   console.error("❌ Variable d'environnement SUPABASE_KEY manquante !");
 }
 
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+  throw new Error("Supabase env vars missing");
+}
+
+
 export const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_KEY!
   );
