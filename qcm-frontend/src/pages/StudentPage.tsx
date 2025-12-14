@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
+import StudentDashboardStats from "../components/StudentDashboardStats";
+
 
 // ✅ Importation des images
 import concoursImg from "../assets/CONCOURS.jfif";
@@ -111,6 +113,10 @@ useEffect(() => {
 
   // --- Rendu principal ---
   const renderCenterContent = () => {
+    if (activeSection === "dashboard") {
+  return <StudentDashboardStats />;
+}
+
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (currentExam) {
       if (questions.length === 0)
@@ -414,6 +420,10 @@ if (section === "soutien" && selectedMatiere) {
         initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
+      <button onClick={() => setActiveSection("dashboard")}>
+        📊 Mon tableau de bord
+      </button>
+
         {/* 🎯 QCE par concours */}
         <div>
           <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>
