@@ -84,11 +84,7 @@ export default function StudentSummaries({
 
   return (
     <div>
-       <h3 className="text-xl font-bold mb-6"> 
-       📘 Résumés — {selectedSubject}
-      </h3>
-
-      {filtered.length === 0 ? (
+       {filtered.length === 0 ? (
         <p className="text-gray-500 text-center">
           Aucun résumé disponible.
         </p>
