@@ -392,10 +392,9 @@ if (section === "soutien" && selectedMatiere) {
     // 🧩 Par défaut
 
     // 📊 DASHBOARD
-            if (activeSection === "dashboard") {
+            
               return <StudentDashboardStats />;
-            }
-
+            
     return (
       <motion.p
         initial={{ opacity: 0, y: 20 }}
