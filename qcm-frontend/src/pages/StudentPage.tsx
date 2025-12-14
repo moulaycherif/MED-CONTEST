@@ -389,21 +389,13 @@ if (section === "soutien" && selectedMatiere) {
 }
 
 
-    // 🧩 Par défaut
+// 🧩 PAR DÉFAUT → STATISTIQUES (HOME)
+return (
+  <div className="p-6">
+    <StudentDashboardStats />
+  </div>
+);
 
-    // 📊 DASHBOARD
-            
-              return <StudentDashboardStats />;
-            
-    return (
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-gray-700 text-lg text-center mt-20"
-      >      
-        👈 Sélectionnez une section à gauche pour commencer.
-      </motion.p>
-    );
   };
 
   // --- Structure principale ---
