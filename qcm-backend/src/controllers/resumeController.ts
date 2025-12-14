@@ -3,6 +3,7 @@ import Summary from "../models/resume";
 import { uploadToSupabase } from "../services/supabaseUpload";
 import Resume from "../models/resume";
 import { supabase } from "../utils/supabase";
+import StudentActivity from "../models/StudentActivity";
 
 export const createSummary = async (req: Request, res: Response) => {
   try {
@@ -126,6 +127,15 @@ export const getSignedResumeUrl = async (req: Request, res: Response) => {
       console.error("❌ Erreur Supabase :", error);
       return res.status(500).json({ message: "Erreur Supabase" });
     }
+
+    await StudentActivity.create({
+  studentId: "TEMP_STUDENT_ID",
+  type: "RESUME",
+  subject: resume.subject,
+  chapter: resume.chapter,
+  referenceId: resume._id.toString(),
+  });
+
 
     return res.json({ signedUrl: data.signedUrl });
   } catch (err) {

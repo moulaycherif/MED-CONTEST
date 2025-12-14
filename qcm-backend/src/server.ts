@@ -3,8 +3,10 @@ import dotenv from "dotenv";
 import app from "./app";
 import http from "http";
 import { initRankingSocket } from "./websocket/rankingSocket";
+import statsRoutes from "./routes/statsRoutes";
 
 dotenv.config({ path: "./.env" });
+app.use("/api/stats", statsRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/qcmdb";
