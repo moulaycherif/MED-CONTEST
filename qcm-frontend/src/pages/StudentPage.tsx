@@ -307,7 +307,7 @@ if (section === "soutien" && selectedMatiere) {
     return (
       <div className="p-6">
         <h2 className="text-3xl font-bold text-center mb-6">
-          📘 Résumés {selectedMatiere}
+          📘 Résumés {selectedMatiere} - {selectedChapter}
         </h2>
 
         <StudentSummaries selectedSubject={selectedMatiere} selectedChapter={selectedChapter} />
