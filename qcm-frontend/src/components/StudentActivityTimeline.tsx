@@ -1,49 +1,39 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 import { API_BASE_URL } from "../config";
 
-type TimelineItem = {
-  _id: string;   // date YYYY-MM-DD
-  count: number; // nombre d’actions ce jour-là
-};
-
 export default function StudentActivityTimeline() {
-  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
     axios
       .get(`${API_BASE_URL}/api/stats/student/TEMP_STUDENT_ID/timeline`)
-      .then((res) => {
-        setTimeline(res.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then(res => setData(res.data))
+      .catch(() => setData([]));
   }, []);
 
-  if (loading) return <p>Chargement activité...</p>;
-
-  if (timeline.length === 0) {
-    return <p>Aucune activité enregistrée.</p>;
-  }
+  if (!data.length) return <p>Aucune activité enregistrée</p>;
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 mt-6">
-      <h3 className="text-lg font-semibold mb-3">
-        📈 Activité de l’étudiant (par jour)
-      </h3>
+    <div className="bg-white p-4 rounded-xl shadow">
+      <h3 className="font-semibold mb-3">📈 Activité dans le temps</h3>
 
-      <ul className="space-y-2">
-        {timeline.map((d) => (
-          <li
-            key={d._id}
-            className="flex justify-between border-b pb-1"
-          >
-            <span>{d._id}</span>
-            <span className="font-bold">{d.count}</span>
-          </li>
-        ))}
-      </ul>
+      <ResponsiveContainer width="100%" height={250}>
+        <LineChart data={data}>
+          <XAxis dataKey="_id" />
+          <YAxis />
+          <Tooltip />
+          <Line type="monotone" dataKey="count" />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }

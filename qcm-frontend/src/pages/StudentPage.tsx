@@ -497,7 +497,7 @@ return (
             🔙 Retour
           </button>
         )}
-
+        <StudentDashboardStats />
         {renderCenterContent()}
       </motion.div>
     </div>
