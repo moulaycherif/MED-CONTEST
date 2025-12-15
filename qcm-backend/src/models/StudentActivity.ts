@@ -1,17 +1,16 @@
-// models/StudentActivity.ts
 import mongoose from "mongoose";
 
-const StudentActivitySchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  type: {
-    type: String,
-    enum: ["QCM", "CONCOURS", "ASTUCE", "RESUME", "EXERCICE"],
-    required: true,
+const StudentActivitySchema = new mongoose.Schema(
+  {
+    studentId: { type: String, required: true },
+    type: { type: String, required: true }, // RESUME | ASTUCE | QCM | EXERCICE
+    subject: String,
+    chapter: String,
+    referenceId: String,
   },
-  subject: String,
-  chapter: String,
-  referenceId: String, // examId, resumeId, astuceId…
-  createdAt: { type: Date, default: Date.now },
-});
+  {
+    timestamps: true, // ⭐⭐⭐ OBLIGATOIRE ⭐⭐⭐
+  }
+);
 
 export default mongoose.model("StudentActivity", StudentActivitySchema);

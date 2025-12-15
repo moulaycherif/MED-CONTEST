@@ -11,7 +11,10 @@ export const getStudentTimeline = async (req: Request, res: Response) => {
       {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: { $ifNull: ["$createdAt", new Date()] }
+            }
           },
           count: { $sum: 1 }
         }
@@ -31,14 +34,27 @@ export const getStudentStats = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const total = await StudentActivity.countDocuments({ studentId: id });
-
-    const byType = await StudentActivity.aggregate([
+    // Ressources consultées
+    const resources = await StudentActivity.aggregate([
       { $match: { studentId: id } },
-      { $group: { _id: "$type", count: { $sum: 1 } } }
+      {
+        $group: {
+          _id: { $ifNull: ["$type", "UNKNOWN"] },
+          count: { $sum: 1 }
+        }
+      }
     ]);
 
-    res.json({ total, byType });
+    // (placeholder concours pour l’instant)
+    const concours = {
+      done: 0,
+      total: 0
+    };
+
+    res.json({
+      concours,
+      resources
+    });
   } catch (err) {
     console.error("❌ getStudentStats", err);
     res.status(500).json({ message: "Erreur stats étudiant" });
