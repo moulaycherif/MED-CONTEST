@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import StudentActivityTimeline from "./StudentActivityTimeline";
-import StudentResourcesChart from "./StudentResourcesChart";
+import StudentResourcesChart from "./StudentResourcesChart.tsx";
 
 export default function StudentDashboardStats() {
   const [stats, setStats] = useState<any>(null);
