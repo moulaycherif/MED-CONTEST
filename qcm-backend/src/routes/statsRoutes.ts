@@ -1,4 +1,5 @@
 import express from "express";
+import { authMiddleware } from "../middleware/auth";
 import {
   getStudentStats,
   getStudentTimeline
@@ -6,7 +7,7 @@ import {
 
 const router = express.Router();
 
-router.get("/student/:id/timeline", getStudentTimeline);
-router.get("/student/:id", getStudentStats);
+router.get("/student/me", authMiddleware, getStudentStats);
+router.get("/student/me/timeline", authMiddleware, getStudentTimeline);
 
 export default router;

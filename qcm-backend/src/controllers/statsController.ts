@@ -1,19 +1,23 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import StudentActivity from "../models/StudentActivity";
+import { AuthRequest } from "../middleware/auth";
 
-// 📊 Timeline activité étudiant
-export const getStudentTimeline = async (req: Request, res: Response) => {
+/**
+ * 📊 Timeline activité étudiant (par jour)
+ * Route : GET /api/stats/student/me/timeline
+ */
+export const getStudentTimeline = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const studentId = req.user!.id;
 
     const timeline = await StudentActivity.aggregate([
-      { $match: { studentId: id } },
+      { $match: { studentId } },
       {
         $group: {
           _id: {
             $dateToString: {
               format: "%Y-%m-%d",
-              date: { $ifNull: ["$createdAt", new Date()] }
+              date: "$createdAt"
             }
           },
           count: { $sum: 1 }
@@ -29,31 +33,43 @@ export const getStudentTimeline = async (req: Request, res: Response) => {
   }
 };
 
-// 📊 Stats globales étudiant
-export const getStudentStats = async (req: Request, res: Response) => {
+/**
+ * 📊 Stats globales étudiant
+ * Route : GET /api/stats/student/me
+ */
+export const getStudentStats = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const studentId = req.user!.id;
 
-    // Ressources consultées
-    const resources = await StudentActivity.aggregate([
-      { $match: { studentId: id } },
-      {
-        $group: {
-          _id: { $ifNull: ["$type", "UNKNOWN"] },
-          count: { $sum: 1 }
-        }
-      }
+    // 📄 Activité de l’étudiant (par type)
+    const studentByType = await StudentActivity.aggregate([
+      { $match: { studentId } },
+      { $group: { _id: "$type", count: { $sum: 1 } } }
     ]);
 
-    // (placeholder concours pour l’instant)
-    const concours = {
-      done: 0,
-      total: 0
-    };
+    // 🔢 Total QCM étudiant
+    const studentQcmTotal =
+      studentByType.find((t) => t._id === "QCM")?.count || 0;
+
+    // 📊 Moyenne QCM de tous les étudiants
+    const avg = await StudentActivity.aggregate([
+      { $match: { type: "QCM" } },
+      { $group: { _id: "$studentId", total: { $sum: 1 } } },
+      { $group: { _id: null, average: { $avg: "$total" } } }
+    ]);
+
+    const averageQcm = avg[0]?.average || 0;
+
+    // 🎯 Concours (placeholder)
+    const concours = { done: 0, total: 0 };
 
     res.json({
       concours,
-      resources
+      resources: studentByType,
+      comparison: {
+        student: studentQcmTotal,
+        average: averageQcm
+      }
     });
   } catch (err) {
     console.error("❌ getStudentStats", err);

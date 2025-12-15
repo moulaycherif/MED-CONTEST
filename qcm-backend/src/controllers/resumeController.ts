@@ -4,8 +4,9 @@ import { uploadToSupabase } from "../services/supabaseUpload";
 import Resume from "../models/resume";
 import { supabase } from "../utils/supabase";
 import StudentActivity from "../models/StudentActivity";
+import { AuthRequest } from "../middleware/auth";
 
-export const createSummary = async (req: Request, res: Response) => {
+export const createSummary = async (req: AuthRequest, res: Response) => {
   try {
     const { title, subject, chapter, content } = req.body;
 
@@ -36,7 +37,7 @@ export const createSummary = async (req: Request, res: Response) => {
 };
 
 
-export const importPDF = async (req: Request, res: Response) => {
+export const importPDF = async (req: AuthRequest, res: Response) => {
   try {
     const { title, subject, chapter } = req.body;
     const pdfFile = req.file;
@@ -63,12 +64,12 @@ export const importPDF = async (req: Request, res: Response) => {
 };
 
 
-export const getAllSummaries = async (req: Request, res: Response) => {
+export const getAllSummaries = async (req: AuthRequest, res: Response) => {
   const summaries = await Summary.find().sort({ createdAt: -1 });
   res.json(summaries);
 };
 
-export const deleteSummary = async (req: Request, res: Response) => {
+export const deleteSummary = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -81,7 +82,7 @@ export const deleteSummary = async (req: Request, res: Response) => {
 };
 
 // 📌 Récupérer les résumés par matière
-export const getResumesBySubject = async (req: Request, res: Response) => {
+export const getResumesBySubject = async (req: AuthRequest, res: Response) => {
   try {
     const { subject } = req.params;
 
@@ -103,7 +104,7 @@ export const getResumesBySubject = async (req: Request, res: Response) => {
 };
 
   // 📌 Générer une URL signée Supabase
-export const getSignedResumeUrl = async (req: Request, res: Response) => {
+export const getSignedResumeUrl = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -129,7 +130,7 @@ export const getSignedResumeUrl = async (req: Request, res: Response) => {
     }
 
     await StudentActivity.create({
-  studentId: "TEMP_STUDENT_ID",
+  studentId: req.user!.id,
   type: "RESUME",
   subject: resume.subject,
   chapter: resume.chapter,
