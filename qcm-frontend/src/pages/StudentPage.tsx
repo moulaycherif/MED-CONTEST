@@ -13,7 +13,7 @@ import bgImage from "/Image3.jfif";
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
 import { fetchAstucesByChapter, Astuce } from "../api/api";
 import StudentSummaries from "./StudentSummaries";
-import StudentDashboardStats from "../components/StudentDashboardStats";
+import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 
 interface Question {
   _id: string;

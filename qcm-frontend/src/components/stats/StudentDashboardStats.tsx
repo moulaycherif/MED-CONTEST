@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "../config";
-import StudentActivityTimeline from "./StudentActivityTimeline";
+import { API_BASE_URL } from "../../config";
+import StudentActivityTimeline from "../StudentActivityTimeline";
+import QcmBarChart from "./QcmBarChart";
+import StudentRanking from "./StudentRanking";
+import ActivityLineChart from "./ActivityLineChart";
+
+
 
 export default function StudentDashboardStats() {
   const [stats, setStats] = useState<any>(null);
@@ -53,6 +58,9 @@ export default function StudentDashboardStats() {
 
       {/* Timeline */}
       <StudentActivityTimeline />
+      <QcmBarChart data={stats.qcmBySubject} />
+      <ActivityLineChart data={stats.timeline} />
+      <StudentRanking data={stats.ranking} />
     </div>
-  );
+      );
 }
