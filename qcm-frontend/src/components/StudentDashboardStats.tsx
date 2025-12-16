@@ -33,20 +33,20 @@ export default function StudentDashboardStats() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="p-4 bg-white rounded-xl shadow">
           📘 Concours<br />
-          <b>{stats.concours.done} / {stats.concours.total}</b>
+          <b>0 / 0</b>
         </div>
 
         <div className="p-4 bg-white rounded-xl shadow">
           📄 Résumés consultés<br />
           <b>
-            {stats.resources.find((r: any) => r._id === "RESUME")?.count || 0}
+            {stats.resources?.find((r:any)=>r._id==="RESUME")?.count ?? 0}
           </b>
         </div>
 
         <div className="p-4 bg-white rounded-xl shadow">
           💡 Astuces consultées<br />
           <b>
-            {stats.resources.find((r: any) => r._id === "ASTUCE")?.count || 0}
+            {stats.resources?.find((r:any)=>r._id==="ASTUCE")?.count ?? 0}
           </b>
         </div>
       </div>
