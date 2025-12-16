@@ -8,16 +8,21 @@ export default function StudentDashboardStats() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/api/stats/student/TEMP_STUDENT_ID`)
-      .then((res) => {
-        setStats(res.data);
-      })
-      .catch((err) => {
-        console.error("Erreur stats", err);
-        setError(true);
-      });
-  }, []);
+  const url = `${API_BASE_URL}/api/stats/student/TEMP_STUDENT_ID`;
+  console.log("📡 Appel API stats :", url);
+
+  axios
+    .get(url)
+    .then((res) => {
+      console.log("✅ Réponse stats :", res.data);
+      setStats(res.data);
+    })
+    .catch((err) => {
+      console.error("❌ Erreur stats", err);
+      setError(true);
+    });
+}, []);
+
 
   if (error) return <p>❌ Impossible de charger les statistiques.</p>;
   if (!stats) return <p>Chargement statistiques...</p>;
