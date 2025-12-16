@@ -3,9 +3,15 @@ import {
 } from "recharts";
 
 export default function ActivityLineChart({ data }: { data: any[] }) {
-  if (!data || data.length === 0) {
-    return <p className="text-gray-500">Aucune activité</p>;
-  }
+ if (!data || data.length === 0) {
+  return (
+    <div className="bg-white p-4 rounded-xl shadow">
+      <h3 className="font-semibold mb-2">📈 Activité dans le temps</h3>
+      <p className="text-gray-500">Aucune activité temporelle</p>
+    </div>
+  );
+}
+
 
   return (
     <div className="bg-white p-4 rounded-xl shadow">
