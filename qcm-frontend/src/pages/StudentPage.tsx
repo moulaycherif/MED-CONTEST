@@ -25,7 +25,7 @@ interface Question {
 
 export default function StudentPage() {
   // Navigation
-  const [activeSection, setActiveSection] = useState<"home" | "dashboard">("home");
+  
   const [section, setSection] = useState<"concours" | "matiere" | "soutien" | null>(null);
 
    // Sélections
@@ -109,8 +109,8 @@ useEffect(() => {
   // --- Rendu principal ---
   const renderCenterContent = () => {
 
-  // 📊 DASHBOARD
-    if (activeSection === "dashboard") {
+   // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
+    if (!section && !currentExam && !selectedChapter && !selectedAction) {
       return <StudentDashboardStats />;
     }
 
@@ -420,8 +420,9 @@ return (
           <button
             onClick={() => {
               setSection("concours");
-              setSelectedMatiere(null);
               setCurrentExam(null);
+              setSelectedChapter(null);
+              setSelectedAction(null);
             }}
             className="py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition w-full"
           >
@@ -438,8 +439,9 @@ return (
                 key={m}
                 onClick={() => {
                   setSection("matiere");
-                  setSelectedMatiere(m);
                   setCurrentExam(null);
+                  setSelectedChapter(null);
+                  setSelectedAction(null);
                 }}
                 className="py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition"
               >
@@ -458,7 +460,7 @@ return (
                 key={m}
                 onClick={() => {
                   setSection("soutien");
-                  setSelectedMatiere(m);
+                  setCurrentExam(null);
                   setSelectedChapter(null);
                   setSelectedAction(null);
                 }}
@@ -481,14 +483,9 @@ return (
         {(section || currentExam || selectedChapter || selectedAction || activeSection === "dashboard") && (
           <button
             onClick={() => {
-             // if (selectedAction) setSelectedAction(null);
-              //else if (selectedChapter) setSelectedChapter(null);
-              //else if (currentExam) setCurrentExam(null);
-              //else if (selectedMatiere) setSelectedMatiere(null);
-              //else setSection(null);
-              setActiveSection("home");
               setSection(null);
               setCurrentExam(null);
+              setSelectedMatiere(null);
               setSelectedChapter(null);
               setSelectedAction(null);
             }}
