@@ -110,7 +110,7 @@ useEffect(() => {
   const renderCenterContent = () => {
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
-    if (!section && !currentExam && !selectedChapter && !selectedAction) {
+    if (section === null) {
       return <StudentDashboardStats />;
     }
 
