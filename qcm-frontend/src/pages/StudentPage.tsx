@@ -110,6 +110,9 @@ useEffect(() => {
   const renderCenterContent = () => {
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
+
+    console.log("SECTION =", section);
+
     if (section === null) {
       return <StudentDashboardStats />;
     }
@@ -420,7 +423,7 @@ return (
           <button
             onClick={() => {
               setSection("concours");
-              setCurrentExam(null);
+              setSelectedMatiere(m);
               setSelectedChapter(null);
               setSelectedAction(null);
             }}
@@ -438,10 +441,10 @@ return (
               <button
                 key={m}
                 onClick={() => {
-                  setSection("matiere");
-                  setCurrentExam(null);
-                  setSelectedChapter(null);
-                  setSelectedAction(null);
+                setSection("matiere");
+                setSelectedMatiere(m);
+                setSelectedChapter(null);
+                setSelectedAction(null);
                 }}
                 className="py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition"
               >
@@ -459,10 +462,10 @@ return (
               <button
                 key={m}
                 onClick={() => {
-                  setSection("soutien");
-                  setCurrentExam(null);
-                  setSelectedChapter(null);
-                  setSelectedAction(null);
+                setSection("soutien");
+                setSelectedMatiere(m);
+                setSelectedChapter(null);
+                setSelectedAction(null);
                 }}
                 className="py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition"
               >
