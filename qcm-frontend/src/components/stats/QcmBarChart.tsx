@@ -11,7 +11,9 @@ export default function QcmBarChart({ data }: { data: any[] }) {
     <div className="bg-white p-4 rounded-xl shadow">
       <h3 className="font-semibold mb-2">📊 QCM par matière</h3>
 
-      <ResponsiveContainer width="100%" height={250}>
+      <div className="bg-white p-4 rounded-xl shadow h-[220px]">
+      <ResponsiveContainer width="100%" height="100%">
+    {/* chart */}
         <BarChart data={data}>
           <XAxis dataKey="_id" />
           <YAxis />
@@ -19,6 +21,8 @@ export default function QcmBarChart({ data }: { data: any[] }) {
           <Bar dataKey="count" />
         </BarChart>
       </ResponsiveContainer>
+      </div>
+       
     </div>
   );
 }
