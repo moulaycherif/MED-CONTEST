@@ -393,11 +393,11 @@ if (section === "soutien" && selectedMatiere) {
 
 
 // 🧩 PAR DÉFAUT → STATISTIQUES (HOME)
-// return (
-  // <div className="p-6">
-    // <StudentDashboardStats />
-  // </div>
-// );
+ return (
+   <div className="p-6">
+     <StudentDashboardStats />
+   </div>
+ );
 
   };
 
@@ -483,7 +483,7 @@ if (section === "soutien" && selectedMatiere) {
         animate={{ opacity: 1 }}
       >
         {/* 🔙 Bouton Retour en haut à droite */}
-        {(section || currentExam || selectedChapter || selectedAction || activeSection === "dashboard") && (
+       {section !== null && (
           <button
             onClick={() => {
               setSection(null);
@@ -497,7 +497,7 @@ if (section === "soutien" && selectedMatiere) {
             🔙 Retour
           </button>
         )}
-        <StudentDashboardStats />
+       
         {renderCenterContent()}
       </motion.div>
     </div>
