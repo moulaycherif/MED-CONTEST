@@ -393,11 +393,11 @@ if (section === "soutien" && selectedMatiere) {
 
 
 // 🧩 PAR DÉFAUT → STATISTIQUES (HOME)
-return (
-  <div className="p-6">
-    <StudentDashboardStats />
-  </div>
-);
+// return (
+  // <div className="p-6">
+    // <StudentDashboardStats />
+  // </div>
+// );
 
   };
 
