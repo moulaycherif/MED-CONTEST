@@ -12,7 +12,7 @@ export default function QcmBarChart({ data }: { data: any[] }) {
       <h3 className="font-semibold mb-2">📊 QCM par matière</h3>
 
       <div className="bg-white p-4 rounded-xl shadow h-[220px]">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="50%" height="50%">
     {/* chart */}
         <BarChart data={data}>
           <XAxis dataKey="_id" />
