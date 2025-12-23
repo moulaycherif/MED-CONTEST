@@ -10,7 +10,7 @@ export default function StudentResourcesChart({ data }: any) {
     <div className="bg-white p-4 rounded-xl shadow">
       <h3 className="font-semibold mb-3">📚 Ressources consultées</h3>
 
-      <ResponsiveContainer width="50%" height={100}>
+      <ResponsiveContainer width="150%" height={200}>
         <PieChart>
           <Pie
             data={data}

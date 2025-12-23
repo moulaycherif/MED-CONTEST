@@ -12,7 +12,7 @@ export default function StudentQCMBySubjectChart({ data }: any) {
     <div className="bg-white p-4 rounded-xl shadow">
       <h3 className="font-semibold mb-3">📊 QCM par matière</h3>
 
-      <ResponsiveContainer width="50%" height={100}>
+      <ResponsiveContainer width="150%" height={200}>
         <BarChart data={data}>
           <XAxis dataKey="_id" />
           <YAxis />
