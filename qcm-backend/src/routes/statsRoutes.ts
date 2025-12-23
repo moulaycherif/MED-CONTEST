@@ -1,8 +1,13 @@
-import express from "express";
-import { getStudentStats } from "../controllers/statsController";
+import { Router } from "express";
+import { getStudentStats, getStudentTimeline } from "../controllers/statsController";
+import { protect } from "../middleware/auth";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/student/:id", getStudentStats);
+// ✅ Statistiques complètes étudiant — JWT réel
+router.get("/student", protect, getStudentStats);
+
+// ✅ Timeline seule (optionnel)
+router.get("/student/timeline", protect, getStudentTimeline);
 
 export default router;

@@ -1,81 +1,74 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import StudentActivity from "../models/StudentActivity";
+import { AuthRequest } from "../middleware/auth";
 
-/* ============================
-   📈 TIMELINE (activité / jour)
-============================ */
-const getTimeline = async (studentId: string) => {
-  return StudentActivity.aggregate([
-    { $match: { studentId } },
-    {
-      $group: {
-        _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
-        },
-        count: { $sum: 1 }
-      }
-    },
-    { $sort: { _id: 1 } }
-  ]);
-};
-
-/* ============================
-   📊 QCM PAR MATIÈRE
-============================ */
-const getQcmBySubject = async (studentId: string) => {
-  return StudentActivity.aggregate([
-    { $match: { studentId, type: "QCM" } },
-    {
-      $group: {
-        _id: "$subject",
-        count: { $sum: 1 }
-      }
-    }
-  ]);
-};
-
-/* ============================
-   🏆 CLASSEMENT ÉTUDIANTS
-============================ */
-const getRanking = async () => {
-  return StudentActivity.aggregate([
-    { $match: { type: "QCM" } },
-    {
-      $group: {
-        _id: "$studentId",
-        total: { $sum: 1 }
-      }
-    },
-    { $sort: { total: -1 } },
-    { $limit: 10 }
-  ]);
-};
-
-/* ============================
-   📊 STATS ÉTUDIANT (GLOBAL)
-============================ */
-export const getStudentStats = async (req: Request, res: Response) => {
+// 📊 STATS COMPLETES ÉTUDIANT (JWT)
+export const getStudentStats = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const studentId = req.user!.id;
 
-    const [timeline, qcmBySubject, ranking, resources] = await Promise.all([
-      getTimeline(id),
-      getQcmBySubject(id),
-      getRanking(),
-      StudentActivity.aggregate([
-        { $match: { studentId: id } },
-        { $group: { _id: "$type", count: { $sum: 1 } } }
-      ])
+    // 📈 Timeline activité
+    const timeline = await StudentActivity.aggregate([
+      { $match: { studentId } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // 📊 QCM par matière
+    const qcmBySubject = await StudentActivity.aggregate([
+      { $match: { studentId, type: "QCM" } },
+      { $group: { _id: "$subject", count: { $sum: 1 } } }
+    ]);
+
+    // 📄 Ressources (Résumé / Astuce)
+    const resources = await StudentActivity.aggregate([
+      { $match: { studentId } },
+      { $group: { _id: "$type", count: { $sum: 1 } } }
+    ]);
+
+    // 🏆 Classement étudiant (ranking)
+    const ranking = await StudentActivity.aggregate([
+      { $match: { type: "QCM" } },
+      { $group: { _id: "$studentId", total: { $sum: 1 } } },
+      { $sort: { total: -1 } }
     ]);
 
     res.json({
       timeline,
       qcmBySubject,
-      ranking,
-      resources
+      resources,
+      ranking
     });
   } catch (err) {
-    console.error("❌ getStudentStats", err);
+    console.error("❌ stats étudiant", err);
     res.status(500).json({ message: "Erreur stats étudiant" });
+  }
+};
+
+// 📊 Timeline seule (optionnel)
+export const getStudentTimeline = async (req: AuthRequest, res: Response) => {
+  try {
+    const studentId = req.user!.id;
+
+    const timeline = await StudentActivity.aggregate([
+      { $match: { studentId } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    res.json(timeline);
+  } catch (err) {
+    console.error("❌ getStudentTimeline", err);
+    res.status(500).json({ message: "Erreur stats timeline" });
   }
 };
