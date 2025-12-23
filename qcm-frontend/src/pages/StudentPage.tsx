@@ -11,7 +11,7 @@ import chimieImg from "../assets/CHIMIE.jfif";
 import svtImg from "../assets/SVT.jfif";
 import bgImage from "/Image3.jfif";
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
-import { fetchAstucesByChapter, Astuce } from "../api/api";
+import { fetchAstucesByChapter, Astuce } from "../api/astuces.api";
 import StudentSummaries from "./StudentSummaries";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 
