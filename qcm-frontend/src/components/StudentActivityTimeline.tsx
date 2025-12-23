@@ -26,7 +26,7 @@ export default function StudentActivityTimeline() {
     <div className="bg-white p-4 rounded-xl shadow">
       <h3 className="font-semibold mb-3">📈 Activité dans le temps</h3>
 
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="50%" height={100}>
         <LineChart data={data}>
           <XAxis dataKey="_id" />
           <YAxis />
