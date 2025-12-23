@@ -57,9 +57,13 @@ export default function StudentDashboardStats() {
       </div>
 
       {/* Timeline */}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <QcmBarChart data={stats.qcmBySubject} />
+          <ActivityLineChart data={stats.timeline} />
+        </div>
+
       <StudentActivityTimeline />
-      <QcmBarChart data={stats.qcmBySubject} />
-      <ActivityLineChart data={stats.timeline} />
       <StudentRanking data={stats.ranking} />
     </div>
       );

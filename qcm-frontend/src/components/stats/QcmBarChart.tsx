@@ -1,28 +1,33 @@
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
 } from "recharts";
 
 export default function QcmBarChart({ data }: { data: any[] }) {
   if (!data || data.length === 0) {
-    return <p className="text-gray-500">Aucun QCM traité</p>;
+    return (
+      <div className="bg-white p-4 rounded-xl shadow h-[300px] flex items-center justify-center text-gray-400">
+        Aucun QCM
+      </div>
+    );
   }
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow">
+    <div className="bg-white p-4 rounded-xl shadow h-[300px]">
       <h3 className="font-semibold mb-2">📊 QCM par matière</h3>
 
-      <div className="bg-white p-4 rounded-xl shadow h-[220px]">
-      <ResponsiveContainer width="150%" height="200%">
-    {/* chart */}
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data}>
           <XAxis dataKey="_id" />
-          <YAxis />
+          <YAxis allowDecimals={false} />
           <Tooltip />
           <Bar dataKey="count" />
         </BarChart>
       </ResponsiveContainer>
-      </div>
-       
     </div>
   );
 }

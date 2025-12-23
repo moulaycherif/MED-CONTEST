@@ -1,35 +1,33 @@
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
 } from "recharts";
 
 export default function ActivityLineChart({ data }: { data: any[] }) {
- if (!data || data.length === 0) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow">
-      <h3 className="font-semibold mb-2">📈 Activité dans le temps</h3>
-      <p className="text-gray-500">Aucune activité temporelle</p>
-    </div>
-  );
-}
-
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white p-4 rounded-xl shadow h-[300px] flex items-center justify-center text-gray-400">
+        Aucune activité
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow">
+    <div className="bg-white p-4 rounded-xl shadow h-[300px]">
       <h3 className="font-semibold mb-2">📈 Activité dans le temps</h3>
 
-      <div className="bg-white p-4 rounded-xl shadow h-[220px]">
-        <ResponsiveContainer width="150%" height="200%">
-        {/* chart */}
-          <LineChart data={data}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
           <XAxis dataKey="_id" />
-          <YAxis />
+          <YAxis allowDecimals={false} />
           <Tooltip />
           <Line type="monotone" dataKey="count" />
-          </LineChart>
-   
-        </ResponsiveContainer>
-      </div>
-
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
