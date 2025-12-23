@@ -18,7 +18,7 @@ export default function ActivityLineChart({ data }: { data: any[] }) {
       <h3 className="font-semibold mb-2">📈 Activité dans le temps</h3>
 
       <div className="bg-white p-4 rounded-xl shadow h-[220px]">
-        <ResponsiveContainer width="50%" height="50%">
+        <ResponsiveContainer width="50%" height="100%">
         {/* chart */}
           <LineChart data={data}>
           <XAxis dataKey="_id" />
