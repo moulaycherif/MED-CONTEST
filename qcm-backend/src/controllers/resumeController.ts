@@ -114,29 +114,41 @@ export const getSignedResumeUrl = async (req: AuthRequest, res: Response) => {
     }
 
     const bucket = process.env.SUPABASE_BUCKET!;
-    const filePath = resume.pdfUrl.split(`/object/public/${bucket}/`)[1];
 
-    if (!filePath) {
-      return res.status(400).json({ message: "Chemin PDF invalide" });
+    // 🔥 Extraire le chemin réel du fichier depuis l’URL Supabase
+    // ex: https://xyz.supabase.co/storage/v1/object/public/qcm-resumes/1699_trigo.pdf
+    const match = resume.pdfUrl.match(/\/object\/public\/([^/]+)\/(.+)$/);
+
+    if (!match) {
+      console.error("URL Supabase invalide :", resume.pdfUrl);
+      return res.status(400).json({ message: "URL PDF invalide" });
+    }
+
+    const fileBucket = match[1];  // qcm-resumes
+    const filePath = match[2];    // 1699_trigo.pdf
+
+    if (fileBucket !== bucket) {
+      console.error("Bucket incorrect :", fileBucket, "≠", bucket);
+      return res.status(400).json({ message: "Bucket incorrect" });
     }
 
     const { data, error } = await supabase.storage
       .from(bucket)
-      .createSignedUrl(filePath, 60 * 10); // 10 min
+      .createSignedUrl(filePath, 60 * 10); // 10 minutes
 
-    if (error) {
+    if (error || !data) {
       console.error("❌ Erreur Supabase :", error);
       return res.status(500).json({ message: "Erreur Supabase" });
     }
 
+    // 📊 Enregistrer l'activité étudiante
     await StudentActivity.create({
-  studentId: req.user!.id,
-  type: "RESUME",
-  subject: resume.subject,
-  chapter: resume.chapter,
-  referenceId: resume._id.toString(),
-  });
-
+      studentId: req.user!.id,
+      type: "RESUME",
+      subject: resume.subject,
+      chapter: resume.chapter,
+      referenceId: resume._id.toString(),
+    });
 
     return res.json({ signedUrl: data.signedUrl });
   } catch (err) {
