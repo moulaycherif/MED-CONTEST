@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import { API_BASE_URL } from "../config";
 
 interface ResumeItem {
@@ -25,9 +25,7 @@ export default function StudentSummaries({
   const openPdf = async (id: string) => {
     try {
       setLoadingId(id);
-      const res = await axios.get(
-        `${API_BASE_URL}/api/resume/signed/${id}`
-      );
+      const res = await api.get(`/api/resume/signed/${id}`);
       window.open(res.data.signedUrl, "_blank");
     } catch (err) {
       console.error("Erreur ouverture PDF :", err);
@@ -40,8 +38,7 @@ export default function StudentSummaries({
   useEffect(() => {
     if (!selectedSubject) return;
 
-    axios
-      .get(`${API_BASE_URL}/api/resume/by-subject/${selectedSubject}`)
+    api.get(`/api/resume/by-subject/${selectedSubject}`)
       .then((res) => {
         const all: ResumeItem[] = res.data;
         setResumes(all);
