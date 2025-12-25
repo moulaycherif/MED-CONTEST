@@ -1,21 +1,23 @@
 import { supabase } from "../utils/supabase";
 
-export const uploadToSupabase = async (fileBuffer: Buffer, fileName: string) => {
-  const { data, error } = await supabase.storage
-    .from(process.env.SUPABASE_BUCKET!)
-    .upload(fileName, fileBuffer, {
+export async function uploadToSupabase(file: Buffer, fileName: string) {
+  const bucket = process.env.SUPABASE_BUCKET!;
+
+  const path = `uploads/${Date.now()}_${fileName}`;
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, {
       contentType: "application/pdf",
-      upsert: true,
+      upsert: false,
     });
 
-  if (error) {
-    console.error("❌ Erreur upload Supabase :", error);
-    throw new Error("Erreur upload Supabase");
-  }
+  if (error) throw error;
 
-  const { data: publicUrl } = supabase.storage
-    .from(process.env.SUPABASE_BUCKET!)
-    .getPublicUrl(fileName);
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
 
-  return publicUrl.publicUrl;
-};
+  return {
+    publicUrl: data.publicUrl,
+    path,   // 🔥 on retourne le vrai chemin
+  };
+}

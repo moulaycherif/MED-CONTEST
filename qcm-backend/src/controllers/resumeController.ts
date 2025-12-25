@@ -18,13 +18,15 @@ export const createSummary = async (req: AuthRequest, res: Response) => {
     const pdfBuffer = Buffer.from(content, "utf-8");
 
     const fileName = `${Date.now()}_${title.replace(/ /g, "_")}.pdf`;
-    const publicUrl = await uploadToSupabase(pdfBuffer, fileName);
+
+    const { publicUrl, path } = await uploadToSupabase(pdfBuffer, fileName);
 
     const summary = new Summary({
       title,
       subject,
       chapter,
       pdfUrl: publicUrl,
+      storagePath: path,   // 🔥
     });
 
     await summary.save();
@@ -45,13 +47,15 @@ export const importPDF = async (req: AuthRequest, res: Response) => {
     if (!pdfFile) return res.status(400).json({ error: "Aucun fichier PDF" });
 
     const fileName = `${Date.now()}_${pdfFile.originalname.replace(/ /g, "_")}`;
-    const publicUrl = await uploadToSupabase(pdfFile.buffer, fileName);
+
+    const { publicUrl, path } = await uploadToSupabase(pdfFile.buffer, fileName);
 
     const summary = new Summary({
       title,
       subject,
       chapter,
       pdfUrl: publicUrl,
+      storagePath: path,   // 🔥
     });
 
     await summary.save();
@@ -82,66 +86,38 @@ export const deleteSummary = async (req: AuthRequest, res: Response) => {
 };
 
 // 📌 Récupérer les résumés par matière
-export const getResumesBySubject = async (req: AuthRequest, res: Response) => {
-  try {
-    const { subject } = req.params;
-
-    const resumes = await Resume.find({ subject }).sort({ createdAt: -1 });
-
-    const formatted = resumes.map((r) => ({
-      id: r._id,
-      subject: r.subject,
-      chapter: r.chapter,
-      url: r.pdfUrl,
-      created_at: r.createdAt,
-    }));
-
-    return res.json(formatted);
-  } catch (error) {
-    console.error("❌ Erreur getResumesBySubject :", error);
-    return res.status(500).json({ message: "Erreur serveur" });
-  }
-};
-
-  // 📌 Générer une URL signée Supabase
 export const getSignedResumeUrl = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-
-    const resume = await Resume.findById(id);
-    if (!resume) {
-      return res.status(404).json({ message: "Résumé introuvable" });
-    }
+    const resume = await Resume.findById(req.params.id);
+    if (!resume) return res.status(404).json({ message: "Résumé introuvable" });
 
     const bucket = process.env.SUPABASE_BUCKET!;
 
-    // 🔥 Extraire le chemin réel du fichier depuis l’URL Supabase
-    // ex: https://xyz.supabase.co/storage/v1/object/public/qcm-resumes/1699_trigo.pdf
-    const match = resume.pdfUrl.match(/\/object\/public\/([^/]+)\/(.+)$/);
+    let storagePath = resume.storagePath;
 
-    if (!match) {
-      console.error("URL Supabase invalide :", resume.pdfUrl);
-      return res.status(400).json({ message: "URL PDF invalide" });
-    }
+    // 🔥 Si l’ancien document n’a pas storagePath → on le reconstruit
+    if (!storagePath && resume.pdfUrl) {
+      const parts = resume.pdfUrl.split(`/object/public/${bucket}/`);
+      if (parts.length !== 2) {
+        return res.status(400).json({ message: "URL PDF invalide" });
+      }
+      storagePath = parts[1];
 
-    const fileBucket = match[1];  // qcm-resumes
-    const filePath = match[2];    // 1699_trigo.pdf
-
-    if (fileBucket !== bucket) {
-      console.error("Bucket incorrect :", fileBucket, "≠", bucket);
-      return res.status(400).json({ message: "Bucket incorrect" });
+      // On le sauvegarde pour la prochaine fois
+      resume.storagePath = storagePath;
+      await resume.save();
     }
 
     const { data, error } = await supabase.storage
       .from(bucket)
-      .createSignedUrl(filePath, 60 * 10); // 10 minutes
+      .createSignedUrl(storagePath!, 600);
 
-    if (error || !data) {
-      console.error("❌ Erreur Supabase :", error);
+    if (error) {
+      console.error("❌ Supabase:", error);
       return res.status(500).json({ message: "Erreur Supabase" });
     }
 
-    // 📊 Enregistrer l'activité étudiante
+    // 📊 Tracker activité étudiant
     await StudentActivity.create({
       studentId: req.user!.id,
       type: "RESUME",
@@ -150,9 +126,65 @@ export const getSignedResumeUrl = async (req: AuthRequest, res: Response) => {
       referenceId: resume._id.toString(),
     });
 
-    return res.json({ signedUrl: data.signedUrl });
+    res.json({ signedUrl: data.signedUrl });
+  } catch (e) {
+    console.error("❌ getSignedResumeUrl:", e);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
+
+  // 📌 Générer une URL signée Supabase
+export const getSignedResumeUrl = async (req: AuthRequest, res: Response) => {
+  try {
+    const resume = await Resume.findById(req.params.id);
+    if (!resume) {
+      return res.status(404).json({ message: "Résumé introuvable" });
+    }
+
+    const bucket = process.env.SUPABASE_BUCKET!;
+
+    let filePath = resume.storagePath;
+
+    // 🔁 Compatibilité anciens PDFs (sans storagePath)
+    if (!filePath) {
+      const url = new URL(resume.pdfUrl);
+      const parts = url.pathname.split("/object/public/");
+      filePath = parts[1];   // resumes/abc.pdf
+
+      if (!filePath) {
+        console.error("❌ Impossible d'extraire le path:", resume.pdfUrl);
+        return res.status(400).json({ message: "Chemin PDF invalide" });
+      }
+
+      // 🔥 On corrige MongoDB automatiquement
+      resume.storagePath = filePath;
+      await resume.save();
+      console.log("🛠 storagePath réparé :", filePath);
+    }
+
+    console.log("📄 SIGNED PATH =", filePath);
+
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(filePath, 600); // 10 minutes
+
+    if (error) {
+      console.error("❌ Supabase :", error);
+      return res.status(500).json({ message: "Erreur Supabase" });
+    }
+
+    // 📊 Log activité étudiant
+    await StudentActivity.create({
+      studentId: req.user!.id,
+      type: "RESUME",
+      subject: resume.subject,
+      chapter: resume.chapter,
+      referenceId: resume._id.toString(),
+    });
+
+    res.json({ signedUrl: data.signedUrl });
   } catch (err) {
     console.error("❌ getSignedResumeUrl :", err);
-    return res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
