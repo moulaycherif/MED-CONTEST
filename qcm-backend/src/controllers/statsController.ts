@@ -5,15 +5,10 @@ import { AuthRequest } from "../middleware/auth";
 // 📊 QCM par matière
 export const getQcmStats = async (req: AuthRequest, res: Response) => {
   try {
-    const studentId = req.user!.id; // JWT réel
+    const studentId = req.user!.id;
 
     const stats = await StudentActivity.aggregate([
-      {
-        $match: {
-          studentId,
-          type: "QCM",
-        },
-      },
+      { $match: { studentId, type: "QCM" } },
       {
         $group: {
           _id: "$subject",
@@ -35,16 +30,11 @@ export const getActivityStats = async (req: AuthRequest, res: Response) => {
     const studentId = req.user!.id;
 
     const stats = await StudentActivity.aggregate([
-      {
-        $match: { studentId },
-      },
+      { $match: { studentId } },
       {
         $group: {
           _id: {
-            $dateToString: {
-              format: "%Y-%m-%d",
-              date: "$createdAt",
-            },
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
           },
           count: { $sum: 1 },
         },
@@ -56,5 +46,60 @@ export const getActivityStats = async (req: AuthRequest, res: Response) => {
   } catch (e) {
     console.error("❌ getActivityStats:", e);
     res.status(500).json({ message: "Erreur stats activité" });
+  }
+};
+
+// 🧠 STATS COMPLETES (utilisées par le dashboard)
+export const getStudentStats = async (req: AuthRequest, res: Response) => {
+  try {
+    const studentId = req.user!.id;
+
+    const timeline = await StudentActivity.aggregate([
+      { $match: { studentId } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const qcmBySubject = await StudentActivity.aggregate([
+      { $match: { studentId, type: "QCM" } },
+      {
+        $group: {
+          _id: "$subject",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const resources = await StudentActivity.aggregate([
+      { $match: { studentId } },
+      {
+        $group: {
+          _id: "$type",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const ranking = await StudentActivity.aggregate([
+      { $match: { type: "QCM" } },
+      {
+        $group: {
+          _id: "$studentId",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { total: -1 } },
+      { $limit: 10 },
+    ]);
+
+    res.json({ timeline, qcmBySubject, resources, ranking });
+  } catch (err) {
+    console.error("❌ getStudentStats", err);
+    res.status(500).json({ message: "Erreur stats étudiant" });
   }
 };
