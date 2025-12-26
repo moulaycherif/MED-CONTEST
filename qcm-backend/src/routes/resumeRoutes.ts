@@ -1,4 +1,5 @@
 import express from "express";
+import { protect } from "../middleware/auth";   // 🔥
 import generateResumeBuffer from "../scripts/generateResume";
 import Resume from "../models/resume";
 import { supabase } from "../utils/supabase";
@@ -11,8 +12,9 @@ const router = express.Router();
 
 const bucket = process.env.SUPABASE_BUCKET!;
 
-router.get("/by-subject/:subject", getResumesBySubject);
-router.get("/signed/:id", getSignedResumeUrl);
+router.get("/by-subject/:subject", protect, getResumesBySubject);
+router.get("/signed/:id", protect, getSignedResumeUrl);
+
 
 // ------------------------------------------------------
 // 🟦  GÉNÉRER un PDF → upload Supabase → enregistrer Mongo
