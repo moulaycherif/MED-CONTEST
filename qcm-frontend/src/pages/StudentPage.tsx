@@ -54,6 +54,14 @@ export default function StudentPage() {
     "Chapitre VII : Probabilité",
   ];
 
+  const resetQcm = () => {
+  setCurrentExam(null);
+  setQuestions([]);
+  setAnswers({});
+  setSubmitted(false);
+  setScore(null);
+};
+
   // 🔹 Charger les questions quand currentExam change
   useEffect(() => {
     if (currentExam && selectedMatiere) {
@@ -205,6 +213,7 @@ useEffect(() => {
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
+                resetQcm();
                 setCurrentExam(`MEDECINE ${year}`);
                 setQuestions([]);
                 setAnswers({});
@@ -246,6 +255,7 @@ useEffect(() => {
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
+                resetQcm();
                 setCurrentExam(`MEDECINE ${year}`);
                 setQuestions([]);
                 setAnswers({});
@@ -438,6 +448,7 @@ if (section === "soutien" && selectedMatiere) {
           <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>
           <button
             onClick={() => {
+              resetQcm();
           // 🔥 Sortir du QCM
             setCurrentExam(null);
 
@@ -470,6 +481,7 @@ if (section === "soutien" && selectedMatiere) {
               <button
                 key={m}
                 onClick={() => {
+                  resetQcm();
                 setSection("matiere");
                 setSelectedMatiere(m);
                 setSelectedChapter(null);
@@ -521,6 +533,7 @@ if (section === "soutien" && selectedMatiere) {
               setSelectedChapter(null);
               setSelectedAction(null);
               setSection("concours");     //Modification à vérifier
+              resetQcm();
             }}
             className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"
           >
