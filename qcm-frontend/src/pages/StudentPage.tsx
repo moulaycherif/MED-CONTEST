@@ -118,75 +118,77 @@ useEffect(() => {
     }
 
     // 🧩 Cas 1 : affichage des questions (QCE)
-    if (currentExam) {
-      if (questions.length === 0)
-        return (
-          <div className="text-center mt-10">
-            <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
-          </div>
-        );
+    if ((section === "concours" || section === "matiere") && currentExam) {
+  if (questions.length === 0)
+    return (
+      <div className="text-center mt-10">
+        <p className="text-gray-700 text-lg">
+          Aucune question trouvée pour {currentExam}.
+        </p>
+      </div>
+    );
 
-      return (
-        <div className="p-4">
-          <h2 className="text-xl font-bold text-center mb-4 text-blue-800">
-            📘 QCM — {currentExam}
-          </h2>
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-bold text-center mb-4 text-blue-800">
+        📘 QCM — {currentExam}
+      </h2>
 
-          {questions.map((q, idx) => (
-            <motion.div
-              key={q._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 mb-4 bg-white rounded-xl shadow"
+      {questions.map((q, idx) => (
+        <motion.div
+          key={q._id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 mb-4 bg-white rounded-xl shadow"
+        >
+          <h3 className="font-semibold mb-2">
+            Q{idx + 1}) {q.texte}{" "}
+            <span className="text-purple-600">({q.note} pt)</span>
+          </h3>
+
+          {q.options.map((opt, i) => (
+            <label
+              key={i}
+              className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
+                submitted
+                  ? opt === q.reponseCorrecte
+                    ? "bg-green-100 border-green-400"
+                    : answers[q._id] === opt
+                    ? "bg-red-100 border-red-400"
+                    : ""
+                  : "hover:bg-gray-100"
+              }`}
             >
-              <h3 className="font-semibold mb-2">
-                Q{idx + 1}) {q.texte}{" "}
-                <span className="text-purple-600">({q.note} pt)</span>
-              </h3>
-
-              {q.options.map((opt, i) => (
-                <label
-                  key={i}
-                  className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
-                    submitted
-                      ? opt === q.reponseCorrecte
-                        ? "bg-green-100 border-green-400"
-                        : answers[q._id] === opt
-                        ? "bg-red-100 border-red-400"
-                        : ""
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={q._id}
-                    checked={answers[q._id] === opt}
-                    onChange={() => handleAnswerChange(q._id, opt)}
-                    disabled={submitted}
-                    className="mr-2"
-                  />
-                  {opt}
-                </label>
-              ))}
-            </motion.div>
+              <input
+                type="radio"
+                name={q._id}
+                checked={answers[q._id] === opt}
+                onChange={() => handleAnswerChange(q._id, opt)}
+                disabled={submitted}
+                className="mr-2"
+              />
+              {opt}
+            </label>
           ))}
+        </motion.div>
+      ))}
 
-          {!submitted ? (
-            <button
-              onClick={handleFinish}
-              className="mt-4 px-6 py-2 bg-green-600 text-black rounded-lg"
-            >
-              ✅ Soumettre
-            </button>
-          ) : (
-            <div className="mt-4 text-center text-lg font-semibold text-blue-700">
-              ✅ Score final : {score} /{" "}
-              {questions.reduce((sum, q) => sum + q.note, 0)}
-            </div>
-          )}
+      {!submitted ? (
+        <button
+          onClick={handleFinish}
+          className="mt-4 px-6 py-2 bg-green-600 text-black rounded-lg"
+        >
+          ✅ Soumettre
+        </button>
+      ) : (
+        <div className="mt-4 text-center text-lg font-semibold text-blue-700">
+          ✅ Score final : {score} /{" "}
+          {questions.reduce((sum, q) => sum + q.note, 0)}
         </div>
-      );
-    }
+      )}
+    </div>
+  );
+}
 
     // 🧩 Cas 2 : QCE par concours
     if (section === "concours") {
@@ -513,11 +515,12 @@ if (section === "soutien" && selectedMatiere) {
        {section !== null && section !== "concours" && (
           <button
             onClick={() => {
-              setSection(null);
+             // setSection(null);
               setCurrentExam(null);
               setSelectedMatiere(null);
               setSelectedChapter(null);
               setSelectedAction(null);
+              setSection("concours");     //Modification à vérifier
             }}
             className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"
           >
