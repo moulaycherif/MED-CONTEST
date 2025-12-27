@@ -202,7 +202,14 @@ useEffect(() => {
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => setCurrentExam(`MEDECINE ${year}`)}
+              onClick={() => {
+                setCurrentExam(`MEDECINE ${year}`);
+                setQuestions([]);
+                setAnswers({});
+                setSubmitted(false);
+                setScore(null);
+              }}
+
             >
               <img src={concoursImg} alt={`Concours ${year}`} className="w-48 h-48 object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-white/60 text-black text-center py-2 font-semibold">
@@ -236,7 +243,14 @@ useEffect(() => {
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => setCurrentExam(`MEDECINE ${year}`)}
+              onClick={() => {
+                setCurrentExam(`MEDECINE ${year}`);
+                setQuestions([]);
+                setAnswers({});
+                setSubmitted(false);
+                setScore(null);
+              }}
+
             >
               <img src={matiereImage} alt={`${selectedMatiere} — MEDECINE ${year}`} className="w-48 h-48 object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-black text-center py-2 font-semibold">
@@ -423,7 +437,12 @@ if (section === "soutien" && selectedMatiere) {
           <button
             onClick={() => {
               setSection("concours");
-              setSelectedMatiere(m);
+              setCurrentExam(null);      // ⬅ on quitte le QCM
+              setQuestions([]);
+              setAnswers({});
+              setSubmitted(false);
+              setScore(null);
+              setSelectedMatiere(null);
               setSelectedChapter(null);
               setSelectedAction(null);
             }}
@@ -483,7 +502,7 @@ if (section === "soutien" && selectedMatiere) {
         animate={{ opacity: 1 }}
       >
         {/* 🔙 Bouton Retour en haut à droite */}
-       {section !== null && (
+       {section !== null && section !== "concours" && (
           <button
             onClick={() => {
               setSection(null);
