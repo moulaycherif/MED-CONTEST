@@ -215,10 +215,6 @@ useEffect(() => {
               onClick={() => {
                 resetQcm();
                 setCurrentExam(`MEDECINE ${year}`);
-                setQuestions([]);
-                setAnswers({});
-                setSubmitted(false);
-                setScore(null);
               }}
 
             >
@@ -257,11 +253,7 @@ useEffect(() => {
               onClick={() => {
                 resetQcm();
                 setCurrentExam(`MEDECINE ${year}`);
-                setQuestions([]);
-                setAnswers({});
-                setSubmitted(false);
-                setScore(null);
-              }}
+          }}
 
             >
               <img src={matiereImage} alt={`${selectedMatiere} — MEDECINE ${year}`} className="w-48 h-48 object-cover" />
@@ -453,10 +445,7 @@ if (section === "soutien" && selectedMatiere) {
             setCurrentExam(null);
 
           // 🔥 Reset du QCM (défige)
-            setQuestions([]);
-            setAnswers({});
-            setSubmitted(false);
-            setScore(null);
+           resetQcm();
 
           // 🔥 Aller à la liste des concours
             setSection("concours");
