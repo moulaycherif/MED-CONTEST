@@ -517,22 +517,35 @@ if (section === "soutien" && selectedMatiere) {
       >
         {/* 🔙 Bouton Retour en haut à droite */}
        
-        {section === "soutien" && selectedMatiere && (
+        {section === "soutien" && (
   <button
     onClick={() => {
-  resetQcm();
-  setSection("concours");
-  setSelectedMatiere(null);
-  setSelectedChapter(null);
-  setSelectedAction(null);
-}}
+      // Niveau 4 → 3 (PDF, Astuces, Exercices)
+      if (selectedAction) {
+        setSelectedAction(null);
+        return;
+      }
 
+      // Niveau 3 → 2 (boutons)
+      if (selectedChapter) {
+        setSelectedChapter(null);
+        return;
+      }
+
+      // Niveau 2 → 1 (chapitres → matières)
+      if (selectedMatiere) {
+        setSelectedMatiere(null);
+        return;
+      }
+
+      // Niveau 1 → Home
+      setSection("home");
+    }}
     className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"
   >
     🔙 Retour
   </button>
 )}
-
        
         {renderCenterContent()}
       </motion.div>
