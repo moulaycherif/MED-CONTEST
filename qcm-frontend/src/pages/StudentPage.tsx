@@ -524,23 +524,7 @@ if (section === "soutien" && selectedMatiere) {
         animate={{ opacity: 1 }}
       >
         {/* 🔙 Bouton Retour en haut à droite */}
-       {section !== null && section !== "concours" && (
-          <button
-            onClick={() => {
-             // setSection(null);
-              setCurrentExam(null);
-              setSelectedMatiere(null);
-              setSelectedChapter(null);
-              setSelectedAction(null);
-              setSection("concours");     //Modification à vérifier
-              resetQcm();
-            }}
-            className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"
-          >
-            🔙 Retour
-          </button>
-        )}
-
+       
         {section === "soutien" && selectedMatiere && (
   <button
     onClick={() => {
