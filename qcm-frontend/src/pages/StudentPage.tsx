@@ -436,20 +436,28 @@ if (section === "soutien" && selectedMatiere) {
           <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>
           <button
             onClick={() => {
-              setSection("concours");
-              setCurrentExam(null);      // ⬅ on quitte le QCM
-              setQuestions([]);
-              setAnswers({});
-              setSubmitted(false);
-              setScore(null);
-              setSelectedMatiere(null);
-              setSelectedChapter(null);
-              setSelectedAction(null);
-            }}
-            className="py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition w-full"
+          // 🔥 Sortir du QCM
+            setCurrentExam(null);
+
+          // 🔥 Reset du QCM (défige)
+            setQuestions([]);
+            setAnswers({});
+            setSubmitted(false);
+            setScore(null);
+
+          // 🔥 Aller à la liste des concours
+            setSection("concours");
+
+          // Reset autres vues
+            setSelectedMatiere(null);
+            setSelectedChapter(null);
+            setSelectedAction(null);
+          }}
+          className="py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition w-full"
           >
-            Concours
+          Concours
           </button>
+
         </div>
 
         {/* 📚 QCE par matière */}
