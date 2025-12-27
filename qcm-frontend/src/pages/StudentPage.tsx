@@ -540,6 +540,32 @@ if (section === "soutien" && selectedMatiere) {
             🔙 Retour
           </button>
         )}
+
+        {section === "soutien" && selectedMatiere && (
+  <button
+    onClick={() => {
+      // Niveau 3 → Niveau 2
+      if (selectedAction) {
+        setSelectedAction(null);
+        return;
+      }
+
+      // Niveau 2 → Niveau 1
+      if (selectedChapter) {
+        setSelectedChapter(null);
+        return;
+      }
+
+      // Niveau 1 → sortir du soutien
+      setSelectedMatiere(null);
+      setSection(null);
+    }}
+    className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"
+  >
+    🔙 Retour
+  </button>
+)}
+
        
         {renderCenterContent()}
       </motion.div>
