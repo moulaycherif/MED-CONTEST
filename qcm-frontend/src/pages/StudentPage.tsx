@@ -26,7 +26,8 @@ interface Question {
 export default function StudentPage() {
   // Navigation
   
-  const [section, setSection] = useState<"concours" | "matiere" | "soutien" | null>(null);
+  const [section, setSection] = useState<"home" | "concours" | "matiere" | "soutien" | "qcm">("home");
+
 
    // Sélections
   const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null);
@@ -126,7 +127,7 @@ useEffect(() => {
     }
 
     // 🧩 Cas 1 : affichage des questions (QCE)
-    if ((section === "concours" || section === "matiere") && currentExam) {
+    if (section === "qcm" && currentExam) {
   if (questions.length === 0)
     return (
       <div className="text-center mt-10">
@@ -214,6 +215,7 @@ useEffect(() => {
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
                 resetQcm();
+                setSection("qcm");
                 setCurrentExam(`MEDECINE ${year}`);
               }}
 
@@ -252,6 +254,7 @@ useEffect(() => {
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
                 resetQcm();
+                setSection("qcm");
                 setCurrentExam(`MEDECINE ${year}`);
           }}
 
@@ -517,22 +520,13 @@ if (section === "soutien" && selectedMatiere) {
         {section === "soutien" && selectedMatiere && (
   <button
     onClick={() => {
-      // Niveau 3 → Niveau 2
-      if (selectedAction) {
-        setSelectedAction(null);
-        return;
-      }
+  resetQcm();
+  setSection("concours");
+  setSelectedMatiere(null);
+  setSelectedChapter(null);
+  setSelectedAction(null);
+}}
 
-      // Niveau 2 → Niveau 1
-      if (selectedChapter) {
-        setSelectedChapter(null);
-        return;
-      }
-
-      // Niveau 1 → sortir du soutien
-      setSelectedMatiere(null);
-      setSection(null);
-    }}
     className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"
   >
     🔙 Retour
