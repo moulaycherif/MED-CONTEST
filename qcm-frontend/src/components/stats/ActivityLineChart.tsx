@@ -27,7 +27,8 @@ export default function ActivityLineChart({ data }: { data: any[] }) {
     <div className="bg-white p-4 rounded-xl shadow h-[350px]">
       <h3 className="font-semibold mb-2">📈 Activité dans le temps</h3>
 
-      <ResponsiveContainer width="100%" height="90%">
+      <div className="w-full h-[280px]">
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart data={formattedData}>
           <XAxis dataKey="date" />
           <YAxis allowDecimals={false} />
@@ -35,6 +36,7 @@ export default function ActivityLineChart({ data }: { data: any[] }) {
           <Line type="monotone" dataKey="count" stroke="#60a5fa" strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }

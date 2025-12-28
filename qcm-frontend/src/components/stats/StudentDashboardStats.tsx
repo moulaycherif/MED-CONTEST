@@ -63,15 +63,11 @@ export default function StudentDashboardStats() {
 
       {/* 🔹 Graphes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-xl shadow flex flex-col">
-          <h3 className="font-semibold text-center mb-4">📊 QCM par matière</h3>
-          <QcmBarChart data={stats.qcmBySubject} width="100%" height={300} />
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow flex flex-col">
-          <h3 className="font-semibold text-center mb-4">📈 Activité dans le temps</h3>
-          <ActivityLineChart data={stats.timeline} width="100%" height={300} />
-        </div>
+        
+            <QcmBarChart data={stats.qcmBySubject} />
+               
+            <ActivityLineChart data={stats.timeline} />
+         
       </div>
 
       {/* 🔹 Classement étudiant */}

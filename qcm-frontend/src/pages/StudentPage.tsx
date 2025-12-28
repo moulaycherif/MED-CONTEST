@@ -119,9 +119,7 @@ useEffect(() => {
   const renderCenterContent = () => {
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
-
-    console.log("SECTION =", section);
-
+    
     if (section === null) {
       return <StudentDashboardStats />;
     }
