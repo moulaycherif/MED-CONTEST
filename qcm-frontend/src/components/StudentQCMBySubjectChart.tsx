@@ -8,19 +8,27 @@ import {
 } from "recharts";
 
 export default function StudentQCMBySubjectChart({ data }: any) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white p-4 rounded-xl shadow h-[350px] flex items-center justify-center text-gray-400">
+        Aucun QCM
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white p-4 rounded-xl shadow">
+    <div className="bg-white p-4 rounded-xl shadow h-[350px]">
       <h3 className="font-semibold mb-3">📊 QCM par matière</h3>
 
-      <div className="w-full h-[300px]">
-      <ResponsiveContainer width="150%" height={200}>
-        <BarChart data={data}>
-          <XAxis dataKey="_id" />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="count" />
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="w-full h-[280px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis dataKey="_id" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Bar dataKey="count" fill="#4ade80" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
