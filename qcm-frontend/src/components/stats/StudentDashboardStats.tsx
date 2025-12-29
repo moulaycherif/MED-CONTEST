@@ -26,7 +26,20 @@ export default function StudentDashboardStats() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await api.get("/api/stats/student");
+        const [qcm, timeline, resources, ranking] = await Promise.all([
+          api.get("/api/stats/qcm"),
+          api.get("/api/stats/activity"),
+          api.get("/api/stats/resources"),
+          api.get("/api/stats/ranking"),
+        ]);
+
+        setStats({
+          qcmBySubject: qcm.data,
+          timeline: timeline.data,
+          resources: resources.data,
+          ranking: ranking.data,
+        });
+
         setStats(res.data);
       } catch (err) {
         console.error("Erreur récupération stats :", err);
