@@ -509,7 +509,7 @@ if (section === "soutien" && selectedMatiere) {
 
       {/* ✅ Colonne centrale */}
       <motion.div
-        className="flex-1 bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative"
+        className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
