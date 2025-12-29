@@ -54,52 +54,48 @@ export const getStudentStats = async (req: AuthRequest, res: Response) => {
   try {
     const studentId = req.user!.id;
 
+    // QCM par matière
+    const qcmBySubject = await StudentActivity.aggregate([
+      { $match: { studentId, type: "QCM" } },
+      { $group: { _id: "$subject", count: { $sum: 1 } } },
+    ]);
+
+    // Activité dans le temps
     const timeline = await StudentActivity.aggregate([
       { $match: { studentId } },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
           count: { $sum: 1 },
         },
       },
       { $sort: { _id: 1 } },
     ]);
 
-    const qcmBySubject = await StudentActivity.aggregate([
-      { $match: { studentId, type: "QCM" } },
-      {
-        $group: {
-          _id: "$subject",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
+    // Ressources consultées
     const resources = await StudentActivity.aggregate([
       { $match: { studentId } },
-      {
-        $group: {
-          _id: "$type",
-          count: { $sum: 1 },
-        },
-      },
+      { $group: { _id: "$type", count: { $sum: 1 } } },
     ]);
 
+    // Classement
     const ranking = await StudentActivity.aggregate([
       { $match: { type: "QCM" } },
-      {
-        $group: {
-          _id: "$studentId",
-          total: { $sum: 1 },
-        },
-      },
+      { $group: { _id: "$studentId", total: { $sum: 1 } } },
       { $sort: { total: -1 } },
       { $limit: 10 },
     ]);
 
-    res.json({ timeline, qcmBySubject, resources, ranking });
-  } catch (err) {
-    console.error("❌ getStudentStats", err);
+    res.json({
+      qcmBySubject,
+      timeline,
+      resources,
+      ranking,
+    });
+  } catch (e) {
+    console.error("❌ getStudentStats:", e);
     res.status(500).json({ message: "Erreur stats étudiant" });
   }
 };
