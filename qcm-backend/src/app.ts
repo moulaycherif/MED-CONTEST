@@ -35,9 +35,12 @@ app.use(cors({
     "http://localhost:5173",            // Frontend local
     "https://med-contest.vercel.app"    // Frontend déployé
   ],
+  credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
+app.options("*", cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
