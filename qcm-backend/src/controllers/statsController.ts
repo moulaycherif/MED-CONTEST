@@ -1,11 +1,12 @@
 import { Response } from "express";
 import StudentActivity from "../models/StudentActivity";
 import { AuthRequest } from "../middleware/auth";
+import mongoose from "mongoose";
 
 // 📊 QCM par matière
 export const getQcmStats = async (req: AuthRequest, res: Response) => {
   try {
-    const studentId = req.user!.id;
+    const studentId = new mongoose.Types.ObjectId(req.user!.id);
 
     const stats = await StudentActivity.aggregate([
       { $match: { studentId, type: "QCM" } },
@@ -27,7 +28,7 @@ export const getQcmStats = async (req: AuthRequest, res: Response) => {
 // 📈 Activité dans le temps
 export const getActivityStats = async (req: AuthRequest, res: Response) => {
   try {
-    const studentId = req.user!.id;
+    const studentId = new mongoose.Types.ObjectId(req.user!.id);
 
     const stats = await StudentActivity.aggregate([
       { $match: { studentId } },
@@ -52,15 +53,13 @@ export const getActivityStats = async (req: AuthRequest, res: Response) => {
 // 🧠 STATS COMPLETES (utilisées par le dashboard)
 export const getStudentStats = async (req: AuthRequest, res: Response) => {
   try {
-    const studentId = req.user!.id;
+    const studentId = new mongoose.Types.ObjectId(req.user!.id);
 
-    // QCM par matière
     const qcmBySubject = await StudentActivity.aggregate([
       { $match: { studentId, type: "QCM" } },
       { $group: { _id: "$subject", count: { $sum: 1 } } },
     ]);
 
-    // Activité dans le temps
     const timeline = await StudentActivity.aggregate([
       { $match: { studentId } },
       {
@@ -74,13 +73,11 @@ export const getStudentStats = async (req: AuthRequest, res: Response) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // Ressources consultées
     const resources = await StudentActivity.aggregate([
       { $match: { studentId } },
       { $group: { _id: "$type", count: { $sum: 1 } } },
     ]);
 
-    // Classement
     const ranking = await StudentActivity.aggregate([
       { $match: { type: "QCM" } },
       { $group: { _id: "$studentId", total: { $sum: 1 } } },
@@ -88,12 +85,7 @@ export const getStudentStats = async (req: AuthRequest, res: Response) => {
       { $limit: 10 },
     ]);
 
-    res.json({
-      qcmBySubject,
-      timeline,
-      resources,
-      ranking,
-    });
+    res.json({ qcmBySubject, timeline, resources, ranking });
   } catch (e) {
     console.error("❌ getStudentStats:", e);
     res.status(500).json({ message: "Erreur stats étudiant" });
