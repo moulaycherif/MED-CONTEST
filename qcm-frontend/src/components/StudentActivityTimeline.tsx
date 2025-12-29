@@ -24,7 +24,7 @@ export default function StudentActivityTimeline() {
 
   return (
     <div className="bg-white p-4 rounded-xl shadow">
-      <h3 className="font-semibold mb-3">📈 Activité dans le temps</h3>
+      <h3 className="font-semibold mb-3">📈 Résumés Consultés</h3>
 
       <ResponsiveContainer width="150%" height={200}>
         <LineChart data={data}>

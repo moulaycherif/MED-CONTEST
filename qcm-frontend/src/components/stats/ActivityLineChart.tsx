@@ -25,7 +25,7 @@ export default function ActivityLineChart({ data }: { data: any[] }) {
 
   return (
     <div className="bg-white p-4 rounded-xl shadow h-[350px]">
-      <h3 className="font-semibold mb-2">📈 Activité dans le temps</h3>
+      <h3 className="font-semibold mb-2">📈 Résumés consultés</h3>
 
       <div className="w-full h-[280px]">
       <ResponsiveContainer width="100%" height="100%">
