@@ -44,17 +44,13 @@ export const correctAnswers = async (req: AuthRequest, res: Response) => {
     const studentId = req.user!.id;
 
 // On prend la matière & chapitre depuis la 1ère question
-const firstQuestion = questions[0];
-
 await StudentActivity.create({
-  studentId,
+  studentId: req.user.id,          // ou TEMP_STUDENT_ID si tu n’as pas encore l’auth
   type: "QCM",
-  subject: firstQuestion.subject,
-  chapter: firstQuestion.chapter,
-  referenceId: exam,
-  createdAt: new Date()
+  subject: questions[0].subject,   // ou exam.subject si tu l’as
+  chapter: questions[0].chapter,
+  referenceId: exam
 });
-
 
     res.json({
       message: "✅ Correction effectuée avec succès",
