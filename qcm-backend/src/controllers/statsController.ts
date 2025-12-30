@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 // 📊 QCM par matière
 export const getQcmStats = async (req: AuthRequest, res: Response) => {
   try {
-    const studentId = req.user!.id;
+    const studentId = req.user!.id.toString();
 
     const stats = await StudentActivity.aggregate([
       { $match: { studentId, type: "QCM" } },
@@ -28,7 +28,7 @@ export const getQcmStats = async (req: AuthRequest, res: Response) => {
 // 📈 Activité dans le temps
 export const getActivityStats = async (req: AuthRequest, res: Response) => {
   try {
-    const studentId = req.user!.id;
+    const studentId = req.user!.id.toString();
 
     const stats = await StudentActivity.aggregate([
       { $match: { studentId } },
@@ -53,7 +53,7 @@ export const getActivityStats = async (req: AuthRequest, res: Response) => {
 // 🧠 STATS COMPLETES (utilisées par le dashboard)
 export const getStudentStats = async (req: AuthRequest, res: Response) => {
   try {
-    const studentId = req.user!.id;
+    const studentId = req.user!.id.toString();
 
     const qcmBySubject = await StudentActivity.aggregate([
       { $match: { studentId, type: "QCM" } },
