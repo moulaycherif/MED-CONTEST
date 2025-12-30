@@ -1,6 +1,9 @@
 // controllers/answerController.ts
 import { Request, Response } from "express";
 import Question from "../models/Question";
+import StudentActivity from "../models/StudentActivity";
+import { AuthRequest } from "../middleware/auth";
+
 
 /**
  * Correction du QCM soumis par l'étudiant
@@ -11,7 +14,8 @@ import Question from "../models/Question";
  *   answers: [{ questionId: "...", choice: "Réponse choisie" }, ...]
  * }
  */
-export const correctAnswers = async (req: Request, res: Response) => {
+export const correctAnswers = async (req: AuthRequest, res: Response) => {
+
   try {
     const { exam, answers } = req.body;
 
@@ -36,6 +40,21 @@ export const correctAnswers = async (req: Request, res: Response) => {
         totalScore += q.note ?? 1;
       }
     }
+
+    const studentId = req.user!.id;
+
+// On prend la matière & chapitre depuis la 1ère question
+const firstQuestion = questions[0];
+
+await StudentActivity.create({
+  studentId,
+  type: "QCM",
+  subject: firstQuestion.subject,
+  chapter: firstQuestion.chapter,
+  referenceId: exam,
+  createdAt: new Date()
+});
+
 
     res.json({
       message: "✅ Correction effectuée avec succès",
