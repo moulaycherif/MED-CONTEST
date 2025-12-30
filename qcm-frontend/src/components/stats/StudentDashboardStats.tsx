@@ -24,30 +24,18 @@ export default function StudentDashboardStats() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [qcm, timeline, resources, ranking] = await Promise.all([
-          api.get("/api/stats/qcm"),
-          api.get("/api/stats/activity"),
-          api.get("/api/stats/resources"),
-          api.get("/api/stats/ranking"),
-        ]);
+  const fetchStats = async () => {
+    try {
+      const res = await api.get("/api/stats/student");
+      setStats(res.data);
+    } catch (err) {
+      console.error("Erreur récupération stats :", err);
+    }
+  };
 
-        setStats({
-          qcmBySubject: qcm.data,
-          timeline: timeline.data,
-          resources: resources.data,
-          ranking: ranking.data,
-        });
+  fetchStats();
+}, []);
 
-        setStats(res.data);
-      } catch (err) {
-        console.error("Erreur récupération stats :", err);
-      }
-    };
-
-    fetchStats();
-  }, []);
 
   if (!stats) return <p className="text-center mt-10">Chargement statistiques...</p>;
 
