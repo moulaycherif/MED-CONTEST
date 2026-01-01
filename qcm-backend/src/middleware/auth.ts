@@ -1,41 +1,34 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import Student from "../models/Student";
 
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email?: string;
-    role?: string;
-  };
-}
+const SECRET = process.env.JWT_SECRET || "super_secret_key";
 
-export const protect = (
-  req: AuthRequest,
+export const authenticateStudent = async (
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Token manquant" });
-  }
-
-  const token = authHeader.split(" ")[1];
-
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as any;
+    const token = req.headers.authorization?.split(" ")[1];
 
-    req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      role: decoded.role,
-    };
+    if (!token) {
+      return res.status(401).json({ error: "Token manquant" });
+    }
+
+    const decoded: any = jwt.verify(token, SECRET);
+
+    const student = await Student.findById(decoded.id);
+
+    if (!student) {
+      return res.status(401).json({ error: "Étudiant non trouvé" });
+    }
+
+    // 🔥 ICI la clé
+    req.student = student;
 
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Token invalide" });
+    return res.status(401).json({ error: "Token invalide" });
   }
 };

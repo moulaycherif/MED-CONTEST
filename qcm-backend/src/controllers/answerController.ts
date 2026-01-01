@@ -2,7 +2,6 @@
 import { Request, Response } from "express";
 import Question from "../models/Question";
 import StudentActivity from "../models/StudentActivity";
-import { AuthRequest } from "../middleware/auth";
 
 
 /**
@@ -14,7 +13,7 @@ import { AuthRequest } from "../middleware/auth";
  *   answers: [{ questionId: "...", choice: "Réponse choisie" }, ...]
  * }
  */
-export const correctAnswers = async (req: AuthRequest, res: Response) => {
+export const correctAnswers = async (req: Request, res: Response) => {
 
   try {
     const { exam, answers } = req.body;
@@ -41,16 +40,19 @@ export const correctAnswers = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    const studentId = req.user!.id;
+    const subject = questions[0].subject || "Inconnu";
+    const chapter = questions[0].chapter || "";
+
 
 // On prend la matière & chapitre depuis la 1ère question
-await StudentActivity.create({
-  studentId: req.user.id,          // ou TEMP_STUDENT_ID si tu n’as pas encore l’auth
-  type: "QCM",
-  subject: questions[0].subject,   // ou exam.subject si tu l’as
-  chapter: questions[0].chapter,
-  referenceId: exam
-});
+
+    await StudentActivity.create({
+      studentId: req.student!._id.toString(),
+      type: "QCM",
+      subject,
+      chapter,
+      referenceId: exam,
+    });
 
     res.json({
       message: "✅ Correction effectuée avec succès",

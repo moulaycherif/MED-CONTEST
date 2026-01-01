@@ -1,9 +1,8 @@
-import { Response } from "express";
-import { AuthRequest } from "../middleware/auth";
+import { Response, Request } from "express";
 import StudentActivity from "../models/StudentActivity";
 import QCM from "../models/Question"; // ou Question selon ton modèle
 
-export const submitQcm = async (req: AuthRequest, res: Response) => {
+export const submitQcm = async (req: Request, res: Response) => {
   try {
     const { qcmId } = req.body;
 
@@ -13,8 +12,9 @@ export const submitQcm = async (req: AuthRequest, res: Response) => {
     }
 
     // ✅ ENREGISTREMENT DE L’ACTIVITÉ
+
     await StudentActivity.create({
-      studentId: req.user!.id,
+      studentId: req.student!._id.toString(),
       type: "QCM",
       subject: qcm.subject,
       chapter: qcm.chapter,

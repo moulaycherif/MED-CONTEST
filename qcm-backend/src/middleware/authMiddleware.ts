@@ -5,12 +5,10 @@ import Student from "../models/Student";
 
 const SECRET = process.env.JWT_SECRET || "super_secret_key";
 
-export interface AuthRequest extends Request {
-  student?: any; // ici on attachera l'étudiant décodé
-}
+
 
 export const authenticateStudent = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {

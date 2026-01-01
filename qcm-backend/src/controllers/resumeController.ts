@@ -1,11 +1,10 @@
-import { Response } from "express";
+import { Response, Request } from "express";
 import Resume from "../models/resume";
 import { supabase } from "../utils/supabase";
 import StudentActivity from "../models/StudentActivity";
-import { AuthRequest } from "../middleware/auth";
 
 // 📌 Récupérer les résumés par matière
-export const getResumesBySubject = async (req: AuthRequest, res: Response) => {
+export const getResumesBySubject = async (req: Request, res: Response) => {
   try {
     const { subject } = req.params;
 
@@ -27,7 +26,7 @@ export const getResumesBySubject = async (req: AuthRequest, res: Response) => {
 };
 
 // 📌 Générer une URL signée Supabase (COMPATIBLE anciens documents)
-export const getSignedResumeUrl = async (req: AuthRequest, res: Response) => {
+export const getSignedResumeUrl = async (req: Request, res: Response) => {
   try {
     const resume = await Resume.findById(req.params.id);
     if (!resume) return res.status(404).json({ message: "Résumé introuvable" });
@@ -59,15 +58,16 @@ export const getSignedResumeUrl = async (req: AuthRequest, res: Response) => {
     }
 
     // 📊 Tracker activité étudiant
-    if (req.user) {
-      await StudentActivity.create({
-        studentId: req.user.id,
-        type: "RESUME",
-        subject: resume.subject,
-        chapter: resume.chapter,
-        referenceId: resume._id.toString(),
-      });
-    }
+   if (req.student) {
+  await StudentActivity.create({
+    studentId: req.student!._id.toString(),   // ✅
+    type: "RESUME",
+    subject: resume.subject,
+    chapter: resume.chapter,
+    referenceId: resume._id.toString(),
+  });
+}
+
 
     res.json({ signedUrl: data.signedUrl });
   } catch (e) {

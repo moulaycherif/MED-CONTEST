@@ -1,12 +1,12 @@
 import express from "express";
 import { correctAnswers } from "../controllers/answerController";
-import { protect } from "../middleware/auth";
+import { authenticateStudent } from "../middleware/auth";
 
 
 const router = express.Router();
 
 // ✅ Correction du QCM étudiant
 
-router.post("/correct", protect, correctAnswers);
+router.post("/correct", authenticateStudent, correctAnswers);
 
 export default router;

@@ -95,7 +95,7 @@ const verifyToken = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Token manquant" });
   try {
-    req.user = jwt.verify(token, SECRET);
+    req.student = jwt.verify(token, SECRET);
     next();
   } catch (err) {
     res.status(403).json({ error: "Token invalide" });
@@ -103,7 +103,7 @@ const verifyToken = (req: any, res: any, next: any) => {
 };
 
 const verifyAdmin = (req: any, res: any, next: any) => {
-  if (req.user.role === "admin") next();
+  if (req.student.role === "admin") next();
   else res.status(403).json({ error: "Accès réservé à l'admin" });
 };
 

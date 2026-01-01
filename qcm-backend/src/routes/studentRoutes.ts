@@ -1,6 +1,6 @@
 // routes/studentRoutes.ts
 import express from "express";
-import { authenticateStudent, AuthRequest } from "../middleware/authMiddleware";
+import { authenticateStudent} from "../middleware/authMiddleware";
 import Exam from "../models/Exam"; // Modèle des examens
 import Result from "../models/Result"; // Modèle des résultats
 import Question from "../models/Question"; // Modèle des questions
@@ -8,7 +8,7 @@ import Question from "../models/Question"; // Modèle des questions
 const router = express.Router();
 
 // 🔹 Profil étudiant
-router.get("/profile", authenticateStudent, async (req: AuthRequest, res) => {
+router.get("/profile", authenticateStudent, async (req, res) => {
   res.json({
     id: req.student._id,
     name: req.student.name,
@@ -17,7 +17,7 @@ router.get("/profile", authenticateStudent, async (req: AuthRequest, res) => {
 });
 
 // 🔹 Liste des examens disponibles
-router.get("/exams", authenticateStudent, async (req: AuthRequest, res) => {
+router.get("/exams", authenticateStudent, async (req, res) => {
   try {
     const exams = await Exam.find().select("title date"); // titre et date
     res.json(exams);
@@ -28,7 +28,7 @@ router.get("/exams", authenticateStudent, async (req: AuthRequest, res) => {
 });
 
 // 🔹 Questions pour un examen
-router.get("/exams/:examId/questions", authenticateStudent, async (req: AuthRequest, res) => {
+router.get("/exams/:examId/questions", authenticateStudent, async (req, res) => {
   const { examId } = req.params;
   try {
     const questions = await Question.find({ exam: examId }).select("text options"); // questions + options
@@ -40,7 +40,7 @@ router.get("/exams/:examId/questions", authenticateStudent, async (req: AuthRequ
 });
 
 // 🔹 Soumettre les réponses d’un examen
-router.post("/exams/:examId/submit", authenticateStudent, async (req: AuthRequest, res) => {
+router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
   const { examId } = req.params;
   const { answers } = req.body; // { questionId: answer }
   try {
@@ -70,7 +70,7 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req: AuthReques
 });
 
 // 🔹 Historique des résultats
-router.get("/results", authenticateStudent, async (req: AuthRequest, res) => {
+router.get("/results", authenticateStudent, async (req, res) => {
   try {
     const results = await Result.find({ student: req.student._id }).populate("exam", "title date");
     res.json(results);
