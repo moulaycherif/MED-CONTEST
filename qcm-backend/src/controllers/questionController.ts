@@ -6,26 +6,43 @@ import XLSX from "xlsx";
 
 /**
  * Récupérer toutes les questions (avec filtres facultatifs)
+ * - exam: "MEDECINE 2023"
+ * - subject: "Mathématique"
+ * Les filtres sont insensibles à la casse et aux espaces superflus
  */
-export const getQuestions = async (req: any, res: any) => {
+/**
+ * Récupérer toutes les questions (avec filtres facultatifs)
+ */
+export const getQuestions = async (req: Request, res: Response) => {
   try {
-    const { exam, subject } = req.query;
+    let { exam, subject } = req.query as { exam?: string; subject?: string };
 
-    console.log("🔥 GET QUESTIONS", { exam, subject });
+    console.log("🔥 GET QUESTIONS appelé avec params:", { exam, subject });
 
     const filter: any = {};
 
-    if (exam) filter.exam = exam;          // "MEDECINE 2023"
-    if (subject) filter.subject = subject; // "Mathématique"
+    if (exam) {
+      const cleanExam = exam.trim();
+      filter.exam = { $regex: new RegExp(`^${cleanExam}$`, "i") };
+    }
 
-    const questions = await Question.find(filter);
+    if (subject) {
+      const cleanSubject = subject.trim();
+      filter.subject = { $regex: new RegExp(`^${cleanSubject}$`, "i") };
+    }
 
-    console.log("🔥 FOUND QUESTIONS:", questions.length);
+    const questions = await Question.find(filter).sort({ _id: 1 });
+
+    console.log(`🔥 FOUND QUESTIONS: ${questions.length}`);
+
+    if (questions.length === 0) {
+      console.warn("⚠️ Aucune question trouvée pour ces paramètres");
+    }
 
     res.json(questions);
   } catch (err) {
-    console.error("❌ getQuestions error", err);
-    res.status(500).json({ error: "Erreur serveur" });
+    console.error("❌ getQuestions error:", err);
+    res.status(500).json({ error: "Erreur serveur lors de la récupération des questions" });
   }
 };
 
