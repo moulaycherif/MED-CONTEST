@@ -41,6 +41,7 @@ router.get("/exams/:examId/questions", authenticateStudent, async (req: Authenti
 
 // 🔹 Soumettre les réponses d’un examen (QCM)
 router.post("/exams/:examId/submit", authenticateStudent, async (req: AuthenticatedRequest, res) => {
+  console.log("🔥 QCM SUBMIT appelé par", req.student?.email);
   try {
     const { examId } = req.params;
     const { answers } = req.body;
