@@ -43,38 +43,37 @@ router.get("/exams/:examId/questions", authenticateStudent, async (req, res) => 
 
 // 🔹 Soumettre les réponses d’un examen
 router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
-  const { examId } = req.params;
-  const { answers } = req.body; // { questionId: answer }
   try {
-    // Calcul du score (exemple simple)
-    const questions = await Question.find({ exam: examId });
+    const { examId } = req.params;
+    const { answers } = req.body;
+
+    const exam = await Exam.findById(examId);
+    if (!exam) return res.status(404).json({ error: "Examen introuvable" });
+
+    // 🔥 clé réelle utilisée par les questions
+    const questions = await Question.find({ exam: exam.title });
+
     let score = 0;
     questions.forEach(q => {
-      if (answers[q._id] && answers[q._id] === q.reponseCorrecte) {
-        score += q.note;
-      }
+      if (answers[q._id] === q.reponseCorrecte) score += q.note;
     });
 
-    // Enregistrer le résultat
-    const result = new Result({
+    await Result.create({
       student: req.student._id,
       exam: examId,
       answers,
       score,
     });
-    await result.save();
 
- 
-    // 🔥 Enregistrer l’activité QCM (pour les stats)
+    // 🔥 ENREGISTREMENT DE L’ACTIVITÉ QCM
     if (questions.length > 0) {
       await StudentActivity.create({
-        studentId: req.student._id.toString(),   // 👈 CRITIQUE
+        studentId: req.student._id.toString(),
         type: "QCM",
-        subject: questions[0].subject,           // 👈 matière du QCM
+        subject: questions[0].subject,
         referenceId: examId,
       });
     }
-
 
     res.json({ message: "Examen soumis ✅", score });
   } catch (err) {
@@ -82,6 +81,7 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
 
 // 🔹 Historique des résultats
 router.get("/results", authenticateStudent, async (req, res) => {
