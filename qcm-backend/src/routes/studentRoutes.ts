@@ -28,18 +28,19 @@ router.get("/exams", authenticateStudent, async (req: AuthenticatedRequest, res)
 });
 
 // 🔹 Questions pour un examen
-router.get("/exams/:examId/questions", authenticateStudent, async (req: AuthenticatedRequest, res) => {
-  console.log("🔥 QUESTIONS appelé par", req.student?.email);
+router.get("/exams/:examId/questions", authenticateStudent, async (req, res) => {
   const { examId } = req.params;
-  try {
-    const exam = await Exam.findById(examId);
-    const questions = await Question.find({ exam: exam.title });
-    res.json(questions);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
+
+  const exam = await Exam.findById(examId);
+  if (!exam) return res.status(404).json({ error: "Examen introuvable" });
+
+  const questions = await Question.find({ exam: exam.title });
+
+  console.log("🔥 QUESTIONS appelé par", req.student.email, "→", exam.title);
+
+  res.json(questions);
 });
+
 
 // 🔹 Soumettre les réponses d’un examen (QCM)
 router.post("/exams/:examId/submit", authenticateStudent, async (req: AuthenticatedRequest, res) => {
