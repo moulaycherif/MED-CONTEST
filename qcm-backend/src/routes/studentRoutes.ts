@@ -51,7 +51,7 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
     let score = 0;
     questions.forEach(q => {
       if (answers[q._id] && answers[q._id] === q.reponseCorrecte) {
-        score += 1;
+        score += q.note;
       }
     });
 
@@ -64,14 +64,16 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
     });
     await result.save();
 
-    // 🔥 Enregistrer l'activité QCM
-    await StudentActivity.create({
-        studentId: req.student._id.toString(),   // ✅ VRAI étudiant
+ 
+    // 🔥 Enregistrer l’activité QCM (pour les stats)
+    if (questions.length > 0) {
+      await StudentActivity.create({
+        studentId: req.student._id.toString(),   // 👈 CRITIQUE
         type: "QCM",
-        subject: questions[0]?.subject || "Général",
-        chapter: questions[0]?.chapter || "",
+        subject: questions[0].subject,           // 👈 matière du QCM
         referenceId: examId,
-    });
+      });
+    }
 
 
     res.json({ message: "Examen soumis ✅", score });
