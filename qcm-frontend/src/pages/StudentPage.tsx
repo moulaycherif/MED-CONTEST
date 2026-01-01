@@ -65,22 +65,25 @@ export default function StudentPage() {
 
   // 🔹 Charger les questions quand currentExam change
   useEffect(() => {
-    if (currentExam && selectedMatiere) {
-      axios
-        .get(
-          `${API_BASE_URL}/api/questions?subject=${encodeURIComponent(
-            selectedMatiere
-          )}&exam=${encodeURIComponent(currentExam)}`
-        )
-        .then((res) => setQuestions(res.data))
-        .catch(() => setQuestions([]));
-    } else if (currentExam) {
-      axios
-        .get(`${API_BASE_URL}/api/questions?exam={encodeURIComponent(currentExam)}&subject=${encodeURIComponent(selectedMatiere)}`)
-        .then((res) => setQuestions(res.data))
-        .catch(() => setQuestions([]));
+  if (currentExam) {
+    let url = `${API_BASE_URL}/api/questions?exam=${encodeURIComponent(currentExam)}`;
+    if (selectedMatiere) {
+      url += `&subject=${encodeURIComponent(selectedMatiere)}`;
     }
-  }, [currentExam, selectedMatiere]);
+
+    axios
+      .get(url)
+      .then((res) => {
+        console.log("🔥 QUESTIONS reçues:", res.data.length);
+        setQuestions(res.data);
+      })
+      .catch((err) => {
+        console.error("❌ Erreur fetch questions:", err);
+        setQuestions([]);
+      });
+  }
+}, [currentExam, selectedMatiere]);
+
 
   // Charger les astuces quand on clique sur le bouton "Astuces"
 useEffect(() => {
