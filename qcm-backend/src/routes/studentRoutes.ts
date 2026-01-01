@@ -55,7 +55,10 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req: Authentica
     const questions = await Question.find({ exam: exam.title });
     let score = 0;
     questions.forEach(q => {
-      if (answers[q._id] === q.reponseCorrecte) score += q.note ?? 1;
+      const qid = q._id.toString();   // 🔥 CRITIQUE
+      if (answers[qid] === q.reponseCorrecte) {
+        score += q.note || 1;
+      }
     });
 
     await Result.create({
@@ -70,7 +73,7 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req: Authentica
       console.log("🔥 QCM enregistré pour", req.student._id.toString(), questions[0].subject);
 
       await StudentActivity.create({
-        studentId: req.student!._id.toString(),
+        student: req.student._id,      // 🔥 PAS studentId
         type: "QCM",
         subject: questions[0].subject,
         referenceId: examId,
