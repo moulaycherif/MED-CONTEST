@@ -4,6 +4,8 @@ import { authenticateStudent} from "../middleware/authMiddleware";
 import Exam from "../models/Exam"; // Modèle des examens
 import Result from "../models/Result"; // Modèle des résultats
 import Question from "../models/Question"; // Modèle des questions
+import StudentActivity from "../models/StudentActivity";
+
 
 const router = express.Router();
 
@@ -61,6 +63,16 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
       score,
     });
     await result.save();
+
+    // 🔥 Enregistrer l'activité QCM
+    await StudentActivity.create({
+        studentId: req.student._id.toString(),   // ✅ VRAI étudiant
+        type: "QCM",
+        subject: questions[0]?.subject || "Général",
+        chapter: questions[0]?.chapter || "",
+        referenceId: examId,
+    });
+
 
     res.json({ message: "Examen soumis ✅", score });
   } catch (err) {
