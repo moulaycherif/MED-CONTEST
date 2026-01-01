@@ -65,6 +65,8 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req: Authentica
 
     // 🔥 ENREGISTREMENT DE L’ACTIVITÉ QCM
     if (questions.length > 0) {
+      console.log("🔥 QCM enregistré pour", req.student._id.toString(), questions[0].subject);
+
       await StudentActivity.create({
         studentId: req.student!._id.toString(),
         type: "QCM",
