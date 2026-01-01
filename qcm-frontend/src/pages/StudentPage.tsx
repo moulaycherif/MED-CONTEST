@@ -72,17 +72,11 @@ useEffect(() => {
   axios
     .get(`${API_BASE_URL}/api/questions/exams`)
     .then(res => {
-      // backend renvoie ["MEDECINE 2023", ...]
-      // on reconstruit via /api/exams
-      return axios.get(`${API_BASE_URL}/api/exams`);
-    })
-    .then(res => {
-      setExams(res.data); // [{_id,title},...]
+      setExams(res.data); // [{_id,title,subject}]
+      console.log("🔥 EXAMS:", res.data);
     })
     .catch(err => console.error("❌ Exams load error", err));
 }, []);
-
-
 
   // 🔹 Charger les questions quand currentExam change
   useEffect(() => {
