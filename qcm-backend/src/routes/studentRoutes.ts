@@ -29,6 +29,7 @@ router.get("/exams", authenticateStudent, async (req: AuthenticatedRequest, res)
 
 // 🔹 Questions pour un examen
 router.get("/exams/:examId/questions", authenticateStudent, async (req: AuthenticatedRequest, res) => {
+  console.log("🔥 QUESTIONS appelé par", req.student?.email);
   const { examId } = req.params;
   try {
     const questions = await Question.find({ exam: examId }).select("texte options");
