@@ -138,12 +138,13 @@ export const importExcel = async (req: Request, res: Response) => {
 export const getExams = async (_req: Request, res: Response) => {
   try {
     const exams = await Exam.find().sort({ title: 1 });
-    res.json(exams.map((e) => e.title));
+    res.json(exams); // 🔥 on renvoie {_id,title}
   } catch (err) {
     console.error("Erreur récupération examens :", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
+
 
 /**
  * Liste des matières d’un examen donné
