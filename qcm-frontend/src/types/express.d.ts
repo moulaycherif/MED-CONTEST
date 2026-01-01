@@ -1,10 +1,9 @@
-import { Express } from "express";
+import { StudentDocument } from "../models/Student";
 
 declare global {
   namespace Express {
     interface Request {
-      file?: Express.Multer.File;      // un seul fichier
-      files?: Express.Multer.File[];   // plusieurs fichiers
+      student?: StudentDocument;
     }
   }
 }
