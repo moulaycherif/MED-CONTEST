@@ -76,7 +76,7 @@ export default function StudentPage() {
         .catch(() => setQuestions([]));
     } else if (currentExam) {
       axios
-        .get(`${API_BASE_URL}/api/questions?exam=${encodeURIComponent(currentExam)}`)
+        .get(`${API_BASE_URL}/api/questions?exam={encodeURIComponent(currentExam)}&subject=${encodeURIComponent(selectedMatiere)}`)
         .then((res) => setQuestions(res.data))
         .catch(() => setQuestions([]));
     }
