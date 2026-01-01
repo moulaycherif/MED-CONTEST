@@ -7,21 +7,28 @@ import XLSX from "xlsx";
 /**
  * Récupérer toutes les questions (avec filtres facultatifs)
  */
-export const getQuestions = async (req: Request, res: Response) => {
+export const getQuestions = async (req: any, res: any) => {
   try {
     const { exam, subject } = req.query;
-    const query: any = {};
 
-    if (exam) query.exam = String(exam).trim();
-    if (subject) query.subject = String(subject).trim();
+    console.log("🔥 GET QUESTIONS", { exam, subject });
 
-    const questions = await Question.find(query);
+    const filter: any = {};
+
+    if (exam) filter.exam = exam;          // "MEDECINE 2023"
+    if (subject) filter.subject = subject; // "Mathématique"
+
+    const questions = await Question.find(filter);
+
+    console.log("🔥 FOUND QUESTIONS:", questions.length);
+
     res.json(questions);
   } catch (err) {
-    console.error("Erreur récupération questions :", err);
-    res.status(500).json({ error: "Erreur serveur lors de la récupération" });
+    console.error("❌ getQuestions error", err);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 };
+
 
 /**
  * Importer les questions depuis Excel (multer fournit req.file)
