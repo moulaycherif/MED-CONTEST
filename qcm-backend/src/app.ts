@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import questionRoutes from "./routes/questionRoutes";
-import resultRoutes from "./routes/answerRoutes";
 import adminRoutes from "./routes/adminRoutes";  // ✅ AJOUT ICI
 
 import resumeRoutes from "./routes/resumeRoutes";
@@ -50,7 +49,6 @@ app.use(express.urlencoded({ extended: true }));
 // ✅ Routes principales
 app.use("/api/auth", authRoutes);
 app.use("/api/questions", questionRoutes);
-app.use("/api/results", resultRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/ranking", rankingRoutes);

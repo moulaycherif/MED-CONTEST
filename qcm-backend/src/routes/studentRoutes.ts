@@ -1,27 +1,25 @@
-// routes/studentRoutes.ts
 import express from "express";
-import { authenticateStudent} from "../middleware/authMiddleware";
-import Exam from "../models/Exam"; // Modèle des examens
-import Result from "../models/Result"; // Modèle des résultats
-import Question from "../models/Question"; // Modèle des questions
+import { authenticateStudent, AuthenticatedRequest } from "../middleware/authMiddleware";
+import Exam from "../models/Exam";
+import Result from "../models/Result";
+import Question from "../models/Question";
 import StudentActivity from "../models/StudentActivity";
-
 
 const router = express.Router();
 
 // 🔹 Profil étudiant
-router.get("/profile", authenticateStudent, async (req, res) => {
+router.get("/profile", authenticateStudent, async (req: AuthenticatedRequest, res) => {
   res.json({
-    id: req.student._id,
-    name: req.student.name,
-    email: req.student.email,
+    id: req.student!._id,
+    name: req.student!.name,
+    email: req.student!.email,
   });
 });
 
 // 🔹 Liste des examens disponibles
-router.get("/exams", authenticateStudent, async (req, res) => {
+router.get("/exams", authenticateStudent, async (req: AuthenticatedRequest, res) => {
   try {
-    const exams = await Exam.find().select("title date"); // titre et date
+    const exams = await Exam.find().select("title date");
     res.json(exams);
   } catch (err) {
     console.error(err);
@@ -30,10 +28,10 @@ router.get("/exams", authenticateStudent, async (req, res) => {
 });
 
 // 🔹 Questions pour un examen
-router.get("/exams/:examId/questions", authenticateStudent, async (req, res) => {
+router.get("/exams/:examId/questions", authenticateStudent, async (req: AuthenticatedRequest, res) => {
   const { examId } = req.params;
   try {
-    const questions = await Question.find({ exam: examId }).select("text options"); // questions + options
+    const questions = await Question.find({ exam: examId }).select("texte options");
     res.json(questions);
   } catch (err) {
     console.error(err);
@@ -41,8 +39,8 @@ router.get("/exams/:examId/questions", authenticateStudent, async (req, res) => 
   }
 });
 
-// 🔹 Soumettre les réponses d’un examen
-router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
+// 🔹 Soumettre les réponses d’un examen (QCM)
+router.post("/exams/:examId/submit", authenticateStudent, async (req: AuthenticatedRequest, res) => {
   try {
     const { examId } = req.params;
     const { answers } = req.body;
@@ -50,16 +48,14 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
     const exam = await Exam.findById(examId);
     if (!exam) return res.status(404).json({ error: "Examen introuvable" });
 
-    // 🔥 clé réelle utilisée par les questions
     const questions = await Question.find({ exam: exam.title });
-
     let score = 0;
     questions.forEach(q => {
-      if (answers[q._id] === q.reponseCorrecte) score += q.note;
+      if (answers[q._id] === q.reponseCorrecte) score += q.note ?? 1;
     });
 
     await Result.create({
-      student: req.student._id,
+      student: req.student!._id,
       exam: examId,
       answers,
       score,
@@ -68,7 +64,7 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
     // 🔥 ENREGISTREMENT DE L’ACTIVITÉ QCM
     if (questions.length > 0) {
       await StudentActivity.create({
-        studentId: req.student._id.toString(),
+        studentId: req.student!._id.toString(),
         type: "QCM",
         subject: questions[0].subject,
         referenceId: examId,
@@ -82,11 +78,10 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
   }
 });
 
-
 // 🔹 Historique des résultats
-router.get("/results", authenticateStudent, async (req, res) => {
+router.get("/results", authenticateStudent, async (req: AuthenticatedRequest, res) => {
   try {
-    const results = await Result.find({ student: req.student._id }).populate("exam", "title date");
+    const results = await Result.find({ student: req.student!._id }).populate("exam", "title date");
     res.json(results);
   } catch (err) {
     console.error(err);
