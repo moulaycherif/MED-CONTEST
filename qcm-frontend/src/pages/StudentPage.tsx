@@ -34,6 +34,8 @@ export default function StudentPage() {
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [currentExam, setCurrentExam] = useState<string | null>(null);
+  const [currentExamId, setCurrentExamId] = useState<string | null>(null);
+
 
   // QCM
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -57,11 +59,30 @@ export default function StudentPage() {
 
   const resetQcm = () => {
   setCurrentExam(null);
+  setCurrentExamId(null);   // 🔥
   setQuestions([]);
   setAnswers({});
   setSubmitted(false);
   setScore(null);
 };
+
+const [exams, setExams] = useState<{ _id: string; title: string }[]>([]);
+
+useEffect(() => {
+  axios
+    .get(`${API_BASE_URL}/api/questions/exams`)
+    .then(res => {
+      // backend renvoie ["MEDECINE 2023", ...]
+      // on reconstruit via /api/exams
+      return axios.get(`${API_BASE_URL}/api/exams`);
+    })
+    .then(res => {
+      setExams(res.data); // [{_id,title},...]
+    })
+    .catch(err => console.error("❌ Exams load error", err));
+}, []);
+
+
 
   // 🔹 Charger les questions quand currentExam change
   useEffect(() => {
@@ -109,14 +130,39 @@ useEffect(() => {
   };
 
   // 🔹 Correction locale
-  const handleFinish = () => {
-    let total = 0;
-    questions.forEach((q) => {
-      if (answers[q._id] === q.reponseCorrecte) total += q.note;
-    });
-    setScore(total);
-    setSubmitted(true);
-  };
+  const handleFinish = async () => {
+    if (!currentExamId) {
+  console.error("❌ ExamId manquant");
+  return;
+}
+
+  let total = 0;
+  questions.forEach((q) => {
+    if (answers[q._id] === q.reponseCorrecte) total += q.note;
+  });
+
+  setScore(total);
+  setSubmitted(true);
+
+  try {
+    const token = localStorage.getItem("token");
+
+    await axios.post(
+      `${API_BASE_URL}/api/student/exams/${currentExamId}/submit`,
+      { answers },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("🔥 QCM enregistré côté serveur");
+  } catch (err) {
+    console.error("❌ Erreur enregistrement QCM", err);
+  }
+};
+
 
   // --- Rendu principal ---
   const renderCenterContent = () => {
@@ -202,28 +248,29 @@ useEffect(() => {
 
     // 🧩 Cas 2 : QCE par concours
     if (section === "concours") {
-      const annees = ["2025", "2024", "2023", "2022"];
+      
       return (
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-wrap gap-6 justify-start items-start min-h-full"
         >
-          {annees.map((year) => (
+          {exams.map((exam) => (
             <motion.div
-              key={year}
+              key={exam._id}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
                 resetQcm();
                 setSection("qcm");
-                setCurrentExam(`MEDECINE ${year}`);
+                setCurrentExam(exam.title);     // "MEDECINE 2023"
+                setCurrentExamId(exam._id);     // 🔥 ID Mongo
               }}
 
             >
-              <img src={concoursImg} alt={`Concours ${year}`} className="w-48 h-48 object-cover" />
+              <img src={concoursImg} className="w-48 h-48 object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-white/60 text-black text-center py-2 font-semibold">
-                MEDECINE {year}
+                {exam.title}
               </div>
             </motion.div>
           ))}
@@ -240,7 +287,7 @@ useEffect(() => {
         SVT: svtImg,
       };
       const matiereImage = matiereImages[selectedMatiere];
-      const annees = ["2025", "2024", "2023"];
+      const year = ["2025", "2024", "2023"];
 
       return (
         <motion.div
@@ -248,16 +295,20 @@ useEffect(() => {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-wrap gap-6 justify-start items-start min-h-full"
         >
-          {annees.map((year) => (
+          {exams.map((exam) => (
             <motion.div
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
-                resetQcm();
-                setSection("qcm");
-                setCurrentExam(`MEDECINE ${year}`);
-          }}
+  const exam = exams.find(e => e.title === `MEDECINE ${year}`);
+  if (!exam) return;
+
+  resetQcm();
+  setSection("qcm");
+  setCurrentExam(exam.title);
+  setCurrentExamId(exam._id);   // 🔥
+}}
 
             >
               <img src={matiereImage} alt={`${selectedMatiere} — MEDECINE ${year}`} className="w-48 h-48 object-cover" />
