@@ -63,7 +63,7 @@ export default function StudentDashboardStats() {
       </div>
 
       {/* 🔹 Graphes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[400px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
             <QcmBarChart data={stats.qcmBySubject} />
                
