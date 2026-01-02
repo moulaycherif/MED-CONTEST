@@ -271,49 +271,55 @@ useEffect(() => {
         </motion.div>
       );
     }
-
+ 
     // 🧩 Cas 3 : QCE par matière
-    if (section === "matiere" && selectedMatiere) {
-      const matiereImages: Record<string, string> = {
-        Mathématique: mathsImg,
-        Physique: physiqueImg,
-        Chimie: chimieImg,
-        SVT: svtImg,
-      };
-      const matiereImage = matiereImages[selectedMatiere];
-      const year = ["2025", "2024", "2023"];
+if (section === "matiere" && selectedMatiere) {
+  const matiereImages: Record<string, string> = {
+    Mathématique: mathsImg,
+    Physique: physiqueImg,
+    Chimie: chimieImg,
+    SVT: svtImg,
+  };
 
-      return (
+  const matiereImage = matiereImages[selectedMatiere];
+
+  // on récupère les examens existants (MEDECINE 2025, 2024, 2023)
+  const filteredExams = exams.filter(e =>
+    e.title.startsWith("MEDECINE")
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-wrap gap-6 justify-start items-start min-h-full"
+    >
+      {filteredExams.map((exam) => (
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
+          key={exam._id}
+          whileHover={{ scale: 1.05 }}
+          className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+          onClick={() => {
+            resetQcm();
+            setSection("qcm");
+            setCurrentExam(exam.title);   // 🔥 MEDECINE 2024
+            setCurrentExamId(exam._id);   // 🔥 vrai ID Mongo
+          }}
         >
-          {exams.map((exam) => (
-            <motion.div
-              key={year}
-              whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => {
-  const exam = exams.find(e => e.title === `MEDECINE ${year}`);
-  if (!exam) return;
-
-  resetQcm();
-  setSection("qcm");
-  setCurrentExam(exam.title);
-  setCurrentExamId(exam._id);   // 🔥
-}}
-
-            >
-              <img src={matiereImage} alt={`${selectedMatiere} — MEDECINE ${year}`} className="w-48 h-48 object-cover" />
-              <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-black text-center py-2 font-semibold">
-                {selectedMatiere} — MEDECINE {year}
-              </div>
-            </motion.div>
-          ))}
+          <img
+            src={matiereImage}
+            alt={`${selectedMatiere} — ${exam.title}`}
+            className="w-48 h-48 object-cover"
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-black text-center py-2 font-semibold">
+            {selectedMatiere} — {exam.title}
+          </div>
         </motion.div>
-      );
-    }
+      ))}
+    </motion.div>
+  );
+}
+
 
 // 🧩 Cas 4 : Soutien — TOUTES LES MATIÈRES
 
