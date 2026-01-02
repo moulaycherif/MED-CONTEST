@@ -142,14 +142,16 @@ useEffect(() => {
     const token = localStorage.getItem("token");
 
     await axios.post(
-      `${API_BASE_URL}/api/student/exams/${currentExamId}/submit`,
-      { answers },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+  `${API_BASE_URL}/api/student/exams/${currentExamId}/submit`,
+  {
+    answers,
+    subject: selectedMatiere || null   // 🔥 IMPORTANT
+  },
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
+
 
     console.log("🔥 QCM enregistré côté serveur");
   } catch (err) {
