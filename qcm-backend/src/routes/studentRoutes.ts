@@ -47,7 +47,9 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
   console.log("🔥 QCM SUBMIT appelé par", req.student?.email);
 
   try {
-    const { examId } = req.params;
+    const examId = req.params.examId;
+    const studentId = req.student!._id.toString();
+    //const { examId } = req.params;
     const { answers, subject } = req.body;   // 🔥
 
     const exam = await Exam.findById(examId);
@@ -63,16 +65,16 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
     });
 
     await Result.create({
-      studentId: req.student!._id,
+      studentId,
       examId,
       score,
     });
 
     // 🔥 ACTIVITÉ QCM
-    await StudentActivity.create({
-  studentId: req.student._id.toString(),
+   await StudentActivity.create({
+  studentId: studentId,        // 🔥 OBLIGATOIRE
   type: "QCM",
-  subject: subject || "CONCOURS",
+  subject: questions[0]?.subject || "CONCOURS",
   referenceId: examId,
 });
 
