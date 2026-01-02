@@ -14,11 +14,17 @@ export default function StudentActivityTimeline() {
   const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/api/stats/student/TEMP_STUDENT_ID/timeline`)
-      .then(res => setData(res.data))
-      .catch(() => setData([]));
-  }, []);
+  const token = localStorage.getItem("token");
+
+  axios
+    .get(`${API_BASE_URL}/api/stats/student/timeline`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then(res => setData(res.data))
+    .catch(() => setData([]));
+}, []);
 
   if (!data.length) return <p>Aucune activité enregistrée</p>;
 
