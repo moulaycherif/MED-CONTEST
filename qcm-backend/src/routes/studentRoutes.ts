@@ -62,8 +62,8 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req: Authentica
     });
 
     await Result.create({
-      student: req.student!._id,
-      exam: examId,
+      studentId: req.student!._id,
+      examId: examId,
       answers,
       score,
     });
