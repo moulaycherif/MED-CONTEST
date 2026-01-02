@@ -43,42 +43,40 @@ router.get("/exams/:examId/questions", authenticateStudent, async (req, res) => 
 
 
 // 🔹 Soumettre les réponses d’un examen (QCM)
-router.post("/exams/:examId/submit", authenticateStudent, async (req: AuthenticatedRequest, res) => {
+router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
   console.log("🔥 QCM SUBMIT appelé par", req.student?.email);
+
   try {
     const { examId } = req.params;
-    const { answers } = req.body;
+    const { answers, subject } = req.body;   // 🔥
 
     const exam = await Exam.findById(examId);
     if (!exam) return res.status(404).json({ error: "Examen introuvable" });
 
     const questions = await Question.find({ exam: exam.title });
+
     let score = 0;
     questions.forEach(q => {
-      const qid = q._id.toString();   // 🔥 CRITIQUE
-      if (answers[qid] === q.reponseCorrecte) {
+      if (answers[q._id.toString()] === q.reponseCorrecte) {
         score += q.note || 1;
       }
     });
 
     await Result.create({
       studentId: req.student!._id,
-      examId: examId,
-      answers,
+      examId,
       score,
     });
 
-    // 🔥 ENREGISTREMENT DE L’ACTIVITÉ QCM
-    if (questions.length > 0) {
-      console.log("🔥 QCM enregistré pour", req.student._id.toString(), questions[0].subject);
+    // 🔥 ACTIVITÉ QCM
+    await StudentActivity.create({
+      student: req.student!._id,
+      type: "QCM",
+      subject: subject || "CONCOURS",   // 🔥 vrai sujet
+      referenceId: examId,
+    });
 
-      await StudentActivity.create({
-        student: req.student._id,      // 🔥 PAS studentId
-        type: "QCM",
-        subject: questions[0].subject,
-        referenceId: examId,
-      });
-    }
+    console.log("🔥 QCM enregistré pour", req.student._id.toString(), subject);
 
     res.json({ message: "Examen soumis ✅", score });
   } catch (err) {
@@ -86,6 +84,7 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req: Authentica
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
 
 // 🔹 Historique des résultats
 router.get("/results", authenticateStudent, async (req: AuthenticatedRequest, res) => {
