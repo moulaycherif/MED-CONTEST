@@ -72,9 +72,9 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
 
     // 🔥 ACTIVITÉ QCM
    await StudentActivity.create({
-  studentId: studentId,        // 🔥 OBLIGATOIRE
+  studentId: req.student._id,   // 🔥🔥🔥
   type: "QCM",
-  subject: questions[0]?.subject || "CONCOURS",
+  subject,
   referenceId: examId,
 });
 
