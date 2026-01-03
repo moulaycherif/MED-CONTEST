@@ -145,7 +145,7 @@ useEffect(() => {
   `${API_BASE_URL}/api/student/exams/${currentExamId}/submit`,
   {
     answers,
-    subject: selectedMatiere || null   // 🔥 IMPORTANT
+    subject: selectedMatiere || "CONCOURS"   // 🔥 IMPORTANT
   },
   {
     headers: { Authorization: `Bearer ${token}` },
