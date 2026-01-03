@@ -50,7 +50,9 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
     const examId = req.params.examId;
     const studentId = req.student!._id.toString();
     //const { examId } = req.params;
-    const { answers, subject } = req.body;   // 🔥
+    const { answers } = req.body;
+    const subject = req.body.subject || "CONCOURS";   // 🔥
+
 
     const exam = await Exam.findById(examId);
     if (!exam) return res.status(404).json({ error: "Examen introuvable" });
