@@ -5,10 +5,10 @@ import mongoose from "mongoose";
 // 📊 QCM par matière
 export const getQcmStats = async (req: Request, res: Response) => {
   try {
-    const studentId = new mongoose.Types.ObjectId(req.student!._id);
+    const student = new mongoose.Types.ObjectId(req.student!._id);
 
     const stats = await StudentActivity.aggregate([
-      { $match: { studentId, type: "QCM" } },
+      { $match: { student, type: "QCM" } },
       {
         $group: {
           _id: "$subject",
@@ -28,10 +28,10 @@ export const getQcmStats = async (req: Request, res: Response) => {
 // 📈 Activité dans le temps
 export const getActivityStats = async (req: Request, res: Response) => {
   try {
-    const studentId = new mongoose.Types.ObjectId(req.student!._id);
+    const student = new mongoose.Types.ObjectId(req.student!._id);
 
     const stats = await StudentActivity.aggregate([
-      { $match: { studentId } },
+      { $match: { student } },
       {
         $group: {
           _id: {
@@ -54,15 +54,15 @@ export const getActivityStats = async (req: Request, res: Response) => {
 // 🧠 STATS COMPLETES (utilisées par le dashboard)
 export const getStudentStats = async (req: Request, res: Response) => {
   try {
-    const studentId = new mongoose.Types.ObjectId(req.student!._id);
+    const student = new mongoose.Types.ObjectId(req.student!._id);
 
     const qcmBySubject = await StudentActivity.aggregate([
-      { $match: { studentId, type: "QCM" } },
+      { $match: { student, type: "QCM" } },
       { $group: { _id: "$subject", count: { $sum: 1 } } },
     ]);
 
     const timeline = await StudentActivity.aggregate([
-      { $match: { studentId } },
+      { $match: { student } },
       {
         $group: {
           _id: {
@@ -75,13 +75,13 @@ export const getStudentStats = async (req: Request, res: Response) => {
     ]);
 
     const resources = await StudentActivity.aggregate([
-      { $match: { studentId } },
+      { $match: { student } },
       { $group: { _id: "$type", count: { $sum: 1 } } },
     ]);
 
     const ranking = await StudentActivity.aggregate([
       { $match: { type: "QCM" } },
-      { $group: { _id: "$studentId", total: { $sum: 1 } } },
+      { $group: { _id: "$student", total: { $sum: 1 } } },
       { $sort: { total: -1 } },
       { $limit: 10 },
     ]);
