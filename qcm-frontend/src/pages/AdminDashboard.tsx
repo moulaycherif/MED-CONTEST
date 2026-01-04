@@ -375,10 +375,11 @@ const AdminDashboard: React.FC = () => {
             >
               <option value="">-- Choisir un examen --</option>
               {exams.map(exam => (
-                <option key={exam} value={exam}>
-                  {exam}
-                </option>
-              ))}
+  <option key={exam._id} value={exam.title}>
+    {exam.title}
+  </option>
+))}
+
             </select>
           </div>
 
