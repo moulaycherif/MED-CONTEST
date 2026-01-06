@@ -30,8 +30,8 @@ export default function QuestionCard({ question, selectedAnswer, onSelect }: Que
       )}
 
       {/* 📝 TEXTE */}
-      {question.texte && (
-        <p className="font-semibold">{question.texte}</p>
+      {question.questionText && (
+        <p className="font-semibold">{question.questionText}</p>
       )}
 
       <div className="flex flex-col gap-2">
