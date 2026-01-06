@@ -2,13 +2,14 @@ import React from "react";
 
 interface Question {
   _id: string;
-  texte?: string;          // texte de la question
-  image?: string;          // chemin de l’image
+  texte?: string;
+  image?: string;
   options: string[];
   reponseCorrecte: string;
   subject: string;
   exam: string;
 }
+
 
 interface QuestionCardProps {
   question: Question;
@@ -30,8 +31,8 @@ export default function QuestionCard({ question, selectedAnswer, onSelect }: Que
       )}
 
       {/* 📝 TEXTE */}
-      {question.questionText && (
-        <p className="font-semibold">{question.questionText}</p>
+      {question.texte && (
+        <p className="font-semibold">{question.texte}</p>
       )}
 
       <div className="flex flex-col gap-2">
