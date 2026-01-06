@@ -66,31 +66,32 @@ export const importExcel = async (req: Request, res: Response) => {
     }
 
     // 🔹 Mapping des colonnes du template
-    const questions = (data as any[])
-      .map((row) => ({
-        texte: String(row["Texte de la question"] || "").trim(),
-        options: [
-          row["Option 1"],
-          row["Option 2"],
-          row["Option 3"],
-          row["Option 4"],
-          row["Option 5"],
-        ]
-          .filter(Boolean)
-          .map((o: any) => String(o).trim()),
-        reponseCorrecte: String(row["Réponse correcte"] || "").trim(),
-        subject: String(row["Matière"] || "").trim(),
-        exam: String(row["Concours / Examen"] || "").trim(),
-        note: Number(row["Note"] ?? 1),
-      }))
-      .filter(
-        (q) =>
-          q.texte &&
-          q.options.length > 0 &&
-          q.reponseCorrecte &&
-          q.exam &&
-          q.subject
-      );
+    const questions = (data as any[]).map(row => ({
+  texte: String(row["Texte de la question"] || "").trim(),
+  image: row["Image"] ? `/uploads/questions/${String(row["Image"]).trim()}` : null,
+
+  options: [
+    row["Option 1"],
+    row["Option 2"],
+    row["Option 3"],
+    row["Option 4"],
+    row["Option 5"],
+   
+  ].filter(Boolean)
+    .map((o: any) => String(o).trim()),
+
+  reponseCorrecte: String(row["Réponse correcte"] || "").trim(),
+  subject: String(row["Matière"] || "").trim(),
+  exam: String(row["Concours / Examen"] || "").trim(),
+  note: Number(row["Note"] ?? 1),
+})).filter(q =>
+  (q.texte || q.image) &&
+  q.options.length > 0 &&
+  q.reponseCorrecte &&
+  q.subject &&
+  q.exam
+);
+
 
     if (questions.length === 0) {
       return res.status(400).json({ error: "Aucune question valide trouvée dans le fichier" });

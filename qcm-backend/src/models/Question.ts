@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface IQuestion extends Document {
   texte: string;
+  image: String;
   options: string[];
   reponseCorrecte: string;
   subject: string;
