@@ -75,7 +75,7 @@ export const importExcel = async (req: Request, res: Response) => {
       texte,
 
       image: imageName
-        ? `/uploads/${imageName}.png`   // Q21M21 → /uploads/Q21M21.png
+        ? `/uploads/questions/${imageName}.png`   // Q21M21 → /uploads/questions/Q21M21.png
         : null,
 
       options: [
