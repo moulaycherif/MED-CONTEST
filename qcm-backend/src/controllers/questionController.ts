@@ -66,31 +66,42 @@ export const importExcel = async (req: Request, res: Response) => {
     }
 
     // 🔹 Mapping des colonnes du template
-    const questions = (data as any[]).map(row => ({
-  texte: String(row["Texte de la question"] || "").trim(),
-  image: row["Image"] ? `/uploads/questions/${String(row["Image"]).trim()}` : null,
+    const questions = (data as any[])
+  .map((row) => {
+    const texte = String(row["Texte de la question"] || "").trim();
+    const imageName = String(row["Image"] || "").trim();
 
-  options: [
-    row["Option 1"],
-    row["Option 2"],
-    row["Option 3"],
-    row["Option 4"],
-    row["Option 5"],
-   
-  ].filter(Boolean)
-    .map((o: any) => String(o).trim()),
+    return {
+      texte,
 
-  reponseCorrecte: String(row["Réponse correcte"] || "").trim(),
-  subject: String(row["Matière"] || "").trim(),
-  exam: String(row["Concours / Examen"] || "").trim(),
-  note: Number(row["Note"] ?? 1),
-})).filter(q =>
-  (q.texte || q.image) &&
-  q.options.length > 0 &&
-  q.reponseCorrecte &&
-  q.subject &&
-  q.exam
-);
+      image: imageName
+        ? `/uploads/${imageName}.png`   // Q21M21 → /uploads/Q21M21.png
+        : null,
+
+      options: [
+        row["Option 1"],
+        row["Option 2"],
+        row["Option 3"],
+        row["Option 4"],
+        row["Option 5"],
+      ]
+        .filter(Boolean)
+        .map((o) => String(o).trim()),
+
+      reponseCorrecte: String(row["Réponse correcte"] || "").trim(),
+      subject: String(row["Matière"] || "").trim(),
+      exam: String(row["Concours / Examen"] || "").trim(),
+      note: Number(row["Note"] ?? 1),
+    };
+  })
+  .filter(
+    (q) =>
+      (q.texte || q.image) &&      // ✅ TEXTE OU IMAGE
+      q.options.length > 0 &&
+      q.reponseCorrecte &&
+      q.exam &&
+      q.subject
+  );
 
 
     if (questions.length === 0) {

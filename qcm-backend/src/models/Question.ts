@@ -13,6 +13,7 @@ export interface IQuestion extends Document {
 const QuestionSchema: Schema = new Schema(
   {
     texte: { type: String, required: true },
+    image: { type: String },
     options: { type: [String], required: true },
     reponseCorrecte: { type: String, required: true },
     subject: { type: String, required: true },
