@@ -27,14 +27,31 @@ router.post("/import-excel", upload.single("file"), async (req: Request, res: Re
     if (rows.length === 0) return res.status(400).json({ error: "Le fichier est vide" });
 
     // Préparer les questions
-    const questions = rows.map(row => ({
-      texte: row["Texte de la question"],
-      options: [row["Option 1"], row["Option 2"], row["Option 3"], row["Option 4"]],
-      reponseCorrecte: row["Réponse correcte"],
-      subject: row["Matière"],
-      exam: row["Concours / Examen"],
-      note: row["Note"] ? Number(row["Note"]) : 1
-    }));
+    const questions = rows.map(row => {
+  const imageName = String(row["Image"] || "").trim();
+
+  return {
+    texte: row["Texte de la question"]?.toString().trim() || null,
+
+    image: imageName
+      ? `/uploads/questions/${imageName}.png`
+      : null,
+
+    options: [
+      row["Option 1"],
+      row["Option 2"],
+      row["Option 3"],
+      row["Option 4"],
+      row["Option 5"],
+    ].filter(o => o && o.toString().trim() !== ""),
+
+    reponseCorrecte: row["Réponse correcte"],
+    subject: row["Matière"],
+    exam: row["Concours / Examen"],
+    note: row["Note"] ? Number(row["Note"]) : 1,
+  };
+});
+
 
     // Supprimer uniquement les questions de cet examen + matière
     const examName = rows[0]["Concours / Examen"];
