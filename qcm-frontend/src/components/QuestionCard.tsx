@@ -1,4 +1,5 @@
 import React from "react";
+import { API_BASE_URL } from "../config";
 
 interface Question {
   _id: string;
@@ -27,9 +28,8 @@ export default function QuestionCard({
       {/* 🖼️ IMAGE */}
       {question.image && (
         <img
-          src={`http://localhost:5000${question.image}`}
-          alt="Question"
-          className="max-w-lg rounded shadow"
+          src={`${API_BASE_URL}${question.image}`}
+          className="max-w-lg mb-4 rounded shadow"
         />
       )}
 
