@@ -17,11 +17,13 @@ import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 
 interface Question {
   _id: string;
-  texte: string;
+  texte?: string;
+  image?: string | null;
   options: string[];
   reponseCorrecte: string;
   note: number;
 }
+
 
 export default function StudentPage() {
   // Navigation
@@ -194,9 +196,19 @@ useEffect(() => {
           className="p-4 mb-4 bg-white rounded-xl shadow"
         >
           <h3 className="font-semibold mb-2">
-            Q{idx + 1}) {q.texte}{" "}
-            <span className="text-purple-600">({q.note} pt)</span>
-          </h3>
+  Q{idx + 1}){" "}
+  {q.texte && <span>{q.texte}</span>}
+  <span className="text-purple-600"> ({q.note} pt)</span>
+</h3>
+
+{q.image && (
+  <img
+    src={`${API_BASE_URL}${q.image}`}
+    className="max-w-lg my-3 rounded shadow"
+    alt="Question"
+  />
+)}
+
 
           {q.options.map((opt, i) => (
             <label

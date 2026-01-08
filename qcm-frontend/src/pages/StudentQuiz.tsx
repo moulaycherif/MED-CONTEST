@@ -7,11 +7,13 @@ import { API_BASE_URL } from "../config";
 
 interface Question {
   _id: string;
-  texte: string;
+  texte?: string;
+  image?: string | null;
   options: string[];
   reponseCorrecte: string;
   note: number;
 }
+
 
 export default function StudentQuiz() {
   const { examName, subject } = useParams<{ examName?: string; subject?: string }>();
@@ -72,9 +74,19 @@ export default function StudentQuiz() {
           className="p-6 bg-white border rounded-2xl shadow"
         >
           <h2 className="font-bold text-xl mb-4">
-            Q{index + 1}) {current.texte}{" "}
-            <span className="text-purple-600">({current.note} pt)</span>
-          </h2>
+  Q{index + 1}){" "}
+  {current.texte && <span>{current.texte}</span>}
+  <span className="text-purple-600"> ({current.note} pt)</span>
+</h2>
+
+{current.image && (
+  <img
+    src={`${API_BASE_URL}${current.image}`}
+    className="max-w-lg my-4 rounded shadow"
+    alt="Question"
+  />
+)}
+
 
           {current.options.map((opt, i) => (
             <label
