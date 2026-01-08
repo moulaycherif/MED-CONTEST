@@ -17,19 +17,15 @@ interface QuestionCardProps {
   onSelect: (answer: string) => void;
 }
 
-export default function QuestionCard({
-  question,
-  selectedAnswer,
-  onSelect,
-}: QuestionCardProps) {
+export default function QuestionCard({ question, selectedAnswer, onSelect }) {
   return (
     <div className="p-4 border rounded shadow space-y-3">
 
-      {/* 🖼️ IMAGE */}
+      {/* 🖼 IMAGE */}
       {question.image && (
         <img
-          src={`${API_BASE_URL}${question.image}`}
-          className="max-w-lg mb-4 rounded shadow"
+          src={`${import.meta.env.VITE_API_BASE_URL}${question.image}`}
+          className="max-w-lg rounded shadow"
         />
       )}
 
@@ -43,18 +39,15 @@ export default function QuestionCard({
         {question.options.map((option) => (
           <button
             key={option}
-            className={`px-3 py-2 border rounded text-left transition
-              ${
-                selectedAnswer === option
-                  ? "bg-blue-500 text-white"
-                  : "bg-white hover:bg-gray-100"
-              }`}
+            className={`px-3 py-2 border rounded text-left hover:bg-gray-100 
+              ${selectedAnswer === option ? "bg-blue-500 text-white" : ""}`}
             onClick={() => onSelect(option)}
           >
             {option}
           </button>
         ))}
       </div>
+
     </div>
   );
 }
