@@ -25,6 +25,8 @@ export default function QuestionCard({
   return (
     <div className="p-4 border rounded shadow space-y-3">
 
+      console.log("question image =", question.image);
+
       {/* 🖼 IMAGE */}
       {question.image && (
         <img
