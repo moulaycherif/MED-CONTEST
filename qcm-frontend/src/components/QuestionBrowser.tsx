@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 interface Question {
   _id: string;
-  question: string;
+  texte?: string;
+  image?: string | null;
   options: string[];
-  answer: string;
+  reponseCorrecte: string;
+  subject: string;
+  exam: string;
 }
 
 export default function QuestionBrowser() {
@@ -13,11 +18,11 @@ export default function QuestionBrowser() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Charger les questions au montage du composant
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/questions");
+        const res = await axios.get(`${API}/api/questions`);
+        console.log("QUESTIONS:", res.data);
         setQuestions(res.data);
       } catch (err) {
         setError("Impossible de récupérer les questions 😢");
@@ -35,15 +40,36 @@ export default function QuestionBrowser() {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Liste des questions</h2>
-      <ul className="space-y-4">
-        {questions.map((q) => (
-          <li key={q._id} className="p-3 border rounded-lg shadow">
-            <p className="font-medium">{q.question}</p>
-            <ul className="list-disc pl-5">
+
+      <ul className="space-y-6">
+        {questions.map((q, index) => (
+          <li key={q._id} className="p-4 border rounded-lg shadow space-y-3">
+
+            <div className="font-semibold">
+              Q{index + 1}
+            </div>
+
+            {/* 🖼 IMAGE */}
+            {q.image && (
+              <img
+                src={`${API}${q.image}`}
+                className="max-w-lg rounded shadow"
+                alt="Question"
+              />
+            )}
+
+            {/* 📝 TEXTE */}
+            {q.texte && (
+              <p className="font-medium">{q.texte}</p>
+            )}
+
+            {/* OPTIONS */}
+            <ul className="list-disc pl-5 space-y-1">
               {q.options.map((opt, i) => (
                 <li key={i}>{opt}</li>
               ))}
             </ul>
+
           </li>
         ))}
       </ul>
