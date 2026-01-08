@@ -23,12 +23,13 @@ export default function QuestionCard({
   selectedAnswer,
   onSelect,
 }: QuestionCardProps) {
-  return (
-    <div className="p-4 border rounded shadow space-y-3">
 
-      console.log("question image =", question.image);
+    console.log("question image =", question.image);
       console.log("question texte =", question.texte);
 
+  return (
+    <div className="p-4 border rounded shadow space-y-3">
+    
       {/* 🖼 IMAGE */}
       {question.image && (
         <img
