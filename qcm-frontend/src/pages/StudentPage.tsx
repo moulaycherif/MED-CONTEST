@@ -75,7 +75,7 @@ useEffect(() => {
     .get(`${API_BASE_URL}/api/questions/exams`)
     .then(res => {
       setExams(res.data); // [{_id,title,subject}]
-      console.log("🔥 EXAMS:", res.data);
+      
     })
     .catch(err => console.error("❌ Exams load error", err));
 }, []);
@@ -91,7 +91,7 @@ useEffect(() => {
     axios
       .get(url)
       .then((res) => {
-        console.log("🔥 QUESTIONS reçues:", res.data.length);
+        
         setQuestions(res.data);
       })
       .catch((err) => {
@@ -155,7 +155,7 @@ useEffect(() => {
 );
 
 
-    console.log("🔥 QCM enregistré côté serveur");
+    
   } catch (err) {
     console.error("❌ Erreur enregistrement QCM", err);
   }
