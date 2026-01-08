@@ -17,6 +17,7 @@ interface QuestionCardProps {
   onSelect: (answer: string) => void;
 }
 
+
 export default function QuestionCard({
   question,
   selectedAnswer,
@@ -26,6 +27,7 @@ export default function QuestionCard({
     <div className="p-4 border rounded shadow space-y-3">
 
       console.log("question image =", question.image);
+      console.log("question texte =", question.texte);
 
       {/* 🖼 IMAGE */}
       {question.image && (
