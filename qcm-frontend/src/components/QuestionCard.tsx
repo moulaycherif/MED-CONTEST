@@ -17,15 +17,20 @@ interface QuestionCardProps {
   onSelect: (answer: string) => void;
 }
 
-export default function QuestionCard({ question, selectedAnswer, onSelect }) {
+export default function QuestionCard({
+  question,
+  selectedAnswer,
+  onSelect,
+}: QuestionCardProps) {
   return (
     <div className="p-4 border rounded shadow space-y-3">
 
       {/* 🖼 IMAGE */}
       {question.image && (
         <img
-          src={`${import.meta.env.VITE_API_BASE_URL}${question.image}`}
+          src={`${API_BASE_URL}${question.image}`}
           className="max-w-lg rounded shadow"
+          alt="Question"
         />
       )}
 
