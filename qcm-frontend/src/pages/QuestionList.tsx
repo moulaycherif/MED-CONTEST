@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
+console.log("🔥 QUESTION LIST");
+
 interface Question {
   _id: string;
   questionText: string;
