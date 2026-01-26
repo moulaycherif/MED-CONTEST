@@ -1,17 +1,26 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+console.log("🔥 QUESTION BROWSER");
+
 const API = import.meta.env.VITE_API_BASE_URL;
 
 interface Question {
   _id: string;
   texte?: string;
   image?: string | null;
+
+  groupId?: {
+    _id: string;
+    image?: string | null;
+  } | null;
+
   options: string[];
   reponseCorrecte: string;
   subject: string;
   exam: string;
 }
+
 
 export default function QuestionBrowser() {
   const [questions, setQuestions] = useState<Question[]>([]);

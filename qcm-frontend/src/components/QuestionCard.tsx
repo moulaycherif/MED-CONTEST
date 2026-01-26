@@ -1,15 +1,24 @@
 import React from "react";
 import { API_BASE_URL } from "../config";
 
+console.log("🔥 QUESTION CARD");
+
 interface Question {
   _id: string;
   texte?: string;
   image?: string | null;
+
+  groupId?: {
+    _id: string;
+    image?: string | null;
+  } | null;
+
   options: string[];
   reponseCorrecte: string;
   subject: string;
   exam: string;
 }
+
 
 interface QuestionCardProps {
   question: Question;
@@ -23,8 +32,8 @@ export default function QuestionCard({
   selectedAnswer,
   onSelect,
 }: QuestionCardProps) {
-
-    console.log("question image =", question.image);
+const image = question.groupId?.image || question.image;
+    console.log("question image =", image);
       console.log("question texte =", question.texte);
 
   return (
@@ -33,9 +42,9 @@ export default function QuestionCard({
       {/* 🖼 IMAGE */}
       {question.image && (
         <img
-          src={`${API_BASE_URL}${question.image}`}
+          src={`${API_BASE_URL}${image}`}
           className="max-w-lg rounded shadow"
-          alt="Question"
+          alt="Énoncé"
         />
       )}
 
