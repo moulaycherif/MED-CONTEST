@@ -33,7 +33,7 @@ export default function ImportExcel({ onImported }: { onImported?: () => void })
       formData.append("file", file);
 
       const res = await axios.post(
-        `http://localhost:5000/api/questions/import?mode=${mode}`,
+        `http://localhost:5000/api/questions/import-excel?mode=${mode}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
