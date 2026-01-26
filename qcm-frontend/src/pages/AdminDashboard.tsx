@@ -4,6 +4,8 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import SummaryList from "./SummaryList";
 
+console.log("🔥 CECI EST ADMIN DASHBOARD:");
+
 // Déconnexion
 function logout() {
   localStorage.removeItem("token");

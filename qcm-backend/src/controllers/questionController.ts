@@ -4,6 +4,8 @@ import Question from "../models/Question";
 import Exam from "../models/Exam";
 import XLSX from "xlsx";
 
+console.log("🔥 CECI EST QUESTIONS CONTROLLER:");
+
 /**
  * Récupérer toutes les questions (avec filtres facultatifs)
  * - exam: "MEDECINE 2023"
