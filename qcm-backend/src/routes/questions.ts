@@ -3,6 +3,9 @@ import { Router, Request, Response } from "express";
 import multer from "multer";
 import Question from "../models/Question";
 
+console.log("QUESTIONS FILE:", __filename);
+
+
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -14,60 +17,84 @@ interface ExamParams {
 // =======================
 // 📌 Import Excel
 // =======================
-router.post("/import-excel", upload.single("file"), async (req: Request, res: Response) => {
+router.post("/import-excel", upload.single("file"), async (req, res) => {
+   console.log("import-Excel:");
   try {
-    if (!req.file) return res.status(400).json({ error: "Aucun fichier reçu" });
-
     const XLSX = await import("xlsx");
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows: any[] = XLSX.utils.sheet_to_json(sheet);
 
-    const rows: any[] = XLSX.utils.sheet_to_json(worksheet);
-    if (rows.length === 0) return res.status(400).json({ error: "Le fichier est vide" });
+    const exam = rows[0]["Concours / Examen"];
+    const subject = rows[0]["Matière"];
 
-    // Préparer les questions
-    const questions = rows.map(row => {
-  const imageName = String(row["Image"] || "").trim();
+    // 🔥 Nettoyer ancien import
+    await Question.deleteMany({ exam, subject });
 
-  return {
-    texte: row["Texte de la question"]?.toString().trim() || null,
+let currentGroup = null;
 
-    image: imageName
-      ? `/uploads/questions/${imageName}.png`
-      : null,
+for (const row of rows) {
+  const texte = (row["Texte de la question"] || "").trim();
+  const image = (row["Image"] || "").trim();
 
-    options: [
-      row["Option 1"],
-      row["Option 2"],
-      row["Option 3"],
-      row["Option 4"],
-      row["Option 5"],
-    ].filter(o => o && o.toString().trim() !== ""),
+  const options = [
+    row["Option 1"],
+    row["Option 2"],
+    row["Option 3"],
+    row["Option 4"],
+    row["Option 5"],
+  ].filter(o => o && o.toString().trim() !== "");
 
-    reponseCorrecte: row["Réponse correcte"],
-    subject: row["Matière"],
-    exam: row["Concours / Examen"],
-    note: row["Note"] ? Number(row["Note"]) : 1,
-  };
-});
+  const hasImage = image.length > 0;
+  const hasOptions = options.length > 0;
 
-
-    // Supprimer uniquement les questions de cet examen + matière
-    const examName = rows[0]["Concours / Examen"];
-    const subjectName = rows[0]["Matière"];
-    console.log("Import Excel - examen:", examName, "matière:", subjectName);
-    await Question.deleteMany({ exam: examName, subject: subjectName });
-
-    await Question.insertMany(questions);
-
-    res.json({
-      message: `✅ Import réussi : ${questions.length} questions remplacées pour "${examName}" en "${subjectName}"`
+  // 🟦 1) GROUPE (image seule)
+  if (hasImage && !hasOptions) {
+    currentGroup = await Question.create({
+      image: `/uploads/questions/${image}`,
+      subject,
+      exam,
+      isGroup: true,
     });
+    continue;
+  }
 
-  } catch (err) {
-    console.error("Erreur import Excel :", err);
-    res.status(500).json({ error: "Erreur lors de l'import du fichier Excel" });
+  // 🟨 2) QUESTION SIMPLE (sans image)
+  if (!hasImage && hasOptions) {
+    await Question.create({
+      texte,
+      image: null,
+      options,
+      reponseCorrecte: row["Réponse correcte"],
+      note: Number(row["Note"] || 1),
+      subject,
+      exam,
+      isGroup: false,
+      groupId: null,
+    });
+    continue;
+  }
+
+  // 🟩 3) QUESTION D’UN GROUPE
+  if (hasImage && hasOptions && currentGroup) {
+    await Question.create({
+      texte,
+      image: null,   // 🔥 PAS d’image ici
+      options,
+      reponseCorrecte: row["Réponse correcte"],
+      note: Number(row["Note"] || 1),
+      subject,
+      exam,
+      isGroup: false,
+      groupId: currentGroup._id,
+    });
+  }
+}
+
+    res.json({ message: "Import QCM avec énoncés réussi ✅" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Erreur import Excel" });
   }
 });
 
@@ -100,19 +127,17 @@ router.get(
 );
 
 // 📌 Récupérer les questions avec filtres examen et matière
-router.get("/", async (req: Request, res: Response) => {
-  try {
-    const { exam, subject } = req.query as { exam?: string; subject?: string };
-    const filter: any = {};
-    if (exam) filter.exam = exam;
-    if (subject) filter.subject = subject;
+router.get("/", async (req, res) => {
+  const { exam, subject } = req.query;
 
-    const questions = await Question.find(filter);
-    res.json(questions);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erreur récupération questions" });
-  }
+  const filter: any = { isGroup: false };
+  if (exam) filter.exam = exam;
+  if (subject) filter.subject = subject;
+
+  const questions = await Question.find(filter).populate("groupId");
+
+  res.json(questions);
 });
+
 
 export default router;
