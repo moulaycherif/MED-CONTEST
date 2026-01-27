@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { getRankingByQcm } from "../services/rankingService";
 
+console.log("🔥 RANKING CONTROLLER:");
+
 export async function getRanking(req: Request, res: Response): Promise<void> {
   try {
     const { qcmId } = req.params;
