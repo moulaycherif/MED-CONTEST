@@ -9,6 +9,9 @@ import {
   deleteAllQuestions,
 } from "../controllers/questionController";
 
+console.log("QUESTION ROUTES FILE:", __filename);
+
+
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
