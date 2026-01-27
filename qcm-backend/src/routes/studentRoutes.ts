@@ -5,6 +5,9 @@ import Result from "../models/Result";
 import Question from "../models/Question";
 import StudentActivity from "../models/StudentActivity";
 
+console.log("STUDENT ROUTES FILE:", __filename);
+
+
 const router = express.Router();
 
 // 🔹 Profil étudiant
