@@ -4,8 +4,6 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import SummaryList from "./SummaryList";
 
-console.log("🔥 CECI EST ADMIN DASHBOARD:");
-
 // Déconnexion
 function logout() {
   localStorage.removeItem("token");
@@ -125,6 +123,9 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Import Excel
+
+  console.log("🔥 ADMIN DASHBOARD - Import Ecel");
+
   const handleUpload = async () => {
     if (!file) {
       setImportMessage("⚠️ Veuillez choisir un fichier Excel");
@@ -136,7 +137,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/api/questions/import?mode=${mode}`,
+        `${API_BASE_URL}/api/questions/import-excel?mode=${mode}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
