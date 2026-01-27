@@ -1,23 +1,35 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
+
+console.log("QUESTION MODELS FILE:", __filename);
+
 
 export interface IQuestion extends Document {
-  texte?: string;          // optionnel car parfois image seule
-  image?: string | null;   // 🔥
-  options: string[];
-  reponseCorrecte: string;
+  texte?: string;
+  image?: string | null;
+  options?: string[];
+  reponseCorrecte?: string;
   subject: string;
   exam: string;
-  note: number;
+  note?: number;
+
+  isGroup: boolean;
+  groupId?: mongoose.Types.ObjectId | null;
 }
 
-const questionSchema = new Schema<IQuestion>({
-  texte: { type: String, trim: true },
-  image: { type: String, default: null },   // 🔥
-  options: { type: [String], required: true },
-  reponseCorrecte: { type: String, required: true },
-  subject: { type: String, required: true },
-  exam: { type: String, required: true },
-  note: { type: Number, default: 1 },
+const questionSchema = new Schema<IQuestion>(
+  {
+    texte: { type: String, default: null, trim: true },
+    image: { type: String, default: null },
+
+    options: { type: [String], default: [] },
+    reponseCorrecte: { type: String, default: null },
+
+    subject: { type: String, required: true },
+    exam: { type: String, required: true },
+    note: { type: Number, default: 1 },
+
+    isGroup: { type: Boolean, default: false },
+    groupId: { type: Schema.Types.ObjectId, ref: "Question", default: null },
   },
   { timestamps: true }
 );
