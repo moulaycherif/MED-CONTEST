@@ -48,6 +48,8 @@ for (const row of rows) {
   const hasImage = image.length > 0;
   const hasOptions = options.length > 0;
 
+  console.log("Groupe avec ou sans image:", hasImage, hasOptions);
+
   // 🟦 1) GROUPE (image seule)
   if (hasImage && !hasOptions) {
     currentGroup = await Question.create({
