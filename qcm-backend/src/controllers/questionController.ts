@@ -1,25 +1,22 @@
-// controllers/questionController.ts
 import { Request, Response } from "express";
 import Question from "../models/Question";
 import Exam from "../models/Exam";
 import XLSX from "xlsx";
 
 console.log("🔥 QUESTION CONTROLLER LOADED");
-console.log("🚨 VERSION QUESTION CONTROLLER 2026-FINAL-IMPORT-FIX");
+console.log("🚨 VERSION QUESTION CONTROLLER 2026-FINAL-GROUP-IMPORT");
 
 /* ============================================================
    🔧 UTILITAIRES
 ============================================================ */
 
-// normalisation ultra robuste des clés Excel
 const normalize = (s: string) =>
   s
-    .replace(/\u00A0/g, " ") // espaces insécables
+    .replace(/\u00A0/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
 
-// accès robuste à une cellule Excel
 const getCell = (row: any, expectedKey: string) => {
   const expected = normalize(expectedKey);
   const found = Object.entries(row).find(
@@ -39,20 +36,18 @@ export const getQuestions = async (req: Request, res: Response) => {
       subject?: string;
     };
 
-    console.log("🔥 GET QUESTIONS", { exam, subject });
-
-    const filter: any = {};
+    const filter: any = { isGroup: false };
 
     if (exam) {
       filter.exam = { $regex: new RegExp(`^${exam.trim()}$`, "i") };
     }
-
     if (subject) {
       filter.subject = { $regex: new RegExp(`^${subject.trim()}$`, "i") };
     }
 
-    const questions = await Question.find(filter).sort({ _id: 1 });
-    console.log("📊 QUESTIONS FOUND:", questions.length);
+    const questions = await Question.find(filter)
+      .populate("groupId")
+      .sort({ _id: 1 });
 
     res.json(questions);
   } catch (err) {
@@ -62,7 +57,7 @@ export const getQuestions = async (req: Request, res: Response) => {
 };
 
 /* ============================================================
-   📥 IMPORT EXCEL (VERSION DÉFINITIVE)
+   📥 IMPORT EXCEL — VERSION DÉFINITIVE AVEC GROUPES
 ============================================================ */
 
 export const importExcel = async (req: Request, res: Response) => {
@@ -72,39 +67,35 @@ export const importExcel = async (req: Request, res: Response) => {
     }
 
     const mode = String(req.query.mode || "append");
-
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
 
-    const rawData = XLSX.utils.sheet_to_json(
+    const rows = XLSX.utils.sheet_to_json(
       workbook.Sheets[sheetName],
       { defval: "" }
     );
 
-    if (!Array.isArray(rawData) || rawData.length === 0) {
+    if (!rows.length) {
       return res.status(400).json({ error: "Fichier Excel vide" });
     }
 
-    console.log("📥 LIGNES EXCEL:", rawData.length);
-    console.log("🧪 COLONNES DÉTECTÉES:", Object.keys(rawData[0]));
-
-    /* ------------------------------------------------------------
-       🔎 PHASE 1 : lecture brute + logs (CRUCIAL)
-    ------------------------------------------------------------ */
-
-    let lastSubject = "";
     let lastExam = "";
+    let lastSubject = "";
+    let currentGroupId: any = null;
 
-    const parsed = rawData.map((row: any, index: number) => {
-      const rawSubject = String(getCell(row, "Matière")).trim();
+    const questionsToInsert: any[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row: any = rows[i];
+
       const rawExam = String(getCell(row, "Concours / Examen")).trim();
+      const rawSubject = String(getCell(row, "Matière")).trim();
 
-      // ⚠️ héritage UNIQUEMENT si cellule vide (Excel fusionné)
-      if (rawSubject) lastSubject = rawSubject;
       if (rawExam) lastExam = rawExam;
+      if (rawSubject) lastSubject = rawSubject;
 
-      const subject = rawSubject || lastSubject;
-      const exam = rawExam || lastExam;
+      const exam = lastExam;
+      const subject = lastSubject;
 
       const texte = String(getCell(row, "Texte de la question")).trim();
       const imageName = String(getCell(row, "Image")).trim();
@@ -125,58 +116,71 @@ export const importExcel = async (req: Request, res: Response) => {
 
       const note = Number(getCell(row, "Note") || 1);
 
-      // 🔥 LOG ABSOLU (preuve irréfutable)
-      console.log(`🧪 RAW LIGNE ${index + 2}`, {
+      const hasImage = !!imageName;
+      const hasOptions = options.length > 0;
+
+      console.log(`📌 LIGNE ${i + 2}`, {
         exam,
         subject,
-        texte: texte.slice(0, 30),
-        options: options.length,
+        hasImage,
+        hasOptions,
       });
 
-      return {
-        texte,
-        image: imageName ? `/uploads/questions/${imageName}.png` : null,
-        options,
-        reponseCorrecte,
-        subject,
-        exam,
-        note,
-      };
-    });
+      // 🟦 GROUPE (image seule)
+      if (hasImage && !hasOptions && !texte) {
+        const group = await Question.create({
+          image: `/uploads/questions/${imageName}.png`,
+          exam,
+          subject,
+          isGroup: true,
+        });
+        currentGroupId = group._id;
+        continue;
+      }
 
-    /* ------------------------------------------------------------
-       🔎 PHASE 2 : filtrage strict
-    ------------------------------------------------------------ */
+      // 🟨 QUESTION SIMPLE
+      if (!hasImage && hasOptions) {
+        questionsToInsert.push({
+          texte,
+          image: null,
+          options,
+          reponseCorrecte,
+          note,
+          exam,
+          subject,
+          isGroup: false,
+          groupId: null,
+        });
+        continue;
+      }
 
-    const questions = parsed.filter(q =>
-      (q.texte || q.image) &&
-      q.options.length > 0 &&
-      q.reponseCorrecte &&
-      q.subject &&
-      q.exam
-    );
-
-    if (questions.length === 0) {
-      return res.status(400).json({
-        error: "Aucune question valide après parsing",
-      });
+      // 🟩 QUESTION D’UN GROUPE
+      if (hasOptions && currentGroupId) {
+        questionsToInsert.push({
+          texte,
+          image: null,
+          options,
+          reponseCorrecte,
+          note,
+          exam,
+          subject,
+          isGroup: false,
+          groupId: currentGroupId,
+        });
+      }
     }
 
-    /* ------------------------------------------------------------
-       🧹 SUPPRESSION SELON MODE
-    ------------------------------------------------------------ */
+    if (!questionsToInsert.length) {
+      return res.status(400).json({ error: "Aucune question valide" });
+    }
 
-    const exams = [...new Set(questions.map(q => q.exam))];
+    const exams = [...new Set(questionsToInsert.map(q => q.exam))];
 
     if (mode === "replace-global") {
       await Question.deleteMany({});
     } else if (mode === "replace") {
       await Question.deleteMany({ exam: { $in: exams } });
     }
-
-    /* ------------------------------------------------------------
-       📘 CRÉATION DES EXAMS
-    ------------------------------------------------------------ */
 
     for (const ex of exams) {
       const exists = await Exam.findOne({ title: ex });
@@ -185,27 +189,15 @@ export const importExcel = async (req: Request, res: Response) => {
       }
     }
 
-    console.log("📘 EXAMS IMPORTÉS:", exams);
-    console.log(
-      "📗 MATIÈRES IMPORTÉES:",
-      [...new Set(questions.map(q => q.subject))]
-    );
-
-    /* ------------------------------------------------------------
-       💾 INSERTION
-    ------------------------------------------------------------ */
-
-    const inserted = await Question.insertMany(questions, {
+    const inserted = await Question.insertMany(questionsToInsert, {
       ordered: false,
     });
 
     res.json({
-      message: "✅ Import Excel terminé avec succès",
+      message: "✅ Import Excel avec groupes réussi",
       inserted: inserted.length,
       exams,
-      subjects: [...new Set(questions.map(q => q.subject))],
     });
-
   } catch (err: any) {
     console.error("❌ IMPORT ERROR:", err);
     res.status(500).json({
@@ -220,31 +212,20 @@ export const importExcel = async (req: Request, res: Response) => {
 ============================================================ */
 
 export const getExams = async (_req: Request, res: Response) => {
-  try {
-    const exams = await Exam.find().sort({ title: 1 });
-    res.json(exams);
-  } catch (err) {
-    res.status(500).json({ error: "Erreur récupération examens" });
-  }
+  const exams = await Exam.find().sort({ title: 1 });
+  res.json(exams);
 };
 
 export const getSubjectsByExam = async (req: Request, res: Response) => {
-  try {
-    const { exam } = req.params;
-    const subjects = await Question.distinct("subject", { exam });
-    res.json(subjects);
-  } catch (err) {
-    res.status(500).json({ error: "Erreur récupération matières" });
-  }
+  const subjects = await Question.distinct("subject", {
+    exam: req.params.exam,
+  });
+  res.json(subjects);
 };
 
 export const deleteAllQuestions = async (_req: Request, res: Response) => {
-  try {
-    await Question.deleteMany({});
-    res.json({ message: "✅ Toutes les questions supprimées" });
-  } catch (err) {
-    res.status(500).json({ error: "Erreur suppression" });
-  }
+  await Question.deleteMany({});
+  res.json({ message: "✅ Toutes les questions supprimées" });
 };
 
 // Alias
