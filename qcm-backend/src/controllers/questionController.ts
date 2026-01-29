@@ -66,39 +66,32 @@ export const importExcel = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Aucun fichier fourni" });
     }
 
-    const mode = String(req.query.mode || "append");
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
-
-    const rows = XLSX.utils.sheet_to_json(
+    const rows = XLSX.utils.sheet_to_json<any>(
       workbook.Sheets[sheetName],
       { defval: "" }
     );
 
-    if (!rows.length) {
-      return res.status(400).json({ error: "Fichier Excel vide" });
-    }
-
-    let lastExam = "";
     let lastSubject = "";
-    let currentGroupId: any = null;
+    let lastExam = "";
+    let currentGroup: any = null;
 
-    const questionsToInsert: any[] = [];
+    const docs: any[] = [];
 
     for (let i = 0; i < rows.length; i++) {
-      const row: any = rows[i];
-
-      const rawExam = String(getCell(row, "Concours / Examen")).trim();
-      const rawSubject = String(getCell(row, "Matière")).trim();
-
-      if (rawExam) lastExam = rawExam;
-      if (rawSubject) lastSubject = rawSubject;
-
-      const exam = lastExam;
-      const subject = lastSubject;
+      const row = rows[i];
 
       const texte = String(getCell(row, "Texte de la question")).trim();
-      const imageName = String(getCell(row, "Image")).trim();
+      const imageCell = String(getCell(row, "Image")).trim();
+      const subjectCell = String(getCell(row, "Matière")).trim();
+      const examCell = String(getCell(row, "Concours / Examen")).trim();
+
+      if (subjectCell) lastSubject = subjectCell;
+      if (examCell) lastExam = examCell;
+
+      const subject = lastSubject;
+      const exam = lastExam;
 
       const options = [
         getCell(row, "Option 1"),
@@ -116,96 +109,96 @@ export const importExcel = async (req: Request, res: Response) => {
 
       const note = Number(getCell(row, "Note") || 1);
 
-      const hasImage = !!imageName;
-      const hasOptions = options.length > 0;
-
-      console.log(`📌 LIGNE ${i + 2}`, {
-        exam,
-        subject,
-        hasImage,
-        hasOptions,
+      console.log(`🧪 LIGNE ${i + 2}`, {
+        texte,
+        imageCell,
+        options: options.length,
       });
 
-      // 🟦 GROUPE (image seule)
-      if (hasImage && !hasOptions && !texte) {
-        const group = await Question.create({
-          image: `/uploads/questions/${imageName}.png`,
-          exam,
+      /* =============================
+         🟦 CAS 1 : GROUPE (image seule)
+      ============================== */
+      if (!texte && imageCell) {
+        currentGroup = {
+          image: `/uploads/questions/${imageCell}`,
           subject,
+          exam,
           isGroup: true,
-        });
-        currentGroupId = group._id;
+        };
+        docs.push(currentGroup);
         continue;
       }
 
-      // 🟨 QUESTION SIMPLE
-      if (!hasImage && hasOptions) {
-        questionsToInsert.push({
+      /* =============================
+         🟨 CAS 2 : QUESTION SIMPLE
+      ============================== */
+      if (texte && !imageCell) {
+        docs.push({
           texte,
           image: null,
           options,
           reponseCorrecte,
-          note,
-          exam,
           subject,
+          exam,
+          note,
           isGroup: false,
           groupId: null,
         });
         continue;
       }
 
-      // 🟩 QUESTION D’UN GROUPE
-      if (hasOptions && currentGroupId) {
-        questionsToInsert.push({
+      /* =============================
+         🟩 CAS 3 : QUESTION DU GROUPE
+      ============================== */
+      if (texte && imageCell && currentGroup) {
+        docs.push({
           texte,
-          image: null,
+          image: null, // ⚠️ JAMAIS d’image ici
           options,
           reponseCorrecte,
-          note,
-          exam,
           subject,
+          exam,
+          note,
           isGroup: false,
-          groupId: currentGroupId,
+          groupId: null, // temporaire
+          __groupRef: currentGroup, // liaison temporaire
         });
       }
     }
 
-    if (!questionsToInsert.length) {
-      return res.status(400).json({ error: "Aucune question valide" });
-    }
+    /* =============================
+       💾 INSERTION AVEC LIAISON
+    ============================== */
 
-    const exams = [...new Set(questionsToInsert.map(q => q.exam))];
+    await Question.deleteMany({ exam: lastExam });
 
-    if (mode === "replace-global") {
-      await Question.deleteMany({});
-    } else if (mode === "replace") {
-      await Question.deleteMany({ exam: { $in: exams } });
-    }
+    const inserted = [];
+    const groupMap = new Map();
 
-    for (const ex of exams) {
-      const exists = await Exam.findOne({ title: ex });
-      if (!exists) {
-        await Exam.create({ title: ex, subject: "Général" });
+    for (const doc of docs) {
+      if (doc.isGroup) {
+        const g = await Question.create(doc);
+        groupMap.set(doc, g._id);
+      } else if (doc.__groupRef) {
+        doc.groupId = groupMap.get(doc.__groupRef);
+        delete doc.__groupRef;
+        inserted.push(await Question.create(doc));
+      } else {
+        inserted.push(await Question.create(doc));
       }
     }
 
-    const inserted = await Question.insertMany(questionsToInsert, {
-      ordered: false,
+    res.json({
+      message: "✅ Import terminé avec images fonctionnelles",
+      inserted: inserted.length,
     });
 
-    res.json({
-      message: "✅ Import Excel avec groupes réussi",
-      inserted: inserted.length,
-      exams,
-    });
   } catch (err: any) {
     console.error("❌ IMPORT ERROR:", err);
-    res.status(500).json({
-      error: "Erreur import Excel",
-      details: err.message,
-    });
+    res.status(500).json({ error: err.message });
   }
 };
+
 
 /* ============================================================
    📚 AUTRES ROUTES
