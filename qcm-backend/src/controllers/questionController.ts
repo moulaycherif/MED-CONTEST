@@ -75,9 +75,8 @@ export const importExcel = async (req: Request, res: Response) => {
 
     let lastSubject = "";
     let lastExam = "";
-    let currentGroup: any = null;
 
-    const docs: any[] = [];
+    const questions: any[] = [];
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -90,8 +89,14 @@ export const importExcel = async (req: Request, res: Response) => {
       if (subjectCell) lastSubject = subjectCell;
       if (examCell) lastExam = examCell;
 
-      const subject = lastSubject;
-      const exam = lastExam;
+      // ❌ Ligne technique : image seule → on ignore
+      if (!texte && imageCell) {
+        console.log(`⏭️ Ligne ${i + 2} ignorée (image seule)`);
+        continue;
+      }
+
+      // ❌ Ligne vide
+      if (!texte) continue;
 
       const options = [
         getCell(row, "Option 1"),
@@ -109,88 +114,44 @@ export const importExcel = async (req: Request, res: Response) => {
 
       const note = Number(getCell(row, "Note") || 1);
 
-      console.log(`🧪 LIGNE ${i + 2}`, {
+      const image = imageCell
+        ? `/uploads/questions/${imageCell}.png`
+        : null;
+
+      console.log(`✅ QUESTION ${i + 2}`, {
         texte,
-        imageCell,
-        options: options.length,
+        image,
+        subject: lastSubject,
+        exam: lastExam,
       });
 
-      /* =============================
-         🟦 CAS 1 : GROUPE (image seule)
-      ============================== */
-      if (!texte && imageCell) {
-        currentGroup = {
-          image: `/uploads/questions/${imageCell}`,
-          subject,
-          exam,
-          isGroup: true,
-        };
-        docs.push(currentGroup);
-        continue;
-      }
-
-      /* =============================
-         🟨 CAS 2 : QUESTION SIMPLE
-      ============================== */
-      if (texte && !imageCell) {
-        docs.push({
-          texte,
-          image: null,
-          options,
-          reponseCorrecte,
-          subject,
-          exam,
-          note,
-          isGroup: false,
-          groupId: null,
-        });
-        continue;
-      }
-
-      /* =============================
-         🟩 CAS 3 : QUESTION DU GROUPE
-      ============================== */
-      if (texte && imageCell && currentGroup) {
-        docs.push({
-          texte,
-          image: null, // ⚠️ JAMAIS d’image ici
-          options,
-          reponseCorrecte,
-          subject,
-          exam,
-          note,
-          isGroup: false,
-          groupId: null, // temporaire
-          __groupRef: currentGroup, // liaison temporaire
-        });
-      }
+      questions.push({
+        texte,
+        image,
+        options,
+        reponseCorrecte,
+        subject: lastSubject,
+        exam: lastExam,
+        note,
+        isGroup: false,
+        groupId: null,
+      });
     }
 
-    /* =============================
-       💾 INSERTION AVEC LIAISON
-    ============================== */
-
-    await Question.deleteMany({ exam: lastExam });
-
-    const inserted = [];
-    const groupMap = new Map();
-
-    for (const doc of docs) {
-      if (doc.isGroup) {
-        const g = await Question.create(doc);
-        groupMap.set(doc, g._id);
-      } else if (doc.__groupRef) {
-        doc.groupId = groupMap.get(doc.__groupRef);
-        delete doc.__groupRef;
-        inserted.push(await Question.create(doc));
-      } else {
-        inserted.push(await Question.create(doc));
-      }
+    if (questions.length === 0) {
+      return res.status(400).json({ error: "Aucune question valide" });
     }
+
+    // Nettoyage
+    const exams = [...new Set(questions.map(q => q.exam))];
+    await Question.deleteMany({ exam: { $in: exams } });
+
+    const inserted = await Question.insertMany(questions);
 
     res.json({
-      message: "✅ Import terminé avec images fonctionnelles",
+      message: "✅ Import Excel terminé",
       inserted: inserted.length,
+      exams,
     });
 
   } catch (err: any) {
@@ -198,6 +159,7 @@ export const importExcel = async (req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 /* ============================================================
