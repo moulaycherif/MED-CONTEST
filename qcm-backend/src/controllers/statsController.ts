@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import StudentActivity from "../models/StudentActivity";
 import mongoose from "mongoose";
 
+console.log("🔥 statsController LOADED");
+
 // 📊 QCM par matière
 export const getQcmStats = async (req: Request, res: Response) => {
   try {
