@@ -3,14 +3,12 @@ import multer from "multer";
 import {
   getQuestions,
   importExcel,
-  importQuestions,
   getExams,
   getSubjectsByExam,
   deleteAllQuestions,
 } from "../controllers/questionController";
 
-console.log("QUESTION ROUTES FILE:", __filename);
-
+console.log("🔥 QUESTION ROUTES LOADED");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -21,16 +19,13 @@ router.get("/", getQuestions);
 // 📥 Importer un fichier Excel de questions
 router.post("/import", upload.single("file"), importExcel);
 
-// ⚙️ Alias compatible avec anciennes routes
-router.post("/import-legacy", upload.single("file"), importQuestions);
-
-// 🎓 Récupérer la liste des examens disponibles
+// 🎓 Examens
 router.get("/exams", getExams);
 
-// 📘 Récupérer les matières pour un examen donné
+// 📘 Matières par examen
 router.get("/subjects/:exam", getSubjectsByExam);
 
-// 🧹 Supprimer toutes les questions
+// 🧹 Suppression globale
 router.delete("/all", deleteAllQuestions);
 
 export default router;
