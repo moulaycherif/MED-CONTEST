@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import Question from "../models/Question";
 import Exam from "../models/Exam";
 import XLSX from "xlsx";
-import QuestionGroup from "../models/QuestionGroup";
+import QuestionGroup from "../models/QuestionGroup.ts";
 
 console.log("🔥 QUESTION CONTROLLER LOADED");
 console.log("🚨 VERSION QUESTION CONTROLLER 2026-FINAL-GROUP-IMPORT");
