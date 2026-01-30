@@ -4,10 +4,6 @@ import Exam from "../models/Exam";
 import QuestionGroup from "../models/QuestionGroup";
 import XLSX from "xlsx";
 
-console.log("🔥 QUESTION CONTROLLER LOADED");
-console.log("🚨 VERSION 2026-FINAL-GROUP-IMPORT-SAFE");
-
-
 /* ============================================================
    🔧 UTILITAIRES
 ============================================================ */

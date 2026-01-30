@@ -3,8 +3,6 @@ import Resume from "../models/resume";
 import { supabase } from "../utils/supabase";
 import StudentActivity from "../models/StudentActivity";
 
-console.log("🔥 RESUME CONTROLLER:");
-
 // 📌 Récupérer les résumés par matière
 export const getResumesBySubject = async (req: Request, res: Response) => {
   try {

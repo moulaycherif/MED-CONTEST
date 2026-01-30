@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import Astuce from "../models/Astuce";
 
-console.log("🔥 ASTUCES CONTROLLER:");
-
 /**
  * Récupérer les astuces d'un chapitre
  */

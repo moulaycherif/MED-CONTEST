@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/Student";
 
-console.log("🔥 AUTH CONTROLLER:");
-
 // 🔹 Créer un étudiant (admin uniquement)
 export const createStudent = async (req: Request, res: Response) => {
   try {
