@@ -85,14 +85,6 @@ export const importExcel = async (req: Request, res: Response) => {
       const subjectCell = String(getCell(row, "Matière")).trim();
       const examCell = String(getCell(row, "Concours / Examen")).trim();
 
-      console.log("📌 CONTEXTE ACTUEL", {
-  lastSubject,
-  lastExam,
-  texte,
-  imageCell,
-});
-
-
       if (subjectCell) lastSubject = subjectCell;
       if (examCell) lastExam = examCell;
 
@@ -117,6 +109,10 @@ export const importExcel = async (req: Request, res: Response) => {
       ).trim();
 
       const note = Number(getCell(row, "Note") || 1);
+
+      await Question.deleteMany({});
+      await QuestionGroup.deleteMany({});
+
 
       /* ======================================================
          🟦 CAS 1 — IMAGE SEULE → GROUPE
