@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Question from "../models/Question";
 import Exam from "../models/Exam";
 import XLSX from "xlsx";
+import QuestionGroup from "../models/QuestionGroup";
 
 console.log("🔥 QUESTION CONTROLLER LOADED");
 console.log("🚨 VERSION QUESTION CONTROLLER 2026-FINAL-GROUP-IMPORT");
@@ -59,108 +60,114 @@ export const getQuestions = async (req: Request, res: Response) => {
 /* ============================================================
    📥 IMPORT EXCEL — VERSION DÉFINITIVE AVEC GROUPES
 ============================================================ */
-
 export const importExcel = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "Aucun fichier fourni" });
+      return res.status(400).json({ message: "Fichier Excel manquant" });
     }
 
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
-    const rows = XLSX.utils.sheet_to_json<any>(
-      workbook.Sheets[sheetName],
-      { defval: "" }
-    );
+    const sheet = workbook.Sheets[sheetName];
 
-    let lastSubject = "";
-    let lastExam = "";
+    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-    const questions: any[] = [];
+    let currentGroupId: any = null;
+    let groupOrder = 0;
+    let questionOrder = 0;
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
+    for (const row of rows) {
+      const type = String(row["Type"]).trim().toUpperCase();
 
-      const texte = String(getCell(row, "Texte de la question")).trim();
-      const imageCell = String(getCell(row, "Image")).trim();
-      const subjectCell = String(getCell(row, "Matière")).trim();
-      const examCell = String(getCell(row, "Concours / Examen")).trim();
+      const texte = String(row["Texte de la question"]).trim();
+      const image = String(row["Image"]).trim();
 
-      if (subjectCell) lastSubject = subjectCell;
-      if (examCell) lastExam = examCell;
+      const options = [
+        row["Option 1"],
+        row["Option 2"],
+        row["Option 3"],
+        row["Option 4"],
+        row["Option 5"],
+      ].filter(Boolean);
 
-      // ❌ Ligne technique : image seule → on ignore
-      if (!texte && imageCell) {
-        console.log(`⏭️ Ligne ${i + 2} ignorée (image seule)`);
+      const correctAnswer = String(row["Réponse correcte"]).trim();
+      const subject = String(row["Matière"]).trim();
+      const exam = String(row["Concours / Examen"]).trim();
+      const note = Number(row["Note"]) || 1;
+
+      // =========================
+      // 🟦 GROUPE (IMAGE)
+      // =========================
+      if (type === "GROUP") {
+        if (!image) {
+          throw new Error("Ligne GROUP sans image");
+        }
+
+        groupOrder++;
+
+        const group = await QuestionGroup.create({
+          image: `/uploads/questions/${image}.png`,
+          subject,
+          exam,
+          order: groupOrder,
+        });
+
+        currentGroupId = group._id;
         continue;
       }
 
-      // ❌ Ligne vide
-      if (!texte) continue;
+      // =========================
+      // 🟩 QUESTION SIMPLE
+      // =========================
+      if (type === "SIMPLE") {
+        await Question.create({
+          texte,
+          options,
+          reponseCorrecte: correctAnswer,
+          subject,
+          exam,
+          note,
+          groupId: null,
+          order: ++questionOrder,
+        });
 
-      const options = [
-        getCell(row, "Option 1"),
-        getCell(row, "Option 2"),
-        getCell(row, "Option 3"),
-        getCell(row, "Option 4"),
-        getCell(row, "Option 5"),
-      ]
-        .map(o => String(o).trim())
-        .filter(Boolean);
+        continue;
+      }
 
-      const reponseCorrecte = String(
-        getCell(row, "Réponse correcte")
-      ).trim();
+      // =========================
+      // 🟨 QUESTION DE GROUPE
+      // =========================
+      if (type === "QUESTION") {
+        if (!currentGroupId) {
+          throw new Error("QUESTION sans GROUP préalable");
+        }
 
-      const note = Number(getCell(row, "Note") || 1);
+        await Question.create({
+          texte,
+          options,
+          reponseCorrecte: correctAnswer,
+          subject,
+          exam,
+          note,
+          groupId: currentGroupId,
+          order: ++questionOrder,
+        });
 
-      const image = imageCell
-        ? `/uploads/questions/${imageCell}.png`
-        : null;
-
-      console.log(`✅ QUESTION ${i + 2}`, {
-        texte,
-        image,
-        subject: lastSubject,
-        exam: lastExam,
-      });
-
-      questions.push({
-        texte,
-        image,
-        options,
-        reponseCorrecte,
-        subject: lastSubject,
-        exam: lastExam,
-        note,
-        isGroup: false,
-        groupId: null,
-      });
+        continue;
+      }
     }
 
-    if (questions.length === 0) {
-      return res.status(400).json({ error: "Aucune question valide" });
-    }
-
-    // Nettoyage
-    const exams = [...new Set(questions.map(q => q.exam))];
-    await Question.deleteMany({ exam: { $in: exams } });
-
-    const inserted = await Question.insertMany(questions);
-
-    res.json({
-      message: "✅ Import Excel terminé",
-      inserted: inserted.length,
-      exams,
+    res.status(200).json({
+      message: "Import Excel terminé avec succès ✅",
     });
-
-  } catch (err: any) {
-    console.error("❌ IMPORT ERROR:", err);
-    res.status(500).json({ error: err.message });
+  } catch (error: any) {
+    console.error("❌ Import Excel error:", error);
+    res.status(500).json({
+      message: "Erreur lors de l'import Excel",
+      error: error.message,
+    });
   }
 };
-
-
 
 /* ============================================================
    📚 AUTRES ROUTES
