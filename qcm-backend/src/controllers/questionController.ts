@@ -71,6 +71,10 @@ export const importExcel = async (req: Request, res: Response) => {
       { defval: "" }
     );
 
+    // ✅ PURGE UNE SEULE FOIS
+    await Question.deleteMany({});
+    await QuestionGroup.deleteMany({});
+
     let lastSubject = "";
     let lastExam = "";
     let currentGroup: any = null;
@@ -109,10 +113,6 @@ export const importExcel = async (req: Request, res: Response) => {
       ).trim();
 
       const note = Number(getCell(row, "Note") || 1);
-
-      await Question.deleteMany({});
-      await QuestionGroup.deleteMany({});
-
 
       /* ======================================================
          🟦 CAS 1 — IMAGE SEULE → GROUPE
