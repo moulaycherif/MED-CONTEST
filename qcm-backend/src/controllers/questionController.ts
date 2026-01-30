@@ -84,6 +84,8 @@ export const importExcel = async (req: Request, res: Response) => {
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
 
+      const type = String(getCell(row, "Type")).trim().toUpperCase();
+
       const texte = String(getCell(row, "Texte de la question")).trim();
       const imageCell = String(getCell(row, "Image")).trim();
       const subjectCell = String(getCell(row, "Matière")).trim();
@@ -117,68 +119,64 @@ export const importExcel = async (req: Request, res: Response) => {
       /* ======================================================
          🟦 CAS 1 — IMAGE SEULE → GROUPE
       ====================================================== */
-      if (!texte && imageCell) {
-        groupOrder++;
+      if (type === "GROUP") {
+  if (!imageCell) {
+    throw new Error(`GROUP sans image ligne ${i + 2}`);
+  }
 
-        currentGroup = await QuestionGroup.create({
-          image: `/uploads/questions/${imageCell}.png`,
-          subject: lastSubject,
-          exam: lastExam,
-          order: groupOrder,
-        });
+  groupOrder++;
 
-        console.log(`🟦 GROUPE CRÉÉ`, {
-          image: imageCell,
-          subject: lastSubject,
-          exam: lastExam,
-        });
+  currentGroup = await QuestionGroup.create({
+    image: `/uploads/questions/${imageCell}.png`,
+    subject: lastSubject,
+    exam: lastExam,
+    order: groupOrder,
+  });
 
-        continue;
-      }
+  continue;
+}
 
       /* ======================================================
          🟩 CAS 2 — QUESTION SIMPLE (sans groupe)
       ====================================================== */
-      if (texte && !imageCell) {
-        await Question.create({
-          texte,
-          image: null,
-          options,
-          reponseCorrecte,
-          subject: lastSubject,
-          exam: lastExam,
-          note,
-          groupId: null,
-          order: ++questionOrder,
-        });
+      if (type === "SIMPLE") {
+  await Question.create({
+    texte,
+    image: null,
+    options,
+    reponseCorrecte,
+    subject: lastSubject,
+    exam: lastExam,
+    note,
+    groupId: null,
+    order: ++questionOrder,
+  });
 
-        continue;
-      }
+  continue;
+}
 
       /* ======================================================
          🟨 CAS 3 — QUESTION DE GROUPE (texte + image)
       ====================================================== */
-      if (texte && imageCell) {
-        if (!currentGroup) {
-          throw new Error(
-            `Question ligne ${i + 2} sans groupe préalable`
-          );
-        }
+      if (type === "QUESTION") {
+  if (!currentGroup) {
+    throw new Error(`QUESTION sans GROUP ligne ${i + 2}`);
+  }
 
-        await Question.create({
-          texte,
-          image: null, // image héritée du groupe
-          options,
-          reponseCorrecte,
-          subject: lastSubject,
-          exam: lastExam,
-          note,
-          groupId: currentGroup._id,
-          order: ++questionOrder,
-        });
+  await Question.create({
+    texte,
+    image: null,
+    options,
+    reponseCorrecte,
+    subject: lastSubject,
+    exam: lastExam,
+    note,
+    groupId: currentGroup._id,
+    order: ++questionOrder,
+  });
 
-        continue;
-      }
+  continue;
+}
     }
 
     res.json({
