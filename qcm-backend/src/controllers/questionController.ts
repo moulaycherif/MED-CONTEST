@@ -44,8 +44,12 @@ export const getQuestions = async (req: Request, res: Response) => {
     }
 
     const questions = await Question.find(filter)
-      .populate("groupId")
-      .sort({ order: 1, _id: 1 });
+      .populate({
+        path: "groupId",
+        select: "image exam subject order", // 🔥 IMPORTANT
+      })
+      .sort({ order: 1, _id: 1 })
+      .lean(); // 🔥 IMPORTANT
 
     res.json(questions);
   } catch (err) {
@@ -53,6 +57,7 @@ export const getQuestions = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
+
 
 /* ============================================================
    📥 IMPORT EXCEL — GROUPES + QUESTIONS (ROBUSTE)

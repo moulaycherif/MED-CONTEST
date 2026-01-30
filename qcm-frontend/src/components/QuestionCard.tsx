@@ -1,8 +1,6 @@
 import React from "react";
 import { API_BASE_URL } from "../config";
 
-console.log("🔥 QUESTION CARD");
-
 interface Question {
   _id: string;
   texte?: string;
@@ -32,15 +30,14 @@ export default function QuestionCard({
   selectedAnswer,
   onSelect,
 }: QuestionCardProps) {
+  
 const image = question.groupId?.image || question.image;
-    console.log("question image =", image);
-      console.log("question texte =", question.texte);
 
   return (
     <div className="p-4 border rounded shadow space-y-3">
     
       {/* 🖼 IMAGE */}
-      {question.image && (
+      {image && (
         <img
           src={`${API_BASE_URL}${image}`}
           className="max-w-lg rounded shadow"
