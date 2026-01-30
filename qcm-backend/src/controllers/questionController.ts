@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import Question from "../models/Question";
 import Exam from "../models/Exam";
-import XLSX from "xlsx";
 import QuestionGroup from "../models/QuestionGroup";
+import XLSX from "xlsx";
 
 console.log("🔥 QUESTION CONTROLLER LOADED");
-console.log("🚨 VERSION QUESTION CONTROLLER 2026-FINAL-GROUP-IMPORT");
+console.log("🚨 VERSION 2026-FINAL-GROUP-IMPORT-SAFE");
 
 /* ============================================================
    🔧 UTILITAIRES
@@ -18,10 +18,10 @@ const normalize = (s: string) =>
     .trim()
     .toLowerCase();
 
-const getCell = (row: any, expectedKey: string) => {
-  const expected = normalize(expectedKey);
+const getCell = (row: any, key: string) => {
+  const expected = normalize(key);
   const found = Object.entries(row).find(
-    ([key]) => normalize(key) === expected
+    ([k]) => normalize(k) === expected
   );
   return found ? found[1] : "";
 };
@@ -37,7 +37,7 @@ export const getQuestions = async (req: Request, res: Response) => {
       subject?: string;
     };
 
-    const filter: any = { isGroup: false };
+    const filter: any = {};
 
     if (exam) {
       filter.exam = { $regex: new RegExp(`^${exam.trim()}$`, "i") };
@@ -48,7 +48,7 @@ export const getQuestions = async (req: Request, res: Response) => {
 
     const questions = await Question.find(filter)
       .populate("groupId")
-      .sort({ _id: 1 });
+      .sort({ order: 1, _id: 1 });
 
     res.json(questions);
   } catch (err) {
@@ -58,8 +58,9 @@ export const getQuestions = async (req: Request, res: Response) => {
 };
 
 /* ============================================================
-   📥 IMPORT EXCEL — VERSION DÉFINITIVE AVEC GROUPES
+   📥 IMPORT EXCEL — GROUPES + QUESTIONS (ROBUSTE)
 ============================================================ */
+
 export const importExcel = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
@@ -68,64 +69,83 @@ export const importExcel = async (req: Request, res: Response) => {
 
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json<any>(
+      workbook.Sheets[sheetName],
+      { defval: "" }
+    );
 
-    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-    let currentGroupId: any = null;
+    let lastSubject = "";
+    let lastExam = "";
+    let currentGroup: any = null;
     let groupOrder = 0;
     let questionOrder = 0;
 
-    for (const row of rows) {
-      const type = String(row["Type"]).trim().toUpperCase();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
 
-      const texte = String(row["Texte de la question"]).trim();
-      const image = String(row["Image"]).trim();
+      const texte = String(getCell(row, "Texte de la question")).trim();
+      const imageCell = String(getCell(row, "Image")).trim();
+      const subjectCell = String(getCell(row, "Matière")).trim();
+      const examCell = String(getCell(row, "Concours / Examen")).trim();
 
-      const options = [
-        row["Option 1"],
-        row["Option 2"],
-        row["Option 3"],
-        row["Option 4"],
-        row["Option 5"],
-      ].filter(Boolean);
+      if (subjectCell) lastSubject = subjectCell;
+      if (examCell) lastExam = examCell;
 
-      const correctAnswer = String(row["Réponse correcte"]).trim();
-      const subject = String(row["Matière"]).trim();
-      const exam = String(row["Concours / Examen"]).trim();
-      const note = Number(row["Note"]) || 1;
-
-      // =========================
-      // 🟦 GROUPE (IMAGE)
-      // =========================
-      if (type === "GROUP") {
-        if (!image) {
-          throw new Error("Ligne GROUP sans image");
-        }
-
-        groupOrder++;
-
-        const group = await QuestionGroup.create({
-          image: `/uploads/questions/${image}.png`,
-          subject,
-          exam,
-          order: groupOrder,
-        });
-
-        currentGroupId = group._id;
+      // 🔒 Sécurité ABSOLUE
+      if (!lastSubject || !lastExam) {
+        console.warn(`⛔ Ligne ${i + 2} ignorée (matière/examen manquant)`);
         continue;
       }
 
-      // =========================
-      // 🟩 QUESTION SIMPLE
-      // =========================
-      if (type === "SIMPLE") {
+      const options = [
+        getCell(row, "Option 1"),
+        getCell(row, "Option 2"),
+        getCell(row, "Option 3"),
+        getCell(row, "Option 4"),
+        getCell(row, "Option 5"),
+      ]
+        .map(o => String(o).trim())
+        .filter(Boolean);
+
+      const reponseCorrecte = String(
+        getCell(row, "Réponse correcte")
+      ).trim();
+
+      const note = Number(getCell(row, "Note") || 1);
+
+      /* ======================================================
+         🟦 CAS 1 — IMAGE SEULE → GROUPE
+      ====================================================== */
+      if (!texte && imageCell) {
+        groupOrder++;
+
+        currentGroup = await QuestionGroup.create({
+          image: `/uploads/questions/${imageCell}.png`,
+          subject: lastSubject,
+          exam: lastExam,
+          order: groupOrder,
+        });
+
+        console.log(`🟦 GROUPE CRÉÉ`, {
+          image: imageCell,
+          subject: lastSubject,
+          exam: lastExam,
+        });
+
+        continue;
+      }
+
+      /* ======================================================
+         🟩 CAS 2 — QUESTION SIMPLE (sans groupe)
+      ====================================================== */
+      if (texte && !imageCell) {
         await Question.create({
           texte,
+          image: null,
           options,
-          reponseCorrecte: correctAnswer,
-          subject,
-          exam,
+          reponseCorrecte,
+          subject: lastSubject,
+          exam: lastExam,
           note,
           groupId: null,
           order: ++questionOrder,
@@ -134,22 +154,25 @@ export const importExcel = async (req: Request, res: Response) => {
         continue;
       }
 
-      // =========================
-      // 🟨 QUESTION DE GROUPE
-      // =========================
-      if (type === "QUESTION") {
-        if (!currentGroupId) {
-          throw new Error("QUESTION sans GROUP préalable");
+      /* ======================================================
+         🟨 CAS 3 — QUESTION DE GROUPE (texte + image)
+      ====================================================== */
+      if (texte && imageCell) {
+        if (!currentGroup) {
+          throw new Error(
+            `Question ligne ${i + 2} sans groupe préalable`
+          );
         }
 
         await Question.create({
           texte,
+          image: null, // image héritée du groupe
           options,
-          reponseCorrecte: correctAnswer,
-          subject,
-          exam,
+          reponseCorrecte,
+          subject: lastSubject,
+          exam: lastExam,
           note,
-          groupId: currentGroupId,
+          groupId: currentGroup._id,
           order: ++questionOrder,
         });
 
@@ -157,9 +180,10 @@ export const importExcel = async (req: Request, res: Response) => {
       }
     }
 
-    res.status(200).json({
-      message: "Import Excel terminé avec succès ✅",
+    res.json({
+      message: "✅ Import Excel terminé avec succès",
     });
+
   } catch (error: any) {
     console.error("❌ Import Excel error:", error);
     res.status(500).json({
@@ -187,6 +211,7 @@ export const getSubjectsByExam = async (req: Request, res: Response) => {
 
 export const deleteAllQuestions = async (_req: Request, res: Response) => {
   await Question.deleteMany({});
+  await QuestionGroup.deleteMany({});
   res.json({ message: "✅ Toutes les questions supprimées" });
 };
 
