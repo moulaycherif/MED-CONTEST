@@ -7,6 +7,7 @@ import XLSX from "xlsx";
 console.log("🔥 QUESTION CONTROLLER LOADED");
 console.log("🚨 VERSION 2026-FINAL-GROUP-IMPORT-SAFE");
 
+
 /* ============================================================
    🔧 UTILITAIRES
 ============================================================ */
@@ -87,6 +88,14 @@ export const importExcel = async (req: Request, res: Response) => {
       const imageCell = String(getCell(row, "Image")).trim();
       const subjectCell = String(getCell(row, "Matière")).trim();
       const examCell = String(getCell(row, "Concours / Examen")).trim();
+
+      console.log("📌 CONTEXTE ACTUEL", {
+  lastSubject,
+  lastExam,
+  texte,
+  imageCell,
+});
+
 
       if (subjectCell) lastSubject = subjectCell;
       if (examCell) lastExam = examCell;
