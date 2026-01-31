@@ -202,6 +202,9 @@ useEffect(() => {
 </h3>
 
 {/* 🖼 IMAGE (groupe ou question) */}
+
+console.log("STUDENTPAGE :",q as any, q.image, (q as any).groupId?.image)
+
 {(q as any).groupId?.image || q.image ? (
   <img
     src={`${API_BASE_URL}${(q as any).groupId?.image || q.image}`}
