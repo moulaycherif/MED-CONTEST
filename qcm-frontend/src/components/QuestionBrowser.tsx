@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-console.log("🔥 QUESTION BROWSER");
+console.log("🔥 QUESTION BROWSER — FINAL VERSION");
 
 const API = import.meta.env.VITE_API_BASE_URL;
+
+/* ============================================================
+   📦 TYPES
+============================================================ */
 
 interface Question {
   _id: string;
@@ -21,19 +25,27 @@ interface Question {
   exam: string;
 }
 
+/* ============================================================
+   🧠 COMPONENT
+============================================================ */
 
 export default function QuestionBrowser() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  /* ============================================================
+     📡 FETCH QUESTIONS
+  ============================================================ */
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const res = await axios.get(`${API}/api/questions`);
-        console.log("QUESTIONS:", res.data);
+        console.log("📦 QUESTIONS REÇUES :", res.data);
         setQuestions(res.data);
       } catch (err) {
+        console.error("❌ Erreur chargement questions", err);
         setError("Impossible de récupérer les questions 😢");
       } finally {
         setLoading(false);
@@ -44,43 +56,60 @@ export default function QuestionBrowser() {
   }, []);
 
   if (loading) return <p>Chargement des questions...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
+
+  /* ============================================================
+     🖼 LOGIQUE AFFICHAGE IMAGE UNIQUE PAR GROUPE
+  ============================================================ */
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Liste des questions</h2>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-6">
+        📚 QCM — Liste des questions
+      </h2>
 
-      <ul className="space-y-6">
-        {questions.map((q, index) => (
-          <li key={q._id} className="p-4 border rounded-lg shadow space-y-3">
+      <ul className="space-y-8">
+        {questions.map((q, index) => {
+          const image = q.groupId?.image || q.image;
 
-            <div className="font-semibold">
-              Q{index + 1}
-            </div>
+          const previous = questions[index - 1];
 
-            {/* 🖼 IMAGE */}
-            {q.image && (
-              <img
-                src={`${API}${q.image}`}
-                className="max-w-lg rounded shadow"
-                alt="Question"
-              />
-            )}
+          const showImage =
+            image &&
+            (!q.groupId ||
+              !previous ||
+              previous.groupId?._id !== q.groupId._id);
 
-            {/* 📝 TEXTE */}
-            {q.texte && (
-              <p className="font-medium">{q.texte}</p>
-            )}
+          return (
+            <li
+              key={q._id}
+              className="p-4 border rounded-lg shadow bg-white space-y-4"
+            >
+              {/* 🖼 IMAGE (UNE SEULE FOIS PAR GROUPE) */}
+              {showImage && (
+                <img
+                  src={`${API}${image}`}
+                  className="max-w-full rounded shadow"
+                  alt="Illustration"
+                />
+              )}
 
-            {/* OPTIONS */}
-            <ul className="list-disc pl-5 space-y-1">
-              {q.options.map((opt, i) => (
-                <li key={i}>{opt}</li>
-              ))}
-            </ul>
+              {/* 📝 TEXTE */}
+              {q.texte && (
+                <p className="font-medium text-gray-800">
+                  {index + 1}. {q.texte}
+                </p>
+              )}
 
-          </li>
-        ))}
+              {/* OPTIONS */}
+              <ul className="list-disc pl-6 space-y-1">
+                {q.options.map((opt, i) => (
+                  <li key={i}>{opt}</li>
+                ))}
+              </ul>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
