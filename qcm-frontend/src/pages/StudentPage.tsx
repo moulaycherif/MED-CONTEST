@@ -171,6 +171,8 @@ useEffect(() => {
       return <StudentDashboardStats />;
     }
 
+console.log("🔥 STUDENT PAGE — FINAL VERSION");
+
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (section === "qcm" && currentExam) {
   if (questions.length === 0)
