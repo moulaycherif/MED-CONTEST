@@ -171,8 +171,6 @@ useEffect(() => {
       return <StudentDashboardStats />;
     }
 
-console.log("🔥 STUDENT PAGE — FINAL VERSION");
-
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (section === "qcm" && currentExam) {
   if (questions.length === 0)
@@ -205,7 +203,7 @@ console.log("🔥 STUDENT PAGE — FINAL VERSION");
 
 {/* 🖼 IMAGE (groupe ou question) */}
 
-console.log("STUDENTPAGE :",q as any, q.image, (q as any).groupId?.image);
+console.log("🔥 STUDENT PAGE — FINAL VERSION");
 
 
 {(q as any).groupId?.image || q.image ? (
