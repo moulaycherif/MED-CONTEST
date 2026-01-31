@@ -91,7 +91,7 @@ useEffect(() => {
     axios
       .get(url)
       .then((res) => {
-        
+        console.log("🧪 QUESTIONS REÇUES :", res.data);
         setQuestions(res.data);
       })
       .catch((err) => {
@@ -203,9 +203,6 @@ useEffect(() => {
 
 {/* 🖼 IMAGE (groupe ou question) */}
 
-console.log("🔥 STUDENT PAGE — FINAL VERSION");
-
-
 {(q as any).groupId?.image || q.image ? (
   <img
     src={`${API_BASE_URL}${(q as any).groupId?.image || q.image}`}
@@ -213,8 +210,6 @@ console.log("🔥 STUDENT PAGE — FINAL VERSION");
     alt="Illustration"
   />
 ) : null}
-
-
 
           {q.options.map((opt, i) => (
             <label
