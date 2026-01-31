@@ -201,13 +201,15 @@ useEffect(() => {
   <span className="text-purple-600"> ({q.note} pt)</span>
 </h3>
 
-{q.image && (
+{/* 🖼 IMAGE (groupe ou question) */}
+{(q as any).groupId?.image || q.image ? (
   <img
-    src={`${API_BASE_URL}${q.image}`}
+    src={`${API_BASE_URL}${(q as any).groupId?.image || q.image}`}
     className="max-w-lg my-3 rounded shadow"
-    alt="Question"
+    alt="Illustration"
   />
-)}
+) : null}
+
 
 
           {q.options.map((opt, i) => (
