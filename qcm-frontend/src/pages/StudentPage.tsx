@@ -203,7 +203,8 @@ useEffect(() => {
 
 {/* 🖼 IMAGE (groupe ou question) */}
 
-console.log("STUDENTPAGE :",q as any, q.image, (q as any).groupId?.image)
+console.log("STUDENTPAGE :",q as any, q.image, (q as any).groupId?.image);
+
 
 {(q as any).groupId?.image || q.image ? (
   <img
