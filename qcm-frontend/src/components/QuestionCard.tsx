@@ -1,7 +1,9 @@
 import React from "react";
 
-console.log("🔥 QUESTION CARD — FINAL VERSION");
 const API = import.meta.env.VITE_API_BASE_URL;
+
+console.log("🔥🔥🔥 QuestionCard LOADED 🔥🔥🔥");
+
 
 interface Question {
   _id: string;
