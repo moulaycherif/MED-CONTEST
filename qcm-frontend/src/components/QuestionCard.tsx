@@ -1,5 +1,7 @@
 import React from "react";
-import { API_BASE_URL } from "../config";
+
+
+const API = import.meta.env.VITE_API_BASE_URL;
 
 interface Question {
   _id: string;
@@ -39,7 +41,7 @@ const image = question.groupId?.image || question.image;
       {/* 🖼 IMAGE */}
       {image && (
         <img
-          src={`${API_BASE_URL}${image}`}
+          src={`${API}${image}`}
           className="max-w-lg rounded shadow"
           alt="Énoncé"
         />
