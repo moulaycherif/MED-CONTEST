@@ -54,7 +54,7 @@ app.use("/api/student", studentRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/stats", statsRoutes);   // 🔥 OBLIGATOIRE
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/uploads/resumes", express.static(path.join(__dirname, "uploads/resumes")));
 
 
