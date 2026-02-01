@@ -12,6 +12,8 @@ interface Question {
   note: number;
 }
 
+console.log("PASSAGE PAR StudentDashboardFull");
+
 export default function StudentDashboardFull() {
   const [view, setView] = useState<"accueil" | "concoursList" | "matiereList" | "questions">("accueil");
   const [exams, setExams] = useState<string[]>([]);
