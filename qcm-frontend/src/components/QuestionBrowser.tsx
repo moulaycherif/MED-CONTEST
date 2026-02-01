@@ -3,7 +3,7 @@ import axios from "axios";
 
 console.log("🔥🔥🔥 QuestionBrowser LOADED 🔥🔥🔥");
 
-const API = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL } from "../config";
 
 /* ============================================================
    📦 TYPES
@@ -88,7 +88,7 @@ export default function QuestionBrowser() {
               {/* 🖼 IMAGE (UNE SEULE FOIS PAR GROUPE) */}
               {showImage && (
                 <img
-                  src={`${API}${image}`}
+                  src={`${API_BASE_URL}${image}`}
                   className="max-w-full rounded shadow"
                   alt="Illustration"
                 />

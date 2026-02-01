@@ -1,6 +1,6 @@
 import React from "react";
 
-const API = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL } from "../config";
 
 console.log("🔥🔥🔥 QuestionCard LOADED 🔥🔥🔥");
 
@@ -43,7 +43,7 @@ const image = question.groupId?.image || question.image;
       {/* 🖼 IMAGE */}
       {image && (
         <img
-          src={`${API}${image}`}
+          src={`${API_BASE_URL}${image}`}
           className="max-w-lg rounded shadow"
           alt="Énoncé"
         />

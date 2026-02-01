@@ -7,7 +7,6 @@ import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
 import StudentPage from "./pages/StudentPage";
 import AdminDashboard from "./pages/AdminDashboard";
-import { API_BASE_URL } from "./config";
 
 export default function App() {
   return (
