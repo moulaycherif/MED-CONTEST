@@ -205,7 +205,7 @@ useEffect(() => {
 
 {(q as any).groupId?.image || q.image ? (
   <img
-    src={`${API_BASE_URL}${(q as any).groupId?.image || q.image}`}
+    src={`https://med-contest-backend.onrender.com${(q as any).groupId?.image || q.image}`}
     className="max-w-lg my-3 rounded shadow"
     alt="Illustration"
   />
