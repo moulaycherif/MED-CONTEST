@@ -166,9 +166,10 @@ useEffect(() => {
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
     
-    if (section === null) {
-      return <StudentDashboardStats />;
-    }
+    if (section === "home") {
+  return <StudentDashboardStats />;
+}
+
 
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (section === "qcm" && currentExam) {
@@ -284,9 +285,10 @@ if (section === "matiere" && selectedMatiere) {
   const matiereImage = matiereImages[selectedMatiere];
 
   // on récupère les examens existants (MEDECINE 2025, 2024, 2023)
-  const filteredExams = exams.filter(e =>
-    e.title.startsWith("MEDECINE")
-  );
+  const filteredExams = exams.filter(
+  e => typeof e.title === "string" && e.title.startsWith("MEDECINE")
+);
+
 
   return (
     <motion.div
