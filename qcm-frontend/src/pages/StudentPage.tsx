@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -17,11 +17,13 @@ import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 
 interface Question {
   _id: string;
-  texte: string;
+  texte?: string;
+  image?: string | null;
   options: string[];
   reponseCorrecte: string;
   note: number;
 }
+
 
 export default function StudentPage() {
   // Navigation
@@ -39,7 +41,7 @@ export default function StudentPage() {
 
   // QCM
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<{ [id: string]: string }>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
 
@@ -67,20 +69,20 @@ export default function StudentPage() {
 };
 
 const [exams, setExams] = useState<{ _id: string; title: string }[]>([]);
-
+ // Charger examens
 useEffect(() => {
   axios
     .get(`${API_BASE_URL}/api/questions/exams`)
     .then(res => {
       setExams(res.data); // [{_id,title,subject}]
-      console.log("🔥 EXAMS:", res.data);
+      
     })
     .catch(err => console.error("❌ Exams load error", err));
 }, []);
 
   // 🔹 Charger les questions quand currentExam change
   useEffect(() => {
-  if (currentExam) {
+ if (!currentExam) return;
     let url = `${API_BASE_URL}/api/questions?exam=${encodeURIComponent(currentExam)}`;
     if (selectedMatiere) {
       url += `&subject=${encodeURIComponent(selectedMatiere)}`;
@@ -89,15 +91,14 @@ useEffect(() => {
     axios
       .get(url)
       .then((res) => {
-        console.log("🔥 QUESTIONS reçues:", res.data.length);
+        
         setQuestions(res.data);
       })
       .catch((err) => {
         console.error("❌ Erreur fetch questions:", err);
         setQuestions([]);
       });
-  }
-}, [currentExam, selectedMatiere]);
+  }, [currentExam, selectedMatiere]);
 
 
   // Charger les astuces quand on clique sur le bouton "Astuces"
@@ -107,15 +108,7 @@ useEffect(() => {
       .get(`${API_BASE_URL}/api/astuces/${encodeURIComponent(selectedChapter)}`)
       .then((res) => setAstuces(res.data))
       .catch(() => setAstuces([]));
-  }
-}, [selectedAction, selectedChapter]);
-
-useEffect(() => {
-  if (selectedAction === "Astuces" && selectedChapter) {
-    fetchAstucesByChapter(selectedChapter)
-      .then((data) => setAstuces(data))
-      .catch(() => setAstuces([]));
-  }
+    }
 }, [selectedAction, selectedChapter]);
 
   // 🔹 Changement de réponse
@@ -151,14 +144,22 @@ useEffect(() => {
     headers: { Authorization: `Bearer ${token}` },
   }
 );
-
-
-    console.log("🔥 QCM enregistré côté serveur");
+   
   } catch (err) {
     console.error("❌ Erreur enregistrement QCM", err);
   }
 };
 
+  // 🔥 GROUPEMENT PAR IMAGE (clé finale)
+  const groupedQuestions = useMemo(() => {
+    const groups: Record<string, Question[]> = {};
+    questions.forEach(q => {
+      const key = q.image || "__NO_IMAGE__";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(q);
+    });
+    return groups;
+  }, [questions]);
 
   // --- Rendu principal ---
   const renderCenterContent = () => {
@@ -186,44 +187,41 @@ useEffect(() => {
         📘 QCM — {currentExam}
       </h2>
 
-      {questions.map((q, idx) => (
-        <motion.div
-          key={q._id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 mb-4 bg-white rounded-xl shadow"
-        >
-          <h3 className="font-semibold mb-2">
-            Q{idx + 1}) {q.texte}{" "}
-            <span className="text-purple-600">({q.note} pt)</span>
-          </h3>
+      {Object.entries(groupedQuestions).map(([image, qs], idx) => (
+  <div key={idx} className="mb-10">
 
-          {q.options.map((opt, i) => (
-            <label
-              key={i}
-              className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
-                submitted
-                  ? opt === q.reponseCorrecte
-                    ? "bg-green-100 border-green-400"
-                    : answers[q._id] === opt
-                    ? "bg-red-100 border-red-400"
-                    : ""
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <input
-                type="radio"
-                name={q._id}
-                checked={answers[q._id] === opt}
-                onChange={() => handleAnswerChange(q._id, opt)}
-                disabled={submitted}
-                className="mr-2"
-              />
-              {opt}
-            </label>
-          ))}
-        </motion.div>
-      ))}
+    {image !== "__NO_IMAGE__" && (
+      <img
+        src={`${API_BASE_URL}${image}`}
+        className="mx-auto mb-6 max-w-2xl rounded-xl shadow-lg"
+        alt="Énoncé"
+      />
+    )}
+
+    {qs.map((q, i) => (
+      <motion.div key={q._id} className="p-4 mb-4 bg-white rounded-xl shadow">
+        <h3 className="font-semibold mb-2">
+          Q{i + 1}) {q.texte}
+          <span className="text-purple-600"> ({q.note} pt)</span>
+        </h3>
+
+        {q.options.map((opt, j) => (
+          <label key={j} className="block p-2 border rounded mb-2">
+            <input
+              type="radio"
+              name={q._id}
+              checked={answers[q._id] === opt}
+              onChange={() => handleAnswerChange(q._id, opt)}
+              disabled={submitted}
+              className="mr-2"
+            />
+            {opt}
+          </label>
+        ))}
+      </motion.div>
+    ))}
+  </div>
+))}
 
       {!submitted ? (
         <button
@@ -497,7 +495,7 @@ if (section === "soutien" && selectedMatiere) {
           <h3 className="font-bold text-lg mb-3 text-yellow-200">🎯 QCE par Concours</h3>
           <button
             onClick={() => {
-              resetQcm();
+              
           // 🔥 Sortir du QCM
             setCurrentExam(null);
 
