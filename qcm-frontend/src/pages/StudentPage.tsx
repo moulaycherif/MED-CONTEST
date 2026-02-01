@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -17,8 +17,7 @@ import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 
 interface Question {
   _id: string;
-  texte?: string;
-  image?: string | null;
+  texte: string;
   options: string[];
   reponseCorrecte: string;
   note: number;
@@ -54,26 +53,25 @@ export default function StudentPage() {
     "Chapitre VI : Géométrie dans l'espace",
     "Chapitre VII : Probabilité",
   ];
-  
-console.log("FETCH QCM →", currentExam, selectedMatiere);
-
 
   // 🔹 Charger les questions quand currentExam change
   useEffect(() => {
-  if (!currentExam) return;
-
-  let url = `${API_BASE_URL}/api/questions?exam=${encodeURIComponent(currentExam)}`;
-
-  if (selectedMatiere) {
-    url += `&subject=${encodeURIComponent(selectedMatiere)}`;
-  }
-
-  axios
-    .get(url)
-    .then(res => setQuestions(res.data))
-    .catch(() => setQuestions([]));
-
-}, [currentExam, selectedMatiere]);
+    if (currentExam && selectedMatiere) {
+      axios
+        .get(
+          `${API_BASE_URL}/api/questions?subject=${encodeURIComponent(
+            selectedMatiere
+          )}&exam=${encodeURIComponent(currentExam)}`
+        )
+        .then((res) => setQuestions(res.data))
+        .catch(() => setQuestions([]));
+    } else if (currentExam) {
+      axios
+        .get(`${API_BASE_URL}/api/questions?exam=${encodeURIComponent(currentExam)}`)
+        .then((res) => setQuestions(res.data))
+        .catch(() => setQuestions([]));
+    }
+  }, [currentExam, selectedMatiere]);
 
   // Charger les astuces quand on clique sur le bouton "Astuces"
 useEffect(() => {
@@ -108,21 +106,12 @@ useEffect(() => {
     setSubmitted(true);
   };
 
-  const groupedQuestions = useMemo(() => {
-  const groups: Record<string, Question[]> = {};
-  questions.forEach(q => {
-    const key = q.image || "__NO_IMAGE__";
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(q);
-  });
-  return groups;
-}, [questions]);
-
-
   // --- Rendu principal ---
   const renderCenterContent = () => {
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
+
+    console.log("SECTION =", section);
 
     if (section === null) {
       return <StudentDashboardStats />;
@@ -143,26 +132,44 @@ useEffect(() => {
             📘 QCM — {currentExam}
           </h2>
 
-          {Object.entries(groupedQuestions).map(([image, qs]) => (
-  <div key={image} className="mb-10">
+          {questions.map((q, idx) => (
+            <motion.div
+              key={q._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 mb-4 bg-white rounded-xl shadow"
+            >
+              <h3 className="font-semibold mb-2">
+                Q{idx + 1}) {q.texte}{" "}
+                <span className="text-purple-600">({q.note} pt)</span>
+              </h3>
 
-    {image !== "__NO_IMAGE__" && (
-      <img
-        src={`${API_BASE_URL}${image}`}
-        className="mx-auto mb-6 max-w-2xl rounded-xl shadow-lg"
-        alt="Énoncé"
-      />
-    )}
-
-    {qs.map((q, idx) => (
-      <motion.div key={q._id} className="p-4 mb-4 bg-white rounded-xl shadow">
-        ...
-      </motion.div>
-    ))}
-
-  </div>
-))}
-
+              {q.options.map((opt, i) => (
+                <label
+                  key={i}
+                  className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
+                    submitted
+                      ? opt === q.reponseCorrecte
+                        ? "bg-green-100 border-green-400"
+                        : answers[q._id] === opt
+                        ? "bg-red-100 border-red-400"
+                        : ""
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name={q._id}
+                    checked={answers[q._id] === opt}
+                    onChange={() => handleAnswerChange(q._id, opt)}
+                    disabled={submitted}
+                    className="mr-2"
+                  />
+                  {opt}
+                </label>
+              ))}
+            </motion.div>
+          ))}
 
           {!submitted ? (
             <button
@@ -195,13 +202,7 @@ useEffect(() => {
               key={year}
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => {
-  setSelectedMatiere(null);   // 🔥 IMPORTANT
-  setSelectedChapter(null);
-  setSelectedAction(null);
-  setCurrentExam(`MEDECINE ${year}`);
-}}
-
+              onClick={() => setCurrentExam(`MEDECINE ${year}`)}
             >
               <img src={concoursImg} alt={`Concours ${year}`} className="w-48 h-48 object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-white/60 text-black text-center py-2 font-semibold">
@@ -422,7 +423,7 @@ if (section === "soutien" && selectedMatiere) {
           <button
             onClick={() => {
               setSection("concours");
-              setSelectedMatiere(null);
+              setSelectedMatiere(m);
               setSelectedChapter(null);
               setSelectedAction(null);
             }}
