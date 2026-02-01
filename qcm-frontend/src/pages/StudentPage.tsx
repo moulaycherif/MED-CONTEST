@@ -155,41 +155,15 @@ useEffect(() => {
     )}
 
     {qs.map((q, idx) => (
-  <motion.div
-    key={q._id}
-    className="p-4 mb-4 bg-white rounded-xl shadow"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-  >
-    {/* 🔹 Texte de la question */}
-    <h3 className="font-semibold mb-3 whitespace-normal break-words">
-      Q{idx + 1}) {q.texte}
-      <span className="text-purple-600"> ({q.note} pt)</span>
-    </h3>
+      <motion.div key={q._id} className="p-4 mb-4 bg-white rounded-xl shadow">
+        ...
+      </motion.div>
+    ))}
 
-    {/* 🔹 Options */}
-    <div className="flex flex-col gap-2">
-      {q.options.map((opt, i) => (
-        <label
-          key={i}
-          className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-100"
-        >
-          <input
-            type="radio"
-            name={q._id}
-            value={opt}
-            checked={answers[q._id] === opt}
-            onChange={() => handleAnswerChange(q._id, opt)}
-            disabled={submitted}
-          />
-          <span>{opt}</span>
-        </label>
-      ))}
-    </div>
-  </motion.div>
-))}
   </div>
 ))}
+
+
           {!submitted ? (
             <button
               onClick={handleFinish}
