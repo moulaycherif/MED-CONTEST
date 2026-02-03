@@ -178,6 +178,8 @@ useEffect(() => {
     if (section === "qcm" && currentExam) {
       let lastGroupId: string | null = null;
 
+      console.log("QUESTIONS RAW:", questions);
+
   if (questions.length === 0)
     return (
       <div className="text-center mt-10">
@@ -193,7 +195,7 @@ useEffect(() => {
         📘 QCM — {currentExam}
       </h2>
       let lastGroupId: string | null = null;
-console.log("QUESTIONS RAW:", questions);
+
       {questions.map((q, idx) => {
         console.log("GROUP OBJ:", q.groupId);
   const showGroupImage =
