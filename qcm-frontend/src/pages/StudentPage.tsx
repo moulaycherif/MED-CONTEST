@@ -171,9 +171,9 @@ useEffect(() => {
   // --- Rendu principal ---
   const renderCenterContent = () => {
 
-    console.log("ECTION RENDER CENTER CONTENT :", section);
-    console.log("RENDER CENTER CONTENT :", currentExam);
-    console.log("RENDER CENTER CONTENT :", questions.length);
+    console.log("SECTION RENDER CENTER CONTENT :", section);
+    console.log("Current Exam - RENDER CENTER CONTENT :", currentExam);
+    console.log("Questions Length - RENDER CENTER CONTENT :", questions.length);
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
     
@@ -184,7 +184,7 @@ useEffect(() => {
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (section === "qcm" && currentExam) {
       let lastGroupId: string | null = null;
-
+console.log("Affichage des Questions QCE - RENDER CENTER CONTENT :");
   if (questions.length === 0)
     return (
       <div className="text-center mt-10">
