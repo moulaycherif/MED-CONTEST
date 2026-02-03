@@ -8,7 +8,6 @@ import {
   deleteAllQuestions,
 } from "../controllers/questionController";
 
-console.log("🔥 QUESTION ROUTES LOADED");
 
 const router = express.Router();
 
