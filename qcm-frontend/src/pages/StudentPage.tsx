@@ -179,11 +179,11 @@ useEffect(() => {
 
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (section === "qcm" && currentExam) {
-  let lastGroupId: string | null = null;
+      let lastGroupId: string | null = null;
 
-  return (
-    <div className="p-4">
-
+  if (questions.length === 0)
+    return (
+      <div className="text-center mt-10">
         <p className="text-gray-700 text-lg">
           Aucune question trouvée pour {currentExam}.
         </p>
@@ -196,7 +196,7 @@ useEffect(() => {
         📘 QCM — {currentExam}
       </h2>
 
-     {questions.map((q, idx) => {
+      {questions.map((q, idx) => {
   const showGroupImage =
     q.groupId?.image && q.groupId._id !== lastGroupId;
 
@@ -263,6 +263,7 @@ useEffect(() => {
     </motion.div>
   );
 })}
+
 
       {!submitted ? (
         <button
