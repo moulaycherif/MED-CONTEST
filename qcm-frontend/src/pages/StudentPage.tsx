@@ -171,6 +171,8 @@ useEffect(() => {
   // --- Rendu principal ---
   const renderCenterContent = () => {
 
+    console.log("RENDER CENTER CONTENT :", section);
+
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
     
     if (section === null) {
@@ -200,8 +202,6 @@ useEffect(() => {
   const showGroupImage =
     q.groupId?.image && q.groupId._id !== lastGroupId;
 
-    console.log("🔥 QUESTION ROUTES LOADED IMAGE",showGroupImage);
-
   if (q.groupId?._id) {
     lastGroupId = q.groupId._id;
   }
@@ -214,8 +214,7 @@ useEffect(() => {
       className="p-4 mb-4 bg-white rounded-xl shadow"
     >
       {/* 🖼 IMAGE DE GROUPE (UNE SEULE FOIS) */}
-      console.log("🔥 QUESTION ROUTES LOADED");
-      console.log("IMAGE DE GROUPE :",showGroupImage, q.groupId!.image);
+     
       {showGroupImage && (
         <img
           src={`${API_BASE_URL}${q.groupId!.image}`}
@@ -225,16 +224,14 @@ useEffect(() => {
       )}
 
       {/* 🧠 QUESTION */}
-      console.log("🔥 QUESTION ROUTES LOADED Fin");
-      console.log("QUESTION :");
+      
       <h3 className="font-semibold mb-2">
         Q{idx + 1}) {q.texte}
         <span className="text-purple-600"> ({q.note} pt)</span>
       </h3>
 
-      {/* 🖼 IMAGE SIMPLE (si PAS de groupe) */}
-      console.log("🔥 QUESTION ROUTES LOADED G");
-      console.log("IMAGE SIMPLE :",q.image, q.groupId);
+      {/* 🖼 IMAGE SIMPLE (si PAS de groupe) */}     
+
       {!q.groupId && q.image && (
         <img
           src={`${API_BASE_URL}${q.image}`}
