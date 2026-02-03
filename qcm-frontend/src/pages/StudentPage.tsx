@@ -200,6 +200,8 @@ useEffect(() => {
   const showGroupImage =
     q.groupId?.image && q.groupId._id !== lastGroupId;
 
+    console.log("🔥 QUESTION ROUTES LOADED IMAGE",showGroupImage);
+
   if (q.groupId?._id) {
     lastGroupId = q.groupId._id;
   }
