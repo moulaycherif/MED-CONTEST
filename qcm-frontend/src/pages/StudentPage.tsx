@@ -212,6 +212,7 @@ useEffect(() => {
       className="p-4 mb-4 bg-white rounded-xl shadow"
     >
       {/* 🖼 IMAGE DE GROUPE (UNE SEULE FOIS) */}
+      console.log("🔥 QUESTION ROUTES LOADED");
       console.log("IMAGE DE GROUPE :",showGroupImage, q.groupId!.image);
       {showGroupImage && (
         <img
@@ -222,6 +223,7 @@ useEffect(() => {
       )}
 
       {/* 🧠 QUESTION */}
+      console.log("🔥 QUESTION ROUTES LOADED Fin");
       console.log("QUESTION :");
       <h3 className="font-semibold mb-2">
         Q{idx + 1}) {q.texte}
@@ -229,6 +231,7 @@ useEffect(() => {
       </h3>
 
       {/* 🖼 IMAGE SIMPLE (si PAS de groupe) */}
+      console.log("🔥 QUESTION ROUTES LOADED G");
       console.log("IMAGE SIMPLE :",q.image, q.groupId);
       {!q.groupId && q.image && (
         <img
