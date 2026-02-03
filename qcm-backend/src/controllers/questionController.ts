@@ -46,7 +46,7 @@ export const getQuestions = async (req: Request, res: Response) => {
     const questions = await Question.find(filter)
       .populate({
         path: "groupId",
-        select: "image exam subject order", // 🔥 IMPORTANT
+        select: "imageGroup exam subject order", // 🔥 IMPORTANT
       })
       .sort({ order: 1, _id: 1 })
       .lean(); // 🔥 IMPORTANT

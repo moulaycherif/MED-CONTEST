@@ -22,7 +22,7 @@ interface Question {
 
   groupId?: {
     _id: string;
-    image?: string | null;
+    imageGroup?: string | null;
     order?: number;
   } | null;
 
@@ -159,21 +159,14 @@ useEffect(() => {
     headers: { Authorization: `Bearer ${token}` },
   }
 );
-
-
     
   } catch (err) {
     console.error("❌ Erreur enregistrement QCM", err);
   }
 };
 
-
   // --- Rendu principal ---
   const renderCenterContent = () => {
-
-    console.log("SECTION RENDER CENTER CONTENT :", section);
-    console.log("Current Exam - RENDER CENTER CONTENT :", currentExam);
-    console.log("Questions Length - RENDER CENTER CONTENT :", questions.length);
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
     
@@ -184,7 +177,7 @@ useEffect(() => {
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (section === "qcm" && currentExam) {
       let lastGroupId: string | null = null;
-console.log("Affichage des Questions QCE - RENDER CENTER CONTENT :");
+
   if (questions.length === 0)
     return (
       <div className="text-center mt-10">
@@ -199,10 +192,11 @@ console.log("Affichage des Questions QCE - RENDER CENTER CONTENT :");
       <h2 className="text-xl font-bold text-center mb-4 text-blue-800">
         📘 QCM — {currentExam}
       </h2>
-console.log("MAPPING - RENDER CENTER CONTENT :");
+console.log("QUESTIONS RAW:", questions);
       {questions.map((q, idx) => {
+        console.log("GROUP OBJ:", q.groupId);
   const showGroupImage =
-    q.groupId?.image && q.groupId._id !== lastGroupId;
+    q.groupId?.imageGroup && q.groupId._id !== lastGroupId;
 
   if (q.groupId?._id) {
     lastGroupId = q.groupId._id;
@@ -219,7 +213,7 @@ console.log("AVANt MOTION - RENDER CENTER CONTENT :", showGroupImage);
      
       {showGroupImage && (
         <img
-          src={`${API_BASE_URL}${q.groupId!.image}`}
+          src={`${API_BASE_URL}${q.groupId!.imageGroup}`}
           className="max-w-lg mx-auto my-4 rounded shadow"
           alt="Image du groupe"
         />
