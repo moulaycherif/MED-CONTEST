@@ -212,6 +212,7 @@ useEffect(() => {
       className="p-4 mb-4 bg-white rounded-xl shadow"
     >
       {/* 🖼 IMAGE DE GROUPE (UNE SEULE FOIS) */}
+      console.log("IMAGE DE GROUPE :",showGroupImage, q.groupId!.image);
       {showGroupImage && (
         <img
           src={`${API_BASE_URL}${q.groupId!.image}`}
@@ -221,12 +222,14 @@ useEffect(() => {
       )}
 
       {/* 🧠 QUESTION */}
+      console.log("QUESTION :");
       <h3 className="font-semibold mb-2">
         Q{idx + 1}) {q.texte}
         <span className="text-purple-600"> ({q.note} pt)</span>
       </h3>
 
       {/* 🖼 IMAGE SIMPLE (si PAS de groupe) */}
+      console.log("IMAGE SIMPLE :",q.image, q.groupId);
       {!q.groupId && q.image && (
         <img
           src={`${API_BASE_URL}${q.image}`}
