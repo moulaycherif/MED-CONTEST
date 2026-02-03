@@ -192,16 +192,19 @@ useEffect(() => {
       <h2 className="text-xl font-bold text-center mb-4 text-blue-800">
         📘 QCM — {currentExam}
       </h2>
+      let lastGroupId: string | null = null;
 console.log("QUESTIONS RAW:", questions);
       {questions.map((q, idx) => {
         console.log("GROUP OBJ:", q.groupId);
   const showGroupImage =
     q.groupId?.imageGroup && q.groupId._id !== lastGroupId;
 
+    console.log("AVANt MOTION - RENDER CENTER CONTENT :", showGroupImage);
+
   if (q.groupId?._id) {
     lastGroupId = q.groupId._id;
   }
-console.log("AVANt MOTION - RENDER CENTER CONTENT :", showGroupImage);
+
   return (
     <motion.div
       key={q._id}
