@@ -171,8 +171,6 @@ useEffect(() => {
   // --- Rendu principal ---
   const renderCenterContent = () => {
 
-    console.log("RENDER CENTER CONTENT :", section);
-
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
     
     if (section === null) {
