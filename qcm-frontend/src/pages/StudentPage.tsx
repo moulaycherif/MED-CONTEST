@@ -176,6 +176,7 @@ useEffect(() => {
 
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (section === "qcm" && currentExam) {
+
       let lastGroupId: string | null = null;
 
       console.log("QUESTIONS RAW:", questions);
@@ -194,9 +195,9 @@ useEffect(() => {
       <h2 className="text-xl font-bold text-center mb-4 text-blue-800">
         📘 QCM — {currentExam}
       </h2>
-      let lastGroupId: string | null = null;
 
       {questions.map((q, idx) => {
+
         console.log("GROUP OBJ:", q.groupId);
   const showGroupImage =
     q.groupId?.imageGroup && q.groupId._id !== lastGroupId;

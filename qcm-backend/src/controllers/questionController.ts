@@ -44,12 +44,15 @@ export const getQuestions = async (req: Request, res: Response) => {
     }
 
     const questions = await Question.find(filter)
-      .populate({
-        path: "groupId",
-        select: "imageGroup exam subject order", // 🔥 IMPORTANT
-      })
-      .sort({ order: 1, _id: 1 })
-      .lean(); // 🔥 IMPORTANT
+  .populate({
+    path: "groupId",
+    model: "QuestionGroup",
+    select: "imageGroup exam subject order",
+  })
+  .sort({ "groupId.order": 1, _id: 1 })
+  .lean();
+
+console.log("QUESTION SAMPLE:", questions[0]);
 
     res.json(questions);
   } catch (err) {

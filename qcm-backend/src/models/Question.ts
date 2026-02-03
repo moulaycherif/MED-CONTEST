@@ -1,8 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-console.log("QUESTION MODELS FILE:", __filename);
-
-
 export interface IQuestion extends Document {
   texte?: string;
   image?: string | null;
@@ -29,7 +26,7 @@ const questionSchema = new Schema<IQuestion>(
     note: { type: Number, default: 1 },
 
     isGroup: { type: Boolean, default: false },
-    groupId: { type: Schema.Types.ObjectId, ref: "Question", default: null },
+    groupId: { type: Schema.Types.ObjectId, ref: "QuestionGroup", default: null },
   },
   { timestamps: true }
 );
