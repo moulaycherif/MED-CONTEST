@@ -199,7 +199,7 @@ console.log("Affichage des Questions QCE - RENDER CENTER CONTENT :");
       <h2 className="text-xl font-bold text-center mb-4 text-blue-800">
         📘 QCM — {currentExam}
       </h2>
-
+console.log("MAPPING - RENDER CENTER CONTENT :");
       {questions.map((q, idx) => {
   const showGroupImage =
     q.groupId?.image && q.groupId._id !== lastGroupId;
@@ -207,7 +207,7 @@ console.log("Affichage des Questions QCE - RENDER CENTER CONTENT :");
   if (q.groupId?._id) {
     lastGroupId = q.groupId._id;
   }
-
+console.log("AVANt MOTION - RENDER CENTER CONTENT :", showGroupImage);
   return (
     <motion.div
       key={q._id}
