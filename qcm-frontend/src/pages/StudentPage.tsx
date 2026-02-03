@@ -171,7 +171,8 @@ useEffect(() => {
   // --- Rendu principal ---
   const renderCenterContent = () => {
 
-    console.log("RENDER CENTER CONTENT :", section, questions.length);
+    console.log("RENDER CENTER CONTENT :", section);
+     console.log("RENDER CENTER CONTENT :", questions);
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
     
