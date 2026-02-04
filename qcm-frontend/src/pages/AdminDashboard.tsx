@@ -39,6 +39,19 @@ const AdminDashboard: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  
+  // Définition de ImportResult et Exam
+  interface ImportResult {
+  question: string;
+  status: string;
+  details?: string[];
+}
+interface Exam {
+  _id: string;
+  title: string;
+}
+
+const [exams, setExams] = useState<Exam[]>([]);
 
   // Import
   const [file, setFile] = useState<File | null>(null);
@@ -46,11 +59,12 @@ const AdminDashboard: React.FC = () => {
   const [importMessage, setImportMessage] = useState<string>("");
   const [details, setDetails] = useState<ImportResult[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [exams, setExams] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<string>("");
 
   const token = localStorage.getItem("token");
   const itemsPerPage = 10;
+
+  console.log("ADMIN TOKEN:", token);
 
   // ===============================================
   // 📘 SECTION : ÉTUDIANTS
@@ -70,28 +84,38 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Création étudiant
-  const handleCreateStudent = async () => {
-    if (!name || !email || !password) {
-      setMessage("⚠️ Veuillez remplir tous les champs");
-      return;
-    }
+const handleCreateStudent = async () => {
+  if (!name || !email || !password) {
+    setMessage("⚠️ Veuillez remplir tous les champs");
+    return;
+  }
 
-    try {
-      const res = await axios.post(
-        `${API_BASE_URL}/api/auth/create-student`,
-        { name, email, password },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setMessage(res.data.message);
-      setName("");
-      setEmail("");
-      setPassword("");
-      fetchStudents();
-    } catch (err: any) {
-      console.error(err);
-      setMessage(err.response?.data?.error || "Erreur création étudiant");
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/api/admin/students`,
+      { name, email, password },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setMessage("✅ Étudiant ajouté avec succès");
+    setName("");
+    setEmail("");
+    setPassword("");
+    fetchStudents();
+  } catch (err: any) {
+    console.error("❌ Création étudiant :", err);
+
+    if (err.response?.status === 401) {
+      setMessage("⛔ Session expirée. Veuillez vous reconnecter.");
+    } else {
+      setMessage(err.response?.data?.message || "Erreur création étudiant");
     }
-  };
+  }
+};
 
   // Supprimer étudiant
   const handleDeleteStudent = async (id: string) => {
