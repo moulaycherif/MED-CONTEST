@@ -22,7 +22,7 @@ interface Question {
 
   groupId?: {
     _id: string;
-    imageGroup?: string | null;
+    image?: string | null;
     order?: number;
   } | null;
 
@@ -179,8 +179,6 @@ useEffect(() => {
 
       let lastGroupId: string | null = null;
 
-      console.log("QUESTIONS RAW:", questions);
-
   if (questions.length === 0)
     return (
       <div className="text-center mt-10">
@@ -198,11 +196,9 @@ useEffect(() => {
 
       {questions.map((q, idx) => {
 
-        console.log("GROUP OBJ:", q.groupId);
+        console.log("GROUP POPULATED :", q.groupId);
   const showGroupImage =
-    q.groupId?.imageGroup && q.groupId._id !== lastGroupId;
-
-    console.log("AVANt MOTION - RENDER CENTER CONTENT :", showGroupImage);
+    q.groupId?.image && q.groupId._id !== lastGroupId;
 
   if (q.groupId?._id) {
     lastGroupId = q.groupId._id;
@@ -219,7 +215,7 @@ useEffect(() => {
      
       {showGroupImage && (
         <img
-          src={`${API_BASE_URL}${q.groupId!.imageGroup}`}
+          src={`${API_BASE_URL}${q.groupId!.image}`}
           className="max-w-lg mx-auto my-4 rounded shadow"
           alt="Image du groupe"
         />
