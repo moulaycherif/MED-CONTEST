@@ -92,7 +92,7 @@ const handleCreateStudent = async () => {
 
   try {
     const res = await axios.post(
-      `${API_BASE_URL}/api/admin/students`,
+      `${API_BASE_URL}/api/admin/create-student`,
       { name, email, password },
       {
         headers: {
