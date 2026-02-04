@@ -61,10 +61,8 @@ const [exams, setExams] = useState<Exam[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedExam, setSelectedExam] = useState<string>("");
 
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("adminToken");
   const itemsPerPage = 10;
-
-  console.log("ADMIN TOKEN:", token);
 
   // ===============================================
   // 📘 SECTION : ÉTUDIANTS
