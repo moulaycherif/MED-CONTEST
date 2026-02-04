@@ -62,6 +62,7 @@ const [exams, setExams] = useState<Exam[]>([]);
   const [selectedExam, setSelectedExam] = useState<string>("");
 
   const token = localStorage.getItem("token");
+  const adminToken = localStorage.getItem("adminToken");
   const itemsPerPage = 10;
 
   // ===============================================
@@ -94,7 +95,7 @@ const handleCreateStudent = async () => {
       { name, email, password },
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );
