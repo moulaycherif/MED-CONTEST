@@ -196,7 +196,6 @@ useEffect(() => {
 
       {questions.map((q, idx) => {
 
-        console.log("GROUP POPULATED :", q.groupId);
   const showGroupImage =
     q.groupId?.image && q.groupId._id !== lastGroupId;
 
