@@ -1,5 +1,5 @@
-// qcm-backend/routes/adminRoutes.ts
 import express from "express";
+import bcrypt from "bcryptjs";
 import Student from "../models/Student";
 import { authenticateAdmin } from "../middleware/authAdmin";
 
@@ -7,6 +7,37 @@ const router = express.Router();
 
 router.get("/ping", (req, res) => {
   res.json({ message: "pong admin" });
+});
+
+// 🔹 Créer un étudiant (ADMIN)
+router.post("/create-student", authenticateAdmin, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Champs manquants" });
+    }
+
+    const existing = await Student.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: "Email déjà utilisé" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const student = new Student({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    await student.save();
+
+    res.json({ message: "Étudiant créé ✅" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
 });
 
 // ✅ Liste de tous les étudiants (protégée admin)
