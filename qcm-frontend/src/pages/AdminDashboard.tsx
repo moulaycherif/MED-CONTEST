@@ -73,7 +73,7 @@ const [exams, setExams] = useState<Exam[]>([]);
   const fetchStudents = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/admin/students`, {
-        headers: { Authorization: `Bearer ${adminToken}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setStudents(res.data);
     } catch (err) {
