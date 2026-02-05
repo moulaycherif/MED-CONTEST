@@ -5,6 +5,8 @@ import { authenticateAdmin } from "../middleware/authAdmin";
 
 const router = express.Router();
 
+console.log("✅ adminRoutes chargé");
+
 // ✅ Liste de tous les étudiants (protégée admin)
 router.get("/students", authenticateAdmin, async (req, res) => {
   try {
