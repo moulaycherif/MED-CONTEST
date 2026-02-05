@@ -66,20 +66,26 @@ router.post("/login", async (req, res) => {
 });
 
 // 🔹 Gestion étudiants (admin only)
-router.post("/create-student", authenticateStudent, verifyAdmin, async (req: AuthenticatedRequest, res) => {
-  try {
-    const { name, email, password } = req.body;
-    const existing = await Student.findOne({ email });
-    if (existing) return res.status(400).json({ error: "Email déjà utilisé" });
+//router.post("/create-student", authenticateStudent, verifyAdmin, async (req: AuthenticatedRequest, res) => {
+//  try {
+    //const { name, email, password } = req.body;
+    //const existing = await Student.findOne({ email });
+    //if (existing) return res.status(400).json({ error: "Email déjà utilisé" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const student = new Student({ name, email, password: hashedPassword });
-    await student.save();
-    res.json({ message: "Étudiant créé ✅" });
-  } catch (err) {
-    res.status(500).json({ error: "Erreur serveur" });
-  }
+    //const hashedPassword = await bcrypt.hash(password, 10);
+    //const student = new Student({ name, email, password: hashedPassword });
+    //await student.save();
+    //res.json({ message: "Étudiant créé ✅" });
+  //} catch (err) {
+//    res.status(500).json({ error: "Erreur serveur" });
+//  }
+//});
+
+router.post("/create-student", async (req, res) => {
+  console.log("🔥 ROUTE create-student ATTEINTE");
+  res.json({ message: "OK route atteinte" });
 });
+
 
 router.get("/students", authenticateStudent, verifyAdmin, async (req: AuthenticatedRequest, res) => {
   const students = await Student.find({}, { password: 0 });
