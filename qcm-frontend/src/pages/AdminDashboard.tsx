@@ -95,7 +95,7 @@ const handleCreateStudent = async () => {
       { name, email, password },
       {
         headers: {
-          Authorization: `Bearer ${adminToken}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
