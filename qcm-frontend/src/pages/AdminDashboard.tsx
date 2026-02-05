@@ -17,6 +17,12 @@ function logout() {
   window.location.href = "/";
 }
 
+interface Student {
+  _id: string;
+  name: string;
+  email: string;
+}
+
 const AdminDashboard: React.FC = () => {
   
   // Résumés
@@ -34,7 +40,7 @@ const AdminDashboard: React.FC = () => {
   >("students");
 
   // Étudiants
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -95,7 +101,7 @@ const handleCreateStudent = async () => {
       { name, email, password },
       {
         headers: {
-          Authorization: `Bearer ${adminToken}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
