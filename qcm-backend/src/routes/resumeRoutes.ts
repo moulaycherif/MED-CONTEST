@@ -47,7 +47,7 @@ router.post("/generate", upload.none(), async (req, res) => {
 
       let resume = await Resume.findOne({ subject, chapter });
       if (!resume) {
-        resume = await Resume.create({ subject, chapter, pdfUrl });
+        resume = await Resume.create({ subject, chapter, pdfUrl, safeName });
       }
 
       return res.json({
