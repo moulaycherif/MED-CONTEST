@@ -41,22 +41,27 @@ router.post("/generate", upload.none(), async (req, res) => {
     }
 
     // Si le PDF existe déjà → on renvoie directement l'URL
-    if (existing && existing.some((f) => f.name === safeName)) {
-      const pdfUrl =
-        `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${safeName}`;
+   if (existing && existing.some((f) => f.name === safeName)) {
+  const pdfUrl =
+    `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${safeName}`;
 
-      let resume = await Resume.findOne({ subject, chapter });
-      if (!resume) {
-        resume = await Resume.create({ subject, chapter, pdfUrl, safeName });
-      }
+  let resume = await Resume.findOne({ subject, chapter });
+  if (!resume) {
+    resume = await Resume.create({
+      subject,
+      chapter,
+      pdfUrl,
+      storagePath: safeName, // ✅ OBLIGATOIRE
+    });
+  }
 
-      return res.json({
-        success: true,
-        pdfUrl,
-        id: resume._id,
-        alreadyExists: true,
-      });
-    }
+  return res.json({
+    success: true,
+    pdfUrl,
+    id: resume._id,
+    alreadyExists: true,
+  });
+}
 
     // Générer PDF
     const pdfBuffer = await generateResumeBuffer(subject, chapter, content);
@@ -78,12 +83,20 @@ router.post("/generate", upload.none(), async (req, res) => {
       `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${safeName}`;
 
     let resume = await Resume.findOne({ subject, chapter });
-    if (!resume) {
-      resume = await Resume.create({ subject, chapter, pdfUrl });
-    } else {
-      resume.pdfUrl = pdfUrl;
-      await resume.save();
-    }
+
+if (!resume) {
+  resume = await Resume.create({
+    subject,
+    chapter,
+    pdfUrl,
+    storagePath: safeName, // ✅
+  });
+} else {
+  resume.pdfUrl = pdfUrl;
+  resume.storagePath = safeName; // ✅
+  await resume.save();
+}
+
 
     return res.status(201).json({
       success: true,
@@ -129,12 +142,19 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${safeName}`;
 
     let resume = await Resume.findOne({ subject, chapter });
-    if (!resume) {
-      resume = await Resume.create({ subject, chapter, pdfUrl });
-    } else {
-      resume.pdfUrl = pdfUrl;
-      await resume.save();
-    }
+
+if (!resume) {
+  resume = await Resume.create({
+    subject,
+    chapter,
+    pdfUrl,
+    storagePath: safeName, // ✅ OBLIGATOIRE
+  });
+} else {
+  resume.pdfUrl = pdfUrl;
+  resume.storagePath = safeName; // ✅
+  await resume.save();
+}
 
     return res.json({ success: true, pdfUrl });
 
@@ -163,11 +183,11 @@ router.get("/all", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     await Resume.findByIdAndDelete(req.params.id);
-    return res.json({ success: true });
+    return res.json({ success: true });   
   } catch (err) {
     console.error("Erreur suppression résumé :", err);
     return res.status(500).json({ error: "Erreur serveur" });
-  }
+  } 
 });
 
 export default router;
