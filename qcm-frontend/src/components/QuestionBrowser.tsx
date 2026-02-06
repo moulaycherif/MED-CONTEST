@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-console.log("🔥🔥🔥 QuestionBrowser LOADED 🔥🔥🔥");
-
 import { API_BASE_URL } from "../config";
 
 /* ============================================================
