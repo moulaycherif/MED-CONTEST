@@ -3,14 +3,14 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import questionRoutes from "./routes/questionRoutes";
 import adminRoutes from "./routes/adminRoutes";  // ✅ AJOUT ICI
-
+import exerciseRoutes from "./routes/exerciseRoutes";  // ✅ AJOUT ICI
 import resumeRoutes from "./routes/resumeRoutes";
 import studentRoutes from "./routes/studentRoutes";
 import dotenv from "dotenv";
 import rankingRoutes from "./routes/rankingRoutes";
 import path from "path";
 import statsRoutes from "./routes/statsRoutes";
-
+import tipRoutes from "./routes/tipRoutes";
 
 dotenv.config();
 
@@ -56,6 +56,8 @@ app.use("/api/resume", resumeRoutes);
 app.use("/api/stats", statsRoutes);   // 🔥 OBLIGATOIRE
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/uploads/resumes", express.static(path.join(__dirname, "uploads/resumes")));
+app.use("/api/exercises", exerciseRoutes);
+app.use("/api/tips", tipRoutes);
 
 
 // ✅ Route test
