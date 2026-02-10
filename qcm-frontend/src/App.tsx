@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
 import StudentPage from "./pages/StudentPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminExercices from "./pages/AdminExercises";
 
 export default function App() {
   return (
@@ -33,6 +34,9 @@ export default function App() {
 
           {/* 🚫 404 */}
           <Route path="*" element={<div className="p-10 text-center text-red-600 font-semibold">Page non trouvée</div>} />
+
+          <Route path="/admin/exercises" element={<AdminExercises />} />
+
         </Routes>
       </main>
       <Footer />
