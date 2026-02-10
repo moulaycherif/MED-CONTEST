@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import SummaryList from "./SummaryList";
+import { useNavigate } from "react-router-dom";
 
 // Déconnexion
 function logout() {
@@ -70,6 +71,8 @@ const [exams, setExams] = useState<Exam[]>([]);
   const token = localStorage.getItem("token");
   const adminToken = localStorage.getItem("adminToken");
   const itemsPerPage = 10;
+
+  const navigate = useNavigate();
 
   // ===============================================
   // 📘 SECTION : ÉTUDIANTS
@@ -512,6 +515,27 @@ const handleCreateStudent = async () => {
           )}
         </div>
       )}
+
+{/* ----------- Gestion des Exercices et Astuces ----------- */}
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+
+  <button
+    onClick={() => navigate("/admin/exercices")}
+    className="bg-indigo-600 text-white p-6 rounded-xl shadow hover:bg-indigo-700"
+  >
+    📘 Gestion des Exercices du Soutien
+  </button>
+
+  <button
+    onClick={() => navigate("/admin/astuces")}
+    className="bg-green-600 text-white p-6 rounded-xl shadow hover:bg-green-700"
+  >
+    💡 Gestion des Astuces du Soutien
+  </button>
+
+</div>
+
     </div>
   );
 };
