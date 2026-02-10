@@ -7,7 +7,7 @@ import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
 import StudentPage from "./pages/StudentPage";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminExercices from "./pages/AdminExercises";
+import AdminExercises from "./pages/AdminExercises";
 
 export default function App() {
   return (
