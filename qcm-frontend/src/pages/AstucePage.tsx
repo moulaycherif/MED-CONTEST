@@ -7,14 +7,14 @@ import AnimatedQaViewer from "../components/AnimatedQaViewer";
 const ASTUCES: Record<string, { chapter: string; qas: { question: string; answer: string }[] }[]> = {
   math: [
     {
-      chapter: "Les suites",
+      chapitre: "Les suites",
       qas: [
         { question: "Qu’est-ce qu’une suite ?", answer: "Une suite est une fonction définie sur ℕ..." },
         { question: "Limite d’une suite", answer: "On dit qu’une suite a une limite L si pour tout ε>0..." },
       ],
     },
     {
-      chapter: "La probabilité",
+      chapitre: "La probabilité",
       qas: [
         { question: "Probabilité : définition", answer: "La probabilité mesure la chance d’un événement..." },
         { question: "Événements indépendants", answer: "Deux événements A et B sont indépendants si..." },
@@ -24,7 +24,7 @@ const ASTUCES: Record<string, { chapter: string; qas: { question: string; answer
 
   physique: [
     {
-      chapter: "Cinématique",
+      chapitre: "Cinématique",
       qas: [
         { question: "MRU", answer: "Le mouvement rectiligne uniforme est caractérisé par..." },
       ],
@@ -33,14 +33,14 @@ const ASTUCES: Record<string, { chapter: string; qas: { question: string; answer
 
   chimie: [
     {
-      chapter: "Structure de la matière",
+      chapitre: "Structure de la matière",
       qas: [{ question: "Atome", answer: "Un atome est composé d’un noyau et d’électrons..." }],
     },
   ],
 
   svt: [
     {
-      chapter: "Génétique",
+      chapitre: "Génétique",
       qas: [{ question: "ADN", answer: "L’ADN contient l’information génétique..." }],
     },
   ],
