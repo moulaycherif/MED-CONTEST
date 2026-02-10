@@ -5,8 +5,6 @@ import { API_BASE_URL } from "../config";
 import SummaryList from "./SummaryList";
 import { useNavigate } from "react-router-dom";
 
-const navigate = useNavigate();
-
 // Déconnexion
 function logout() {
   localStorage.removeItem("token");
@@ -73,6 +71,8 @@ const [exams, setExams] = useState<Exam[]>([]);
   const token = localStorage.getItem("token");
   const adminToken = localStorage.getItem("adminToken");
   const itemsPerPage = 10;
+
+  const navigate = useNavigate();
 
   // ===============================================
   // 📘 SECTION : ÉTUDIANTS
