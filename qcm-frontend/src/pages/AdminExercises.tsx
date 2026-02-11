@@ -23,17 +23,22 @@ const AdminExercises: React.FC = () => {
   }, []);
 
   const fetchQuizzes = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/quiz`);
-      setQuizzes(res.data);
+  try {
+    const res = await axios.get<Quiz[]>(`${API_BASE_URL}/quiz`);
 
-      // matières uniques
-      const uniqueSubjects = [...new Set(res.data.map((q: Quiz) => q.subject))];
-      setSubjects(uniqueSubjects);
-    } catch (err) {
-      console.error("Erreur chargement quiz :", err);
-    }
-  };
+    const data = res.data;
+    setQuizzes(data);
+
+    const uniqueSubjects: string[] = Array.from(
+      new Set(data.map(q => q.subject))
+    );
+
+    setSubjects(uniqueSubjects);
+  } catch (err) {
+    console.error("Erreur chargement quiz :", err);
+  }
+};
+
 
   // 🔹 Mettre à jour les chapitres selon la matière
   useEffect(() => {

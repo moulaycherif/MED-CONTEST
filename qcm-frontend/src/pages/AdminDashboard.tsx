@@ -26,6 +26,8 @@ interface Student {
 
 const AdminDashboard: React.FC = () => {
   
+  const navigate = useNavigate();
+  
   // Résumés
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
@@ -71,8 +73,6 @@ const [exams, setExams] = useState<Exam[]>([]);
   const token = localStorage.getItem("token");
   const adminToken = localStorage.getItem("adminToken");
   const itemsPerPage = 10;
-
-  const navigate = useNavigate();
 
   // ===============================================
   // 📘 SECTION : ÉTUDIANTS

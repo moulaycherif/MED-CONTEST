@@ -32,12 +32,11 @@ export default function App() {
           <Route path="/demo" element={<div className="p-10 text-center">Page Démo</div>} />
           <Route path="/abonnement" element={<div className="p-10 text-center">Page Abonnement</div>} />
           <Route path="/contact" element={<div className="p-10 text-center">Page Contact</div>} />
+          <Route path="/admin/exercises" element={<AdminExercises />} />
+          <Route path="/admin/astuces" element={<AdminAstuces />} />
 
           {/* 🚫 404 */}
           <Route path="*" element={<div className="p-10 text-center text-red-600 font-semibold">Page non trouvée</div>} />
-
-          <Route path="/admin/exercises" element={<AdminExercises />} />
-          <Route path="/admin/astuces" element={<AdminAstuces />} />
 
         </Routes>
       </main>
