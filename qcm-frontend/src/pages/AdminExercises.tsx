@@ -1,156 +1,121 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
-interface Question {
+interface Quiz {
+  _id: string;
   question: string;
-  options: string[];
-  correctAnswer: number;
+  subject: string;
+  chapter: string;
 }
 
 const AdminExercises: React.FC = () => {
-  const [subject, setSubject] = useState("");
-  const [chapter, setChapter] = useState("");
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState("");
-  const [options, setOptions] = useState(["", "", "", ""]);
-  const [correctAnswer, setCorrectAnswer] = useState(0);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [chapters, setChapters] = useState<string[]>([]);
 
-  // ➕ Ajouter une question
-  const addQuestion = () => {
-    if (!currentQuestion || options.some((o) => !o)) {
-      alert("Veuillez remplir la question et toutes les options");
-      return;
-    }
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedChapter, setSelectedChapter] = useState("");
 
-    setQuestions([
-      ...questions,
-      {
-        question: currentQuestion,
-        options,
-        correctAnswer,
-      },
-    ]);
+  // 🔹 Charger tous les quiz
+  useEffect(() => {
+    fetchQuizzes();
+  }, []);
 
-    setCurrentQuestion("");
-    setOptions(["", "", "", ""]);
-    setCorrectAnswer(0);
-  };
-
-  // 💾 Enregistrer le quiz
-  const saveQuiz = async () => {
-    if (!subject || !chapter || questions.length === 0) {
-      alert("Quiz incomplet");
-      return;
-    }
-
+  const fetchQuizzes = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_BASE_URL}/quiz`);
+      setQuizzes(res.data);
 
-      await axios.post(
-        `${API_BASE_URL}/exercises`,
-        { subject, chapter, questions },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      alert("Quiz enregistré avec succès ✅");
-
-      // Reset
-      setSubject("");
-      setChapter("");
-      setQuestions([]);
+      // matières uniques
+      const uniqueSubjects = [...new Set(res.data.map((q: Quiz) => q.subject))];
+      setSubjects(uniqueSubjects);
     } catch (err) {
-      console.error("Erreur création quiz :", err);
-      alert("Erreur serveur");
+      console.error("Erreur chargement quiz :", err);
     }
   };
+
+  // 🔹 Mettre à jour les chapitres selon la matière
+  useEffect(() => {
+    if (!selectedSubject) {
+      setChapters([]);
+      return;
+    }
+
+    const filtered = quizzes.filter(q => q.subject === selectedSubject);
+    const uniqueChapters = [...new Set(filtered.map(q => q.chapter))];
+    setChapters(uniqueChapters);
+    setSelectedChapter("");
+  }, [selectedSubject, quizzes]);
+
+  // 🔹 Filtrage final
+  const filteredQuizzes = quizzes.filter(q => {
+    return (
+      (selectedSubject ? q.subject === selectedSubject : true) &&
+      (selectedChapter ? q.chapter === selectedChapter : true)
+    );
+  });
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-8 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-center">
         📘 Gestion des Exercices du Soutien
       </h1>
 
-      {/* MATIÈRE */}
-      <input
-        className="border p-2 w-full mb-4"
-        placeholder="Matière (ex: Physique)"
-        value={subject}
-        onChange={(e) => setSubject(e.target.value)}
-      />
+      {/* FILTRES */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <select
+          value={selectedSubject}
+          onChange={(e) => setSelectedSubject(e.target.value)}
+          className="border p-3 rounded-lg"
+        >
+          <option value="">Toutes les matières</option>
+          {subjects.map(subj => (
+            <option key={subj} value={subj}>{subj}</option>
+          ))}
+        </select>
 
-      {/* CHAPITRE */}
-      <input
-        className="border p-2 w-full mb-6"
-        placeholder="Chapitre (ex: Cinématique)"
-        value={chapter}
-        onChange={(e) => setChapter(e.target.value)}
-      />
+        <select
+          value={selectedChapter}
+          onChange={(e) => setSelectedChapter(e.target.value)}
+          className="border p-3 rounded-lg"
+          disabled={!selectedSubject}
+        >
+          <option value="">Tous les chapitres</option>
+          {chapters.map(chap => (
+            <option key={chap} value={chap}>{chap}</option>
+          ))}
+        </select>
+      </div>
 
-      {/* QUESTION */}
-      <textarea
-        className="border p-2 w-full mb-4"
-        placeholder="Énoncé de la question"
-        value={currentQuestion}
-        onChange={(e) => setCurrentQuestion(e.target.value)}
-      />
+      {/* TABLEAU */}
+      <table className="w-full border border-gray-300">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="border p-2">Question</th>
+            <th className="border p-2">Matière</th>
+            <th className="border p-2">Chapitre</th>
+          </tr>
+        </thead>
 
-      {/* OPTIONS */}
-      {options.map((opt, i) => (
-        <input
-          key={i}
-          className="border p-2 w-full mb-2"
-          placeholder={`Option ${i + 1}`}
-          value={opt}
-          onChange={(e) => {
-            const newOpts = [...options];
-            newOpts[i] = e.target.value;
-            setOptions(newOpts);
-          }}
-        />
-      ))}
+        <tbody>
+          {filteredQuizzes.map(q => (
+            <tr key={q._id}>
+              <td className="border p-2">{q.question}</td>
+              <td className="border p-2 text-center">{q.subject}</td>
+              <td className="border p-2 text-center">{q.chapter}</td>
+            </tr>
+          ))}
 
-      {/* BONNE RÉPONSE */}
-      <select
-        className="border p-2 w-full mb-4"
-        value={correctAnswer}
-        onChange={(e) => setCorrectAnswer(Number(e.target.value))}
-      >
-        <option value={0}>Bonne réponse : Option 1</option>
-        <option value={1}>Bonne réponse : Option 2</option>
-        <option value={2}>Bonne réponse : Option 3</option>
-        <option value={3}>Bonne réponse : Option 4</option>
-      </select>
-
-      <button
-        onClick={addQuestion}
-        className="bg-blue-600 text-white px-4 py-2 rounded w-full mb-6"
-      >
-        ➕ Ajouter la question
-      </button>
-
-      {/* LISTE QUESTIONS */}
-      {questions.length > 0 && (
-        <div className="mb-6">
-          <h3 className="font-semibold mb-2">Questions ajoutées :</h3>
-          <ul className="list-disc pl-6">
-            {questions.map((q, i) => (
-              <li key={i}>{q.question}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <button
-        onClick={saveQuiz}
-        className="bg-green-600 text-white px-6 py-3 rounded w-full text-lg"
-      >
-        💾 Enregistrer le Quiz
-      </button>
+          {filteredQuizzes.length === 0 && (
+            <tr>
+              <td colSpan={3} className="text-center p-6 text-gray-500">
+                Aucun exercice trouvé
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };
