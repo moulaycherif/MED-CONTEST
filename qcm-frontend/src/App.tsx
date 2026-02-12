@@ -9,6 +9,9 @@ import StudentPage from "./pages/StudentPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminExercises from "./pages/AdminExercises";
 import AdminAstuces from "./pages/AdminAstuces";
+import StudentAstuces from "./pages/StudentAstuces";
+import StudentAstuceDetail from "./pages/StudentAstuceDetail";
+import StudentQuiz from "./pages/StudentQuiz";
 
 export default function App() {
   return (
@@ -34,6 +37,10 @@ export default function App() {
           <Route path="/contact" element={<div className="p-10 text-center">Page Contact</div>} />
           <Route path="/admin/exercises" element={<AdminExercises />} />
           <Route path="/admin/astuces" element={<AdminAstuces />} />
+          <Route path="/student/astuces" element={<StudentAstuces />} />
+          <Route path="/student/astuces/:id" element={<StudentAstuceDetail />} />
+          <Route path="/student/quiz/:tipId" element={<StudentQuiz />} />
+
 
           {/* 🚫 404 */}
           <Route path="*" element={<div className="p-10 text-center text-red-600 font-semibold">Page non trouvée</div>} />

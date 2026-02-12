@@ -109,14 +109,6 @@ useEffect(() => {
 
 
   // Charger les astuces quand on clique sur le bouton "Astuces"
-useEffect(() => {
-  if (selectedAction === "Astuces" && selectedChapter) {
-    axios
-      .get(`${API_BASE_URL}/api/astuces/${encodeURIComponent(selectedChapter)}`)
-      .then((res) => setAstuces(res.data))
-      .catch(() => setAstuces([]));
-  }
-}, [selectedAction, selectedChapter]);
 
 useEffect(() => {
   if (selectedAction === "Astuces" && selectedChapter) {
