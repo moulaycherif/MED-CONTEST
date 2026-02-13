@@ -1,12 +1,13 @@
 import { Router } from "express";
-import { getAstucesByChapter } from "../controllers/astucesController";
+import {
+  getAstucesByChapter,
+  createAstuce,
+} from "../controllers/astucesController";
 import Astuce from "../models/Astuce";
 
 const router = Router();
 
-router.get("/:chapitre", getAstucesByChapter);
-
-/* 🔵 LISTE DE TOUTES LES ASTUCES (ADMIN) */
+/* 🔵 ADMIN — LISTE TOUTES LES ASTUCES */
 router.get("/", async (req, res) => {
   try {
     const astuces = await Astuce.find().sort({
@@ -19,5 +20,11 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Erreur chargement astuces" });
   }
 });
+
+/* 🟢 ADMIN — CRÉER UNE ASTUCE */
+router.post("/", createAstuce);
+
+/* 🟡 ÉTUDIANT — ASTUCES PAR CHAPITRE */
+router.get("/chapter/:chapter", getAstucesByChapter);
 
 export default router;

@@ -1,48 +1,42 @@
 import { Request, Response } from "express";
 import Astuce from "../models/Astuce";
 
-/**
- * Récupérer les astuces d'un chapitre
- */
+/* 🔵 ASTUCES PAR CHAPITRE (ÉTUDIANT) */
 export const getAstucesByChapter = async (req: Request, res: Response) => {
   try {
     const { chapter } = req.params;
 
-    if (!chapter) {
-      return res.status(400).json({ message: "Chapitre manquant" });
-    }
+    const astuces = await Astuce.find({ chapter }).sort({ order: 1 });
 
-    const astuces = await Astuce.find({ chapter });
-
-    return res.json(astuces);
+    res.json(astuces);
   } catch (error) {
     console.error("Erreur getAstucesByChapter:", error);
-    return res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
 
-/**
- * Ajouter une astuce
- */
+/* 🟢 CRÉATION ASTUCE (ADMIN) */
 export const createAstuce = async (req: Request, res: Response) => {
   try {
-    const { chapter, question, answer } = req.body;
+    const { subject, chapter, title, description, cases } = req.body;
 
-    if (!chapter || !question || !answer) {
-      return res.status(400).json({ message: "Champs manquants" });
+    if (!subject || !chapter || !title) {
+      return res.status(400).json({ message: "Champs obligatoires manquants" });
     }
 
-    const newAstuce = new Astuce({
+    const astuce = new Astuce({
+      subject,
       chapter,
-      question,
-      answer,
+      title,
+      description,
+      cases,
     });
 
-    await newAstuce.save();
+    await astuce.save();
 
-    return res.status(201).json(newAstuce);
+    res.status(201).json(astuce);
   } catch (error) {
     console.error("Erreur createAstuce:", error);
-    return res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
