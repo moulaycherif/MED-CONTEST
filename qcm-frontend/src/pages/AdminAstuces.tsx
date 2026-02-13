@@ -36,7 +36,7 @@ const AdminAstuces: React.FC = () => {
 
   const fetchTips = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/tips`);
+      const res = await axios.get(`${API_BASE_URL}/astuces`);
       setTips(res.data);
     } catch (err) {
       console.error("Erreur chargement astuces :", err);
@@ -66,7 +66,7 @@ const AdminAstuces: React.FC = () => {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/tips`, {
+      await axios.post(`${API_BASE_URL}/astuces`, {
         subject,
         chapter,
         title,
