@@ -1,12 +1,17 @@
+import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import app from "./app";
 import http from "http";
 import { initRankingSocket } from "./websocket/rankingSocket";
 import statsRoutes from "./routes/statsRoutes";
+import uploadRoutes from "./routes/uploadRoutes";
 
 dotenv.config({ path: "./.env" });
 app.use("/api/stats", statsRoutes);
+app.use("/uploads", express.static("uploads"));
+app.use("/api/upload", uploadRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/qcmdb";
