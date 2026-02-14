@@ -3,6 +3,11 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useParams, useNavigate } from "react-router-dom";
 
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
+
 interface TipCase {
   title: string;
   explanation: string;
@@ -55,34 +60,42 @@ const StudentAstuceDetail: React.FC = () => {
           {tip.subject} • {tip.chapter}
         </div>
         <h1 className="text-3xl font-bold mt-2">{tip.title}</h1>
+
         {tip.description && (
-          <p className="mt-3 text-gray-700">{tip.description}</p>
+          <div className="prose max-w-none mt-3">
+            <ReactMarkdown>{tip.description}</ReactMarkdown>
+          </div>
         )}
       </div>
 
-      {/* CAS */}
+      {/* CAS / ASTUCES */}
       <div className="space-y-6">
         {tip.cases.map((c, index) => (
           <div
             key={index}
             className="border rounded-xl p-5 bg-white shadow"
           >
-            <h2 className="text-xl font-semibold mb-2">
+            <h2 className="text-xl font-semibold mb-3">
               🔹 {c.title}
             </h2>
 
-            <p className="mb-3 text-gray-800 whitespace-pre-line">
-              {c.explanation}
-            </p>
+            {/* EXPLICATION */}
+            <div
+  className="prose max-w-none"
+  dangerouslySetInnerHTML={{ __html: c.explanation }}
+/>
 
+            {/* EXEMPLE */}
             {c.example && (
-              <div className="bg-gray-100 p-3 rounded mb-4">
+              <div className="bg-gray-100 p-4 rounded mb-4">
                 <strong>Exemple :</strong>
-                <pre className="whitespace-pre-wrap mt-2">{c.example}</pre>
+                <div
+  className="prose max-w-none"
+  dangerouslySetInnerHTML={{ __html: c.example }}
+/>
               </div>
             )}
 
-            {/* FUTUR */}
             <button
               className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
               onClick={() =>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
+import TipTapEditor from "../components/TipTapEditor";
 
 interface TipCase {
   title: string;
@@ -144,23 +145,17 @@ const AdminAstuces: React.FC = () => {
               className="border p-2 rounded w-full mb-2"
             />
 
-            <textarea
-              value={c.explanation}
-              onChange={(e) =>
-                updateCase(index, "explanation", e.target.value)
-              }
-              placeholder="Explication"
-              className="border p-2 rounded w-full mb-2"
-            />
+            <TipTapEditor
+  value={c.explanation}
+  onChange={(html) => updateCase(index, "explanation", html)}
+/>
 
-            <textarea
-              value={c.example}
-              onChange={(e) =>
-                updateCase(index, "example", e.target.value)
-              }
-              placeholder="Exemple"
-              className="border p-2 rounded w-full mb-2"
-            />
+
+            <TipTapEditor
+  value={c.example}
+  onChange={(html) => updateCase(index, "example", html)}
+/>
+
 
             {cases.length > 1 && (
               <button
