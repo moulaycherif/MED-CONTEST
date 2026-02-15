@@ -5,9 +5,9 @@ import TipTapEditor from "../components/TipTapEditor";
 
 interface TipCase {
   title: string;
-  explanation: string;
-  example: string;
+  content: string;
 }
+
 
 interface Tip {
   _id: string;
@@ -27,7 +27,7 @@ const AdminAstuces: React.FC = () => {
   const [description, setDescription] = useState("");
 
   const [cases, setCases] = useState<TipCase[]>([
-    { title: "", explanation: "", example: "" },
+    { title: "", content: "" },
   ]);
 
   // 🔹 Charger les astuces existantes
@@ -52,7 +52,7 @@ const AdminAstuces: React.FC = () => {
   };
 
   const addCase = () => {
-    setCases([...cases, { title: "", explanation: "", example: "" }]);
+    setCases([...cases, { title: "", content: "" }]);
   };
 
   const removeCase = (index: number) => {
@@ -83,7 +83,7 @@ const AdminAstuces: React.FC = () => {
       setChapter("");
       setTitle("");
       setDescription("");
-      setCases([{ title: "", explanation: "", example: "" }]);
+      setCases([{ title: "", content: "" }]);
     } catch (err) {
       console.error("Erreur création astuce :", err);
       alert("Erreur création astuce");
@@ -142,21 +142,13 @@ const AdminAstuces: React.FC = () => {
                 updateCase(index, "title", e.target.value)
               }
               placeholder={`Titre du cas ${index + 1}`}
-              className="border p-2 rounded w-full mb-2"
+              className="border p-2 rounded w-full mb-3"
             />
 
             <TipTapEditor
-  value={c.explanation}
-  onChange={(html) => updateCase(index, "explanation", html)}
+  value={c.content}
+  onChange={(html) => updateCase(index, "content", html)}
 />
-
-
-            <TipTapEditor
-  value={c.example}
-  onChange={(html) => updateCase(index, "example", html)}
-/>
-
-
             {cases.length > 1 && (
               <button
                 onClick={() => removeCase(index)}
