@@ -5,7 +5,6 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { convertMathMLToLatex } from "../utils/mathConverter";
 
-
 interface Props {
   value: string;
   onChange: (html: string) => void;
@@ -15,15 +14,29 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Image,
+      Image.configure({
+        inline: false,
+        allowBase64: true,
+      }),
     ],
-    content: value,
-   onUpdate: ({ editor }) => {
-  const html = editor.getHTML();
-  const converted = convertMathMLToLatex(html);
-  onChange(converted);
-}
 
+    content: value,
+
+    onUpdate({ editor }) {
+      onChange(editor.getHTML());
+    },
+
+    editorProps: {
+      handlePaste(view, event) {
+        const html = event.clipboardData?.getData("text/html");
+        if (!html) return false;
+
+        // 🔥 Word → LaTeX automatique
+        const converted = convertMathMLToLatex(html);
+        editor.commands.insertContent(converted);
+        return true;
+      },
+    },
   });
 
   const uploadImage = async (file: File) => {
@@ -32,7 +45,8 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
 
     const res = await axios.post(
       `${API_BASE_URL}/upload/image`,
-      formData
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
     );
 
     editor?.chain().focus().setImage({ src: res.data.url }).run();
@@ -41,8 +55,17 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
   if (!editor) return null;
 
   return (
-    <div className="border rounded-lg">
-      <div className="flex gap-2 p-2 border-b bg-gray-50">
+    <div className="border rounded-xl shadow bg-white">
+      {/* TOOLBAR */}
+      <div className="flex gap-2 p-2 border-b bg-gray-100">
+        <button onClick={() => editor.chain().focus().toggleBold().run()}>
+          <b>B</b>
+        </button>
+
+        <button onClick={() => editor.chain().focus().toggleItalic().run()}>
+          <i>I</i>
+        </button>
+
         <input
           type="file"
           accept="image/*"
@@ -52,7 +75,10 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
         />
       </div>
 
-      <EditorContent className="p-4 min-h-[150px]" editor={editor} />
+      <EditorContent
+        editor={editor}
+        className="p-4 min-h-[200px] prose max-w-none"
+      />
     </div>
   );
 };

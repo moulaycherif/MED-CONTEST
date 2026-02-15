@@ -1,8 +1,7 @@
-import { convert } from "mathml-to-latex";
+import convert from "mathml-to-latex";
 
 /**
- * Convertit les équations Word (MathML)
- * en LaTeX compatible KaTeX
+ * Word (MathML) → LaTeX (KaTeX compatible)
  */
 export function convertMathMLToLatex(html: string): string {
   return html.replace(
