@@ -79,6 +79,10 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
         editor={editor}
         className="p-4 min-h-[200px] prose max-w-none"
       />
+      <p className="text-sm text-gray-600 mb-2">
+  Contenu de l’astuce (coller depuis Word possible)
+</p>
+
     </div>
   );
 };

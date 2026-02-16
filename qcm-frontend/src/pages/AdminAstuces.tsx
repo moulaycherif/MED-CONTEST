@@ -3,34 +3,40 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import TipTapEditor from "../components/TipTapEditor";
 
+/* ===================== TYPES ===================== */
+
 interface TipCase {
   title: string;
-  content: string;
+  content: string; // HTML riche (TipTap)
 }
-
 
 interface Tip {
   _id: string;
   subject: string;
   chapter: string;
   title: string;
-  description: string;
+  description?: string;
   cases: TipCase[];
 }
+
+/* ===================== COMPONENT ===================== */
 
 const AdminAstuces: React.FC = () => {
   const [tips, setTips] = useState<Tip[]>([]);
 
+  // Champs principaux
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
+  // Cas
   const [cases, setCases] = useState<TipCase[]>([
     { title: "", content: "" },
   ]);
 
-  // 🔹 Charger les astuces existantes
+  /* ===================== FETCH ===================== */
+
   useEffect(() => {
     fetchTips();
   }, []);
@@ -40,12 +46,17 @@ const AdminAstuces: React.FC = () => {
       const res = await axios.get(`${API_BASE_URL}/astuces`);
       setTips(res.data);
     } catch (err) {
-      console.error("Erreur chargement astuces :", err);
+      console.error("❌ Erreur chargement astuces :", err);
     }
   };
 
-  // 🔹 Gestion des cas
-  const updateCase = (index: number, field: keyof TipCase, value: string) => {
+  /* ===================== CASES ===================== */
+
+  const updateCase = (
+    index: number,
+    field: keyof TipCase,
+    value: string
+  ) => {
     const updated = [...cases];
     updated[index][field] = value;
     setCases(updated);
@@ -59,10 +70,16 @@ const AdminAstuces: React.FC = () => {
     setCases(cases.filter((_, i) => i !== index));
   };
 
-  // 🔹 Création astuce
+  /* ===================== CREATE ===================== */
+
   const createTip = async () => {
     if (!subject || !chapter || !title) {
-      alert("Veuillez remplir les champs obligatoires");
+      alert("⚠️ Matière, chapitre et titre sont obligatoires");
+      return;
+    }
+
+    if (cases.some((c) => !c.title || !c.content)) {
+      alert("⚠️ Tous les cas doivent avoir un titre et un contenu");
       return;
     }
 
@@ -75,84 +92,101 @@ const AdminAstuces: React.FC = () => {
         cases,
       });
 
-      alert("Astuce créée avec succès");
+      alert("✅ Astuce enregistrée avec succès");
       fetchTips();
 
-      // reset
+      // Reset formulaire
       setSubject("");
       setChapter("");
       setTitle("");
       setDescription("");
       setCases([{ title: "", content: "" }]);
     } catch (err) {
-      console.error("Erreur création astuce :", err);
-      alert("Erreur création astuce");
+      console.error("❌ Erreur création astuce :", err);
+      alert("Erreur lors de la création de l’astuce");
     }
   };
 
+  /* ===================== RENDER ===================== */
+
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center">
+    <div className="p-8 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8 text-center">
         💡 Gestion des Astuces du Soutien
       </h1>
 
-      {/* FORMULAIRE */}
-      <div className="bg-white shadow rounded-xl p-6 mb-10">
+      {/* ================= FORMULAIRE ================= */}
+      <div className="bg-white shadow-xl rounded-2xl p-6 mb-12">
+        {/* Infos générales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Matière (ex: Mathématiques)"
-            className="border p-3 rounded"
+            className="border p-3 rounded-lg"
           />
 
           <input
             value={chapter}
             onChange={(e) => setChapter(e.target.value)}
             placeholder="Chapitre (ex: Suites & Sommes)"
-            className="border p-3 rounded"
+            className="border p-3 rounded-lg"
           />
         </div>
 
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Titre de l’astuce"
-          className="border p-3 rounded w-full mb-4"
+          placeholder="Titre global de l’astuce"
+          className="border p-3 rounded-lg w-full mb-4"
         />
 
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description générale (optionnel)"
-          className="border p-3 rounded w-full mb-6"
+          placeholder="Description générale (optionnelle)"
+          className="border p-3 rounded-lg w-full mb-6"
         />
 
-        {/* CAS */}
-        <h2 className="text-xl font-semibold mb-4">Cas / Astuces</h2>
+        {/* ================= CAS ================= */}
+        <h2 className="text-xl font-semibold mb-4">
+          Cas / Astuces détaillées
+        </h2>
 
         {cases.map((c, index) => (
           <div
             key={index}
-            className="border rounded-lg p-4 mb-4 bg-gray-50"
+            className="border rounded-xl p-4 mb-6 bg-gray-50"
           >
+            {/* Titre du cas */}
             <input
               value={c.title}
               onChange={(e) =>
                 updateCase(index, "title", e.target.value)
               }
               placeholder={`Titre du cas ${index + 1}`}
-              className="border p-2 rounded w-full mb-3"
+              className="border p-2 rounded-lg w-full mb-3 font-semibold"
             />
 
-            <TipTapEditor
-  value={c.content}
-  onChange={(html) => updateCase(index, "content", html)}
-/>
+            {/* Éditeur TipTap */}
+            <p className="text-sm text-gray-600 mb-2">
+              Contenu de l’astuce (coller depuis Word, images et équations
+              supportées)
+            </p>
+
+            <div className="border rounded-lg bg-white">
+              <TipTapEditor
+                value={c.content}
+                onChange={(html) =>
+                  updateCase(index, "content", html)
+                }
+              />
+            </div>
+
             {cases.length > 1 && (
               <button
                 onClick={() => removeCase(index)}
-                className="text-red-600 text-sm"
+                className="text-red-600 text-sm mt-3"
               >
                 Supprimer ce cas
               </button>
@@ -160,22 +194,25 @@ const AdminAstuces: React.FC = () => {
           </div>
         ))}
 
-        <button
-          onClick={addCase}
-          className="bg-gray-200 px-4 py-2 rounded mr-4"
-        >
-          ➕ Ajouter un cas
-        </button>
+        {/* Actions */}
+        <div className="flex gap-4">
+          <button
+            onClick={addCase}
+            className="bg-gray-200 px-4 py-2 rounded-lg"
+          >
+            ➕ Ajouter un cas
+          </button>
 
-        <button
-          onClick={createTip}
-          className="bg-indigo-600 text-white px-6 py-2 rounded"
-        >
-          💾 Enregistrer l’astuce
-        </button>
+          <button
+            onClick={createTip}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg"
+          >
+            💾 Enregistrer l’astuce
+          </button>
+        </div>
       </div>
 
-      {/* LISTE ASTUCES */}
+      {/* ================= LISTE ================= */}
       <h2 className="text-2xl font-semibold mb-4">
         📚 Astuces existantes
       </h2>
