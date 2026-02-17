@@ -78,11 +78,10 @@ const AdminAstuces: React.FC = () => {
       return;
     }
 
-    if (cases.some((c) => !c.title || !c.content)) {
-      alert("⚠️ Tous les cas doivent avoir un titre et un contenu");
-      return;
-    }
-
+    if (cases.some(c => !c.content.trim())) {
+  alert("Chaque cas doit contenir du contenu");
+  return;
+}
     try {
       await axios.post(`${API_BASE_URL}/astuces`, {
         subject,
