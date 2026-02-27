@@ -27,16 +27,23 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
     },
 
     editorProps: {
-      handlePaste(view, event) {
-        const html = event.clipboardData?.getData("text/html");
-        if (!html) return false;
+     handlePaste(view, event) {
+  const items = event.clipboardData?.items;
 
-        // 🔥 Word → LaTeX automatique
-        const converted = convertMathMLToLatex(html);
-        editor.commands.insertContent(converted);
-        return true;
-      },
-    },
+  if (!items) return false;
+
+  for (const item of items) {
+    if (item.type.indexOf("image") !== -1) {
+      const file = item.getAsFile();
+      if (file) {
+        uploadImage(file);
+      }
+    }
+  }
+
+  return false;
+}
+    }
   });
 
   const uploadImage = async (file: File) => {
