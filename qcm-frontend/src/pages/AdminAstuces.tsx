@@ -44,7 +44,7 @@ const AdminAstuces: React.FC = () => {
   const fetchTips = async () => {
     try {
       console.log("API URL utilisée :", API_BASE_URL);
-      const res = await axios.get(`${API_BASE_URL}/astuces`);
+      const res = await axios.get(`${API_BASE_URL}/api/astuces`);
       setTips(res.data);
     } catch (err) {
       console.error("❌ Erreur chargement astuces :", err);
