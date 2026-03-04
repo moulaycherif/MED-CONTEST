@@ -45,8 +45,14 @@ const AdminAstuces: React.FC = () => {
     try {
       console.log("API URL utilisée :", API_BASE_URL);
       const res = await axios.get(`${API_BASE_URL}/api/astuces`);
-      setTips(res.data);
-    } catch (err) {
+      const safeData = res.data.map((tip: any) => ({
+  ...tip,
+  cases: tip.cases || [],
+}));
+
+setTips(safeData);
+      
+} catch (err) {
       console.error("❌ Erreur chargement astuces :", err);
     }
   };
@@ -227,7 +233,7 @@ const AdminAstuces: React.FC = () => {
           </div>
           <div className="text-indigo-600">{tip.title}</div>
           <div className="text-sm text-gray-600">
-            {tip.cases.length} cas
+            {(tip.cases || []).length} cas
           </div>
         </div>
       ))}
