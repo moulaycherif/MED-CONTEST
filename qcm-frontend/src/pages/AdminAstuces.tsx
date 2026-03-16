@@ -90,7 +90,7 @@ setTips(safeData);
   return;
 }
     try {
-      await axios.post(`${API_BASE_URL}/astuces`, {
+      await axios.post(`${API_BASE_URL}/api/astuces`, {
         subject,
         chapter,
         title,
