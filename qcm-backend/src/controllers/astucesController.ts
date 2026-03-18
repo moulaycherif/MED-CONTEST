@@ -6,9 +6,12 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
   try {
     const { chapter } = req.params;
 
-    console.log("Chapitre reçu :", chapter); // 👈 AJOUT
+    const astuces = await Astuce.find({
+      chapter: { $regex: chapter, $options: "i" }, // 🔥 match flexible
+    }).sort({ order: 1 });
 
-    const astuces = await Astuce.find({ chapter }).sort({ order: 1 });
+    console.log("🔎 Chapitre reçu :", chapter);
+    console.log("📦 Astuces trouvées :", astuces.length);
 
     res.json(astuces);
   } catch (error) {
