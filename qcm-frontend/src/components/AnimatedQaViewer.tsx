@@ -1,79 +1,108 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 
-interface QaItem {
-  question: string;
-  answer: string;
+interface TipCase {
+  title: string;
+  content: string;
 }
 
-interface Props {
-  qas: QaItem[];
-  typingSpeed?: number; // ⬅ vitesse configurable
+interface Astuce {
+  title: string;
+  cases: TipCase[];
 }
 
-export default function AnimatedQaViewer({ qas, typingSpeed = 20 }: Props) {
-  const [index, setIndex] = useState(0);
-  const [typedText, setTypedText] = useState("");
+const AnimatedQaViewer: React.FC<{ qas: Astuce[] }> = ({ qas }) => {
+  const [astuceIndex, setAstuceIndex] = useState(0);
+  const [caseIndex, setCaseIndex] = useState(0);
 
   if (!qas || qas.length === 0) {
     return (
-      <div className="p-4 bg-white shadow rounded-xl text-center text-gray-600">
-        Aucun contenu disponible.
-      </div>
+      <p className="text-center text-gray-500">
+        Aucune astuce disponible
+      </p>
     );
   }
 
-  const current = qas[index];
+  const currentAstuce = qas[astuceIndex];
+  const currentCase = currentAstuce.cases[caseIndex];
 
-  // --- Effet de typewriter ---
-  useEffect(() => {
-    let i = 0;
-    setTypedText("");
+  const next = () => {
+    if (caseIndex < currentAstuce.cases.length - 1) {
+      setCaseIndex(caseIndex + 1);
+    } else if (astuceIndex < qas.length - 1) {
+      setAstuceIndex(astuceIndex + 1);
+      setCaseIndex(0);
+    }
+  };
 
-    const interval = setInterval(() => {
-      setTypedText(current.answer.slice(0, i));
-      i++;
-
-      if (i > current.answer.length) clearInterval(interval);
-    }, typingSpeed);
-
-    return () => clearInterval(interval);
-  }, [index, current.answer, typingSpeed]);
+  const prev = () => {
+    if (caseIndex > 0) {
+      setCaseIndex(caseIndex - 1);
+    } else if (astuceIndex > 0) {
+      const prevAstuce = qas[astuceIndex - 1];
+      setAstuceIndex(astuceIndex - 1);
+      setCaseIndex(prevAstuce.cases.length - 1);
+    }
+  };
 
   return (
-    <motion.div
-      key={index} // IMPORTANT → permet l’animation entre questions
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="p-4 bg-white shadow rounded-xl"
-    >
-      <h3 className="font-bold text-xl mb-4 text-blue-900">
-        {current.question}
-      </h3>
+    <div className="max-w-3xl mx-auto">
 
-      {/* Zone réponse avec hauteur fixe pour éviter les sauts */}
-      <p className="whitespace-pre-wrap text-gray-800 min-h-[150px] leading-relaxed">
-        {typedText}
-      </p>
+      {/* 🔷 Titre de l’astuce */}
+      <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">
+        {currentAstuce.title}
+      </h2>
 
+      {/* 🧠 Carte animée */}
+      <motion.div
+        key={`${astuceIndex}-${caseIndex}`}
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -40 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white p-6 rounded-2xl shadow-lg"
+      >
+        {/* 🔹 Titre du cas */}
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+          🔹 {currentCase.title}
+        </h3>
+
+        {/* 📄 Contenu HTML */}
+        <div
+          className="prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: currentCase.content }}
+        />
+      </motion.div>
+
+      {/* 🔘 Navigation */}
       <div className="flex justify-between mt-6">
         <button
-          disabled={index === 0}
-          onClick={() => setIndex((prev) => prev - 1)}
-          className="px-4 py-2 bg-gray-300 rounded-lg disabled:opacity-50 transition active:scale-95"
+          onClick={prev}
+          disabled={astuceIndex === 0 && caseIndex === 0}
+          className="px-4 py-2 bg-gray-300 rounded-lg disabled:opacity-50"
         >
-          ⬅ Précédent
+          ⬅️ Précédent
         </button>
 
         <button
-          disabled={index === qas.length - 1}
-          onClick={() => setIndex((prev) => prev + 1)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 transition active:scale-95"
+          onClick={next}
+          disabled={
+            astuceIndex === qas.length - 1 &&
+            caseIndex === currentAstuce.cases.length - 1
+          }
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50"
         >
-          Suivant ➡
+          Suivant ➡️
         </button>
       </div>
-    </motion.div>
+
+      {/* 🔢 Indicateur */}
+      <div className="text-center mt-4 text-sm text-gray-500">
+        Astuce {astuceIndex + 1}/{qas.length} — Cas {caseIndex + 1}/
+        {currentAstuce.cases.length}
+      </div>
+    </div>
   );
-}
+};
+
+export default AnimatedQaViewer;
