@@ -112,8 +112,7 @@ useEffect(() => {
 
   useEffect(() => {
     if (!selectedChapter) return; // 🔥 IMPORTANT
-    console.log("🎯 Chapitre sélectionné :", selectedChapter);
-
+    
   if (selectedAction === "Astuces" && selectedChapter) {
     fetchAstucesByChapter(selectedChapter)
       .then((data) => setAstuces(data))

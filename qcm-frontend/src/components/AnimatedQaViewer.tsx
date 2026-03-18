@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import parse from "html-react-parser";
+import katex from "katex";
 
 interface TipCase {
   title: string;
@@ -9,6 +11,31 @@ interface TipCase {
 interface Astuce {
   title: string;
   cases: TipCase[];
+}
+
+/* 🔥 Fonction pour rendre LaTeX */
+function renderContent(html: string) {
+  if (!html) return null;
+
+  // 🔧 Correction automatique (Word → LaTeX)
+  let fixed = html;
+
+  // Si contient \frac mais pas de $, on entoure automatiquement
+  if (fixed.includes("\\frac") && !fixed.includes("$")) {
+    fixed = `$${fixed}$`;
+  }
+
+  // 🔥 Remplace $...$ par KaTeX
+  const withMath = fixed.replace(
+    /\$(.*?)\$/g,
+    (_, expr) =>
+      katex.renderToString(expr, {
+        throwOnError: false,
+        displayMode: true,
+      })
+  );
+
+  return parse(withMath);
 }
 
 const AnimatedQaViewer: React.FC<{ qas: Astuce[] }> = ({ qas }) => {
@@ -48,12 +75,12 @@ const AnimatedQaViewer: React.FC<{ qas: Astuce[] }> = ({ qas }) => {
   return (
     <div className="max-w-3xl mx-auto">
 
-      {/* 🔷 Titre de l’astuce */}
+      {/* 🔷 Titre */}
       <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">
         {currentAstuce.title}
       </h2>
 
-      {/* 🧠 Carte animée */}
+      {/* 🧠 Carte */}
       <motion.div
         key={`${astuceIndex}-${caseIndex}`}
         initial={{ opacity: 0, x: 40 }}
@@ -62,16 +89,15 @@ const AnimatedQaViewer: React.FC<{ qas: Astuce[] }> = ({ qas }) => {
         transition={{ duration: 0.3 }}
         className="bg-white p-6 rounded-2xl shadow-lg"
       >
-        {/* 🔹 Titre du cas */}
+        {/* 🔹 Cas */}
         <h3 className="text-xl font-semibold mb-4 text-gray-800">
           🔹 {currentCase.title}
         </h3>
 
-        {/* 📄 Contenu HTML */}
-        <div
-          className="prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: currentCase.content }}
-        />
+        {/* 📄 Contenu avec équations */}
+        <div className="prose max-w-none">
+          {renderContent(currentCase.content)}
+        </div>
       </motion.div>
 
       {/* 🔘 Navigation */}
