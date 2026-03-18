@@ -111,6 +111,7 @@ useEffect(() => {
   // Charger les astuces quand on clique sur le bouton "Astuces"
 
   useEffect(() => {
+    if (!selectedChapter) return; // 🔥 IMPORTANT
     console.log("🎯 Chapitre sélectionné :", selectedChapter);
 
   if (selectedAction === "Astuces" && selectedChapter) {
