@@ -25,6 +25,6 @@ router.get("/", async (req, res) => {
 router.post("/", createAstuce);
 
 /* 🟡 ÉTUDIANT — ASTUCES PAR CHAPITRE */
-router.get("/chapter/:chapter", getAstucesByChapter);
+router.get("/api/astuces/:chapter", getAstucesByChapter);
 
 export default router;
