@@ -1,5 +1,7 @@
 import api from "./axios";
 
+console.log("API astuces routine :");
+
 export interface Astuce {
   question: string;
   answer: string;
