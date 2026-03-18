@@ -110,6 +110,8 @@ useEffect(() => {
 
   // Charger les astuces quand on clique sur le bouton "Astuces"
 
+  console.log("🎯 Chapitre sélectionné :", selectedChapter);
+
 useEffect(() => {
   if (selectedAction === "Astuces" && selectedChapter) {
     fetchAstucesByChapter(selectedChapter)

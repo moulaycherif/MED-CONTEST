@@ -5,10 +5,13 @@ export interface Astuce {
   answer: string;
 }
 
-export async function fetchAstucesByChapter(chapter: string): Promise<Astuce[]> {
-  console.log("API astuces brut :");
+export async function fetchAstucesByChapter(chapter: string) {
+  console.log("📤 Chapitre envoyé :", chapter);
+
   const res = await api.get(`/api/astuces/${encodeURIComponent(chapter)}`);
-  console.log("API astuces brut AVANT :", res);
+
+  console.log("📥 Réponse API complète :", res);
+  console.log("📦 Données reçues :", res.data);
+
   return res.data;
-  console.log("API astuces brut APRES:", res.data);
 }
