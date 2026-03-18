@@ -6,6 +6,8 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
   try {
     const { chapter } = req.params;
 
+    console.log("Chapitre reçu :", chapter); // 👈 AJOUT
+
     const astuces = await Astuce.find({ chapter }).sort({ order: 1 });
 
     res.json(astuces);
