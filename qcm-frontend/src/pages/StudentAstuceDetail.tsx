@@ -7,6 +7,35 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import katex from "katex";
+import parse from "html-react-parser";
+
+function autoDetectLatex(text: string) {
+  if (
+    text.includes("\\frac") ||
+    text.includes("\\left") ||
+    text.includes("\\right") ||
+    text.includes("\\sum")
+  ) {
+    return `$${text}$`;
+  }
+  return text;
+}
+
+function renderWithMath(html: string) {
+  const fixed = autoDetectLatex(html);
+
+  const formatted = fixed.replace(
+    /\$(.*?)\$/g,
+    (_, expr) =>
+      katex.renderToString(expr, {
+        throwOnError: false,
+        displayMode: true,
+      })
+  );
+
+  return parse(formatted);
+}
 
 interface TipCase {
   title: string;
@@ -63,7 +92,7 @@ const StudentAstuceDetail: React.FC = () => {
 
         {tip.description && (
           <div className="prose max-w-none mt-3">
-            <ReactMarkdown>{tip.description}</ReactMarkdown>
+            {renderWithMath(tip.description)}
           </div>
         )}
       </div>
@@ -80,19 +109,17 @@ const StudentAstuceDetail: React.FC = () => {
             </h2>
 
             {/* EXPLICATION */}
-            <div
-  className="prose max-w-none"
-  dangerouslySetInnerHTML={{ __html: c.explanation }}
-/>
+            <div className="prose max-w-none">
+  {renderWithMath(c.explanation)}
+</div>
 
             {/* EXEMPLE */}
             {c.example && (
               <div className="bg-gray-100 p-4 rounded mb-4">
                 <strong>Exemple :</strong>
-                <div
-  className="prose max-w-none"
-  dangerouslySetInnerHTML={{ __html: c.example }}
-/>
+                <div className="prose max-w-none">
+  {renderWithMath(c.example)}
+</div>
               </div>
             )}
 

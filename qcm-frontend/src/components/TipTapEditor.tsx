@@ -46,6 +46,19 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
     }
   });
 
+  <button
+  onClick={() => {
+    const latex = prompt("Entrer une équation LaTeX :");
+
+    if (!latex) return;
+
+    editor?.chain().focus().insertContent(`$${latex}$`).run();
+  }}
+  className="px-3 py-1 bg-purple-600 text-white rounded"
+>
+  ∑ Équation
+</button>
+
   const uploadImage = async (file: File) => {
     const formData = new FormData();
     formData.append("image", file);
