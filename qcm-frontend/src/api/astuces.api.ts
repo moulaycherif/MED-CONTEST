@@ -6,12 +6,19 @@ export interface Astuce {
 }
 
 export async function fetchAstucesByChapter(chapter: string) {
-  console.log("📤 Chapitre envoyé :", chapter);
+  try {
+    console.log("📤 Chapitre envoyé :", chapter);
 
-  const res = await api.get(`/api/astuces/${encodeURIComponent(chapter)}`);
+    const res = await api.get(
+      `/api/astuces/${encodeURIComponent(chapter)}`
+    );
 
-  console.log("📥 Réponse API complète :", res);
-  console.log("📦 Données reçues :", res.data);
+    console.log("📥 Réponse API complète :", res);
+    console.log("📦 Données reçues :", res.data);
 
-  return res.data;
+    return res.data;
+  } catch (error: any) {
+    console.error("❌ ERREUR API ASTUCES :", error.response || error);
+    return [];
+  }
 }
