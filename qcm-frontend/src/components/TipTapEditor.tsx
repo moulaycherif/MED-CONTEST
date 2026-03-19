@@ -4,6 +4,9 @@ import Image from "@tiptap/extension-image";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { convertMathMLToLatex } from "../utils/mathConverter";
+import { useEffect } from "react";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 
 interface Props {
   value: string;
@@ -40,6 +43,28 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
   },
 }
   });
+    
+  useEffect(() => {
+  if (!editor) return;
+
+  const updateMath = () => {
+    document.querySelectorAll(".math").forEach((el) => {
+      const latex = el.getAttribute("data-latex");
+      if (latex) {
+        el.innerHTML = katex.renderToString(latex, {
+          throwOnError: false,
+        });
+      }
+    });
+  };
+
+  updateMath();
+  editor.on("update", updateMath);
+
+  return () => {
+    editor.off("update", updateMath);
+  };
+}, [editor]);
 
   <button
   onClick={() => {
@@ -47,7 +72,9 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
 
     if (!latex) return;
 
-    editor?.chain().focus().insertContent(`$${latex}$`).run();
+    editor?.chain().focus().insertContent(
+      `<span class="math" data-latex="${latex}"></span>`
+    ).run();
   }}
   className="px-3 py-1 bg-purple-600 text-white rounded"
 >

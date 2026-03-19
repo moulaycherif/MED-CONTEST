@@ -53,7 +53,15 @@ function renderWithMath(html: string) {
         strict: "ignore",
       })
   );
-
+// remplacer les spans math par KaTeX
+html = html.replace(
+  /<span class="math" data-latex="(.*?)"><\/span>/g,
+  (_, expr) =>
+    katex.renderToString(expr, {
+      throwOnError: false,
+      displayMode: true,
+    })
+);
   return parse(formatted);
 }
 
