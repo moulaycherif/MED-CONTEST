@@ -26,24 +26,23 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
       onChange(editor.getHTML());
     },
 
-    editorProps: {
-     handlePaste(view, event) {
-  const items = event.clipboardData?.items;
+   editorProps: {
+  handlePaste(view, event) {
+    const text = event.clipboardData?.getData("text/plain");
 
-  if (!items) return false;
+    if (text) {
+      event.preventDefault();
 
-  for (const item of items) {
-    if (item.type.indexOf("image") !== -1) {
-      const file = item.getAsFile();
-      if (file) {
-        uploadImage(file);
-      }
+      view.dispatch(
+        view.state.tr.insertText(text)
+      );
+
+      return true;
     }
-  }
 
-  return false;
+    return false;
+  },
 }
-    }
   });
 
   <button

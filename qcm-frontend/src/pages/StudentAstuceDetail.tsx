@@ -10,12 +10,31 @@ import "katex/dist/katex.min.css";
 import katex from "katex";
 import parse from "html-react-parser";
 
+function cleanWordText(text: string) {
+  return text
+    // apostrophes Word → normales
+    .replace(/’/g, "'")
+
+    // accents problématiques dans math
+    .replace(/é/g, "e")
+    .replace(/è/g, "e")
+    .replace(/à/g, "a")
+
+    // corriger espaces manquants
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+
+    // ajouter espaces après :
+    .replace(/:/g, ": ")
+
+    // nettoyer multiples espaces
+    .replace(/\s+/g, " ")
+    .trim();
+}
 function autoDetectLatex(text: string) {
   if (
     text.includes("\\frac") ||
-    text.includes("\\left") ||
-    text.includes("\\right") ||
-    text.includes("\\sum")
+    text.includes("\\sum") ||
+    text.includes("=")
   ) {
     return `$${text}$`;
   }
@@ -23,14 +42,23 @@ function autoDetectLatex(text: string) {
 }
 
 function renderWithMath(html: string) {
-  const fixed = autoDetectLatex(html);
+  // 1. Nettoyer HTML → texte
+  let text = html.replace(/<[^>]+>/g, " ");
 
-  const formatted = fixed.replace(
+  // 2. Nettoyage Word
+  text = cleanWordText(text);
+
+  // 3. Auto LaTeX
+  text = autoDetectLatex(text);
+
+  // 4. Rendu KaTeX
+  const formatted = text.replace(
     /\$(.*?)\$/g,
     (_, expr) =>
       katex.renderToString(expr, {
         throwOnError: false,
         displayMode: true,
+        strict: "ignore", // 🔥 SUPPRIME TES WARNINGS
       })
   );
 
