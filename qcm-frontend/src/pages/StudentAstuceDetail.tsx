@@ -31,34 +31,26 @@ function cleanWordText(text: string) {
     .trim();
 }
 function autoDetectLatex(text: string) {
-  if (
-    text.includes("\\frac") ||
-    text.includes("\\sum") ||
-    text.includes("=")
-  ) {
-    return `$${text}$`;
-  }
-  return text;
+  return text.replace(
+    /(\\frac{.*?}|\\sum.*?|\\left.*?\\right.*?|[A-Za-z0-9_]+\s*=\s*[^.]+)/g,
+    (match) => `$${match}$`
+  );
 }
 
 function renderWithMath(html: string) {
-  // 1. Nettoyer HTML → texte
   let text = html.replace(/<[^>]+>/g, " ");
 
-  // 2. Nettoyage Word
   text = cleanWordText(text);
 
-  // 3. Auto LaTeX
-  text = autoDetectLatex(text);
+  text = autoDetectLatex(text); // 🔥 maintenant intelligent
 
-  // 4. Rendu KaTeX
   const formatted = text.replace(
     /\$(.*?)\$/g,
     (_, expr) =>
       katex.renderToString(expr, {
         throwOnError: false,
         displayMode: true,
-        strict: "ignore", // 🔥 SUPPRIME TES WARNINGS
+        strict: "ignore",
       })
   );
 

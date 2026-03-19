@@ -32,11 +32,7 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
 
     if (text) {
       event.preventDefault();
-
-      view.dispatch(
-        view.state.tr.insertText(text)
-      );
-
+      view.dispatch(view.state.tr.insertText(text));
       return true;
     }
 
