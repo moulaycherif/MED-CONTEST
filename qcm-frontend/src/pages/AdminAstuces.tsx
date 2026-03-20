@@ -82,7 +82,7 @@ const AdminAstuces: React.FC = () => {
 
   try {
     const res = await axios.post(
-      `${API_BASE_URL}/api/astuces/pdf`,
+      `${API_BASE_URL}/api/astuces/upload-pdf`,
       formData
     );
 
@@ -148,7 +148,7 @@ const AdminAstuces: React.FC = () => {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/api/astuces`, {
+      await axios.post(`${API_BASE_URL}/api/astuces/upload-pdf`, {
         subject,
         chapter,
         title,
