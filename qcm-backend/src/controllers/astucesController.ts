@@ -43,7 +43,8 @@ export const createAstuce = async (req: Request, res: Response) => {
   }
 };
 
-const pdfParse = require("pdf-parse");
+
+const pdfParse: any = require("pdf-parse");
 
 export const uploadAstucePdf = async (req: Request, res: Response) => {
   try {
@@ -57,7 +58,7 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
 
     const text = data.text;
 
-    console.log("📄 Texte extrait PDF:", text);
+    console.log("📄 Texte PDF :", text);
 
     res.json({ text });
 
