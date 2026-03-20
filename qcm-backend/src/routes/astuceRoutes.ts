@@ -2,11 +2,11 @@ import { Router } from "express";
 import {
   getAstucesByChapter,
   createAstuce,
+  uploadAstucePdf
 } from "../controllers/astucesController";
 import Astuce from "../models/Astuce";
 
 import multer from "multer";
-import { parsePdfToCases } from "../controllers/astucesController";
 
 const upload = multer();
 
@@ -28,7 +28,8 @@ router.get("/", async (req, res) => {
 
 /* 🟢 ADMIN — CRÉER UNE ASTUCE */
 router.post("/", createAstuce);
-router.post("/pdf", upload.single("file"), parsePdfToCases);
+router.post("/upload-pdf", uploadAstucePdf);
+
 
 /* 🟡 ÉTUDIANT — ASTUCES PAR CHAPITRE */
 router.get("/:chapter", getAstucesByChapter);

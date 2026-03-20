@@ -67,3 +67,15 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Erreur traitement PDF" });
   }
 };
+
+// helper interne
+const parsePdfToCases = (text: string) => {
+  const blocks = text.split(/Cas\s*\d+/i);
+
+  return blocks
+    .filter((b) => b.trim().length > 20)
+    .map((b, i) => ({
+      title: `Cas ${i + 1}`,
+      content: b.trim(),
+    }));
+};
