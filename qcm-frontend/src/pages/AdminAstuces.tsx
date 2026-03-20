@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import TipTapEditor from "../components/TipTapEditor";
+import * as pdfjsLib from "pdfjs-dist";
 
 /* ===================== TYPES ===================== */
 
 interface TipCase {
   title: string;
-  content: string; // HTML riche (TipTap)
+  content: string;
 }
 
 interface Tip {
@@ -24,16 +25,79 @@ interface Tip {
 const AdminAstuces: React.FC = () => {
   const [tips, setTips] = useState<Tip[]>([]);
 
-  // Champs principaux
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  // Cas
   const [cases, setCases] = useState<TipCase[]>([
     { title: "", content: "" },
   ]);
+
+  /* ===================== CLEAN TEXT ===================== */
+
+  const cleanText = (text: string) => {
+    return text
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/\s+/g, " ")
+      .replace(/e\s*ˊ/g, "é")
+      .replace(/\\=/g, "=")
+      .replace(/\\frac/g, "\\frac");
+  };
+
+  /* ===================== PDF → CASES ===================== */
+
+  const processPdfText = (text: string) => {
+    console.log("📄 PDF brut :", text);
+
+    const blocks = text.split(/Cas\s*\d+/i);
+
+    const newCases = blocks
+      .filter((b) => b.trim().length > 20)
+      .map((b, i) => ({
+        title: `Cas ${i + 1}`,
+        content: cleanText(b.trim()),
+      }));
+
+    if (newCases.length > 0) {
+      setCases(newCases);
+    } else {
+      alert("⚠️ Aucun cas détecté dans le PDF");
+    }
+  };
+
+  /* ===================== UPLOAD PDF ===================== */
+
+  const handlePdfUpload = async (e: any) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async () => {
+      try {
+        const typedArray = new Uint8Array(reader.result as ArrayBuffer);
+
+        const pdf = await pdfjsLib.getDocument(typedArray).promise;
+
+        let fullText = "";
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+
+          const strings = content.items.map((item: any) => item.str);
+          fullText += strings.join(" ") + "\n";
+        }
+
+        processPdfText(fullText);
+      } catch (err) {
+        console.error("❌ Erreur lecture PDF :", err);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
 
   /* ===================== FETCH ===================== */
 
@@ -43,16 +107,15 @@ const AdminAstuces: React.FC = () => {
 
   const fetchTips = async () => {
     try {
-      
       const res = await axios.get(`${API_BASE_URL}/api/astuces`);
-      const safeData = res.data.map((tip: any) => ({
-  ...tip,
-  cases: tip.cases || [],
-}));
 
-setTips(safeData);
-      
-} catch (err) {
+      const safeData = res.data.map((tip: any) => ({
+        ...tip,
+        cases: tip.cases || [],
+      }));
+
+      setTips(safeData);
+    } catch (err) {
       console.error("❌ Erreur chargement astuces :", err);
     }
   };
@@ -85,10 +148,11 @@ setTips(safeData);
       return;
     }
 
-    if (cases.some(c => !c.content.trim())) {
-  alert("Chaque cas doit contenir du contenu");
-  return;
-}
+    if (cases.some((c) => !c.content.trim())) {
+      alert("Chaque cas doit contenir du contenu");
+      return;
+    }
+
     try {
       await axios.post(`${API_BASE_URL}/api/astuces`, {
         subject,
@@ -99,9 +163,9 @@ setTips(safeData);
       });
 
       alert("✅ Astuce enregistrée avec succès");
+
       fetchTips();
 
-      // Reset formulaire
       setSubject("");
       setChapter("");
       setTitle("");
@@ -121,21 +185,34 @@ setTips(safeData);
         💡 Gestion des Astuces du Soutien
       </h1>
 
-      {/* ================= FORMULAIRE ================= */}
       <div className="bg-white shadow-xl rounded-2xl p-6 mb-12">
-        {/* Infos générales */}
+
+        {/* PDF */}
+        <div className="mb-6">
+          <label className="block mb-2 font-semibold">
+            📄 Importer un PDF d’astuces
+          </label>
+          <input
+            type="file"
+            accept="application/pdf"
+            onChange={handlePdfUpload}
+            className="border p-2 rounded-lg"
+          />
+        </div>
+
+        {/* Infos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder="Matière (ex: Mathématiques)"
+            placeholder="Matière"
             className="border p-3 rounded-lg"
           />
 
           <input
             value={chapter}
             onChange={(e) => setChapter(e.target.value)}
-            placeholder="Chapitre (ex: Suites & Sommes)"
+            placeholder="Chapitre"
             className="border p-3 rounded-lg"
           />
         </div>
@@ -143,98 +220,70 @@ setTips(safeData);
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Titre global de l’astuce"
+          placeholder="Titre"
           className="border p-3 rounded-lg w-full mb-4"
         />
 
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description générale (optionnelle)"
+          placeholder="Description"
           className="border p-3 rounded-lg w-full mb-6"
         />
 
-        {/* ================= CAS ================= */}
+        {/* CAS */}
         <h2 className="text-xl font-semibold mb-4">
-          Cas / Astuces détaillées
+          Cas / Astuces
         </h2>
 
         {cases.map((c, index) => (
-          <div
-            key={index}
-            className="border rounded-xl p-4 mb-6 bg-gray-50"
-          >
-            {/* Titre du cas */}
+          <div key={index} className="border p-4 mb-4 rounded-lg">
             <input
               value={c.title}
               onChange={(e) =>
                 updateCase(index, "title", e.target.value)
               }
-              placeholder={`Titre du cas ${index + 1}`}
-              className="border p-2 rounded-lg w-full mb-3 font-semibold"
+              className="border p-2 w-full mb-2"
             />
 
-            {/* Éditeur TipTap */}
-            <p className="text-sm text-gray-600 mb-2">
-              Contenu de l’astuce (coller depuis Word, images et équations
-              supportées)
-            </p>
-
-            <div className="border rounded-lg bg-white">
-              <TipTapEditor
-                value={c.content}
-                onChange={(html) =>
-                  updateCase(index, "content", html)
-                }
-              />
-            </div>
+            <TipTapEditor
+              value={c.content}
+              onChange={(html) =>
+                updateCase(index, "content", html)
+              }
+            />
 
             {cases.length > 1 && (
               <button
                 onClick={() => removeCase(index)}
-                className="text-red-600 text-sm mt-3"
+                className="text-red-500 mt-2"
               >
-                Supprimer ce cas
+                Supprimer
               </button>
             )}
           </div>
         ))}
 
-        {/* Actions */}
-        <div className="flex gap-4">
-          <button
-            onClick={addCase}
-            className="bg-gray-200 px-4 py-2 rounded-lg"
-          >
-            ➕ Ajouter un cas
-          </button>
+        <button onClick={addCase} className="mr-4">
+          ➕ Ajouter un cas
+        </button>
 
-          <button
-            onClick={createTip}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-lg"
-          >
-            💾 Enregistrer l’astuce
-          </button>
-        </div>
+        <button
+          onClick={createTip}
+          className="bg-indigo-600 text-white px-4 py-2 rounded"
+        >
+          💾 Enregistrer
+        </button>
       </div>
 
-      {/* ================= LISTE ================= */}
-      <h2 className="text-2xl font-semibold mb-4">
-        📚 Astuces existantes
-      </h2>
+      {/* LISTE */}
+      <h2 className="text-2xl mb-4">📚 Astuces</h2>
 
       {tips.map((tip) => (
-        <div
-          key={tip._id}
-          className="border rounded-lg p-4 mb-3 bg-white shadow-sm"
-        >
-          <div className="font-bold">
-            {tip.subject} — {tip.chapter}
-          </div>
-          <div className="text-indigo-600">{tip.title}</div>
-          <div className="text-sm text-gray-600">
-            {(tip.cases || []).length} cas
-          </div>
+        <div key={tip._id} className="border p-4 mb-2">
+          <b>{tip.subject} — {tip.chapter}</b>
+          <div>{tip.title}</div>
+          <div>{(tip.cases || []).length} cas</div>
         </div>
       ))}
     </div>
