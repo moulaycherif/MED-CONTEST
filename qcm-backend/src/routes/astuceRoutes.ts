@@ -27,6 +27,8 @@ router.get("/", async (req, res) => {
 });
 
 /* 🟢 ADMIN — CRÉER UNE ASTUCE */
+console.log("📥 Route upload PDF appelée");
+
 router.post("/", createAstuce);
 router.post("/upload-pdf", uploadAstucePdf);
 
