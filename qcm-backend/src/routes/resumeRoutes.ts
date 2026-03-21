@@ -2,7 +2,7 @@ import express from "express";
 import { authenticateStudent } from "../middleware/auth";   // 🔥
 import generateResumeBuffer from "../scripts/generateResume";
 import Resume from "../models/resume";
-import { supabase } from "../utils/supabase";
+import { supabase } from "../config/supabase";
 import dotenv from "dotenv";
 import { upload } from "../utils/multerConfig";
 import { getResumesBySubject, getSignedResumeUrl } from "../controllers/resumeController";
