@@ -1,7 +1,6 @@
 import Astuce from "../models/Astuce";
 import { Request, Response } from "express";
-const pdfParse = (...args: any) =>
-  require("pdf-parse").default(...args);
+const pdfParse = require("pdf-parse");
 
 /* 🔵 ASTUCES PAR CHAPITRE (ÉTUDIANT) */
 export const getAstucesByChapter = async (req: Request, res: Response) => {
@@ -55,15 +54,11 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Aucun fichier reçu" });
     }
 
-    console.log("FILE :", req.file);
+    const data = await pdfParse(req.file.buffer);
 
-    const data = await pdfParse(req.file.buffer); // ✅ FIX OK
+    console.log("📄 TEXTE PDF :", data.text);
 
-    const text = data.text;
-    console.log("TYPE PDFPARSE:", typeof pdfParse);
-    console.log("📄 TEXTE PDF :", text);
-
-    const blocks = text.split(/Cas\s*\d+/i);
+    const blocks = data.text.split(/Cas\s*\d+/i);
 
     const cases = blocks
       .filter((b: string) => b.trim().length > 20)
@@ -72,11 +67,11 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
         content: b.trim(),
       }));
 
-    return res.json({ cases });
+    res.json({ cases });
 
   } catch (error) {
     console.error("❌ Erreur PDF:", error);
-    return res.status(500).json({ message: "Erreur parsing PDF" });
+    res.status(500).json({ message: "Erreur parsing PDF" });
   }
 };
 
