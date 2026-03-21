@@ -45,7 +45,7 @@ export const createAstuce = async (req: Request, res: Response) => {
 };
 
 
-const pdfParse = require("pdf-parse"); // ✅ FIX
+const pdfParse = require("pdf-parse").default;
 
 export const uploadAstucePdf = async (req: Request, res: Response) => {
   try {
@@ -57,12 +57,11 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
 
     console.log("FILE :", req.file);
 
-    const data = await pdfParse(req.file.buffer); // ✅ fonctionne maintenant
+    const data = await pdfParse(req.file.buffer); // ✅ FIX OK
 
     const text = data.text;
     console.log("📄 TEXTE PDF :", text);
 
-    // 🔥 découpage en cas
     const blocks = text.split(/Cas\s*\d+/i);
 
     const cases = blocks
