@@ -82,9 +82,14 @@ const AdminAstuces: React.FC = () => {
 
   try {
     const res = await axios.post(
-      `${API_BASE_URL}/api/astuces/upload-pdf`,
-      formData
-    );
+  `${API_BASE_URL}/api/astuces/upload-pdf`,
+  formData,
+  {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }
+);
 
     setCases(res.data.cases);
 
