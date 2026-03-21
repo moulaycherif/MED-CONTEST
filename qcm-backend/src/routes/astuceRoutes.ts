@@ -27,11 +27,18 @@ router.get("/", async (req, res) => {
 });
 
 /* 🟢 ADMIN — CRÉER UNE ASTUCE */
-console.log("📥 Route upload PDF appelée");
 
 router.post("/", createAstuce);
-router.post("/upload-pdf", uploadAstucePdf);
 
+router.post(
+  "/upload-pdf",
+  upload.single("file"), // 🔥 IMPORTANT
+  (req, res, next) => {
+    console.log("📥 Route upload PDF appelée");
+    next();
+  },
+  uploadAstucePdf
+);
 
 /* 🟡 ÉTUDIANT — ASTUCES PAR CHAPITRE */
 router.get("/:chapter", getAstucesByChapter);

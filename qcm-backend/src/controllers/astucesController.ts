@@ -49,6 +49,7 @@ const pdfParse: any = require("pdf-parse");
 export const uploadAstucePdf = async (req: Request, res: Response) => {
   try {
     const file = req.file;
+    console.log("FILE :", req.file);
 
     if (!file) {
       return res.status(400).json({ message: "Aucun fichier PDF envoyé" });
