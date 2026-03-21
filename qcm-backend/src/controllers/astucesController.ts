@@ -21,6 +21,7 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
 export const createAstuce = async (req: Request, res: Response) => {
   try {
     const { subject, chapter, title, description, cases } = req.body;
+    console.log("BODY :", req.body);
 
     if (!subject || !chapter || !title) {
       return res.status(400).json({ message: "Champs obligatoires manquants" });
