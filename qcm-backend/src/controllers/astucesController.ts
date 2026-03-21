@@ -1,5 +1,7 @@
 import Astuce from "../models/Astuce";
 import { Request, Response } from "express";
+const pdfParseLib = require("pdf-parse");
+const pdfParse = pdfParseLib.default || pdfParseLib; // ✅ ULTRA SAFE
 
 /* 🔵 ASTUCES PAR CHAPITRE (ÉTUDIANT) */
 export const getAstucesByChapter = async (req: Request, res: Response) => {
@@ -45,8 +47,6 @@ export const createAstuce = async (req: Request, res: Response) => {
 };
 
 
-const pdfParse = require("pdf-parse").default;
-
 export const uploadAstucePdf = async (req: Request, res: Response) => {
   try {
     console.log("📥 Route upload PDF appelée");
@@ -60,6 +60,7 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
     const data = await pdfParse(req.file.buffer); // ✅ FIX OK
 
     const text = data.text;
+    console.log("TYPE PDFPARSE:", typeof pdfParse);
     console.log("📄 TEXTE PDF :", text);
 
     const blocks = text.split(/Cas\s*\d+/i);
