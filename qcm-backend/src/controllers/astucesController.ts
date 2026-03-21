@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
 import Astuce from "../models/Astuce";
+import { Request, Response } from "express";
 
 /* 🔵 ASTUCES PAR CHAPITRE (ÉTUDIANT) */
 export const getAstucesByChapter = async (req: Request, res: Response) => {
@@ -45,28 +45,38 @@ export const createAstuce = async (req: Request, res: Response) => {
 };
 
 
-const pdfParse: any = require("pdf-parse");
+const pdfParse = require("pdf-parse"); // ✅ FIX
 
 export const uploadAstucePdf = async (req: Request, res: Response) => {
   try {
-    const file = req.file;
-    console.log("FILE :", req.file);
+    console.log("📥 Route upload PDF appelée");
 
-    if (!file) {
-      return res.status(400).json({ message: "Aucun fichier PDF envoyé" });
+    if (!req.file) {
+      return res.status(400).json({ message: "Aucun fichier reçu" });
     }
 
-    const data = await pdfParse(file.buffer);
+    console.log("FILE :", req.file);
+
+    const data = await pdfParse(req.file.buffer); // ✅ fonctionne maintenant
 
     const text = data.text;
+    console.log("📄 TEXTE PDF :", text);
 
-    console.log("📄 Texte PDF :", text);
+    // 🔥 découpage en cas
+    const blocks = text.split(/Cas\s*\d+/i);
 
-    res.json({ text });
+    const cases = blocks
+      .filter((b: string) => b.trim().length > 20)
+      .map((b: string, i: number) => ({
+        title: `Cas ${i + 1}`,
+        content: b.trim(),
+      }));
+
+    return res.json({ cases });
 
   } catch (error) {
     console.error("❌ Erreur PDF:", error);
-    res.status(500).json({ message: "Erreur traitement PDF" });
+    return res.status(500).json({ message: "Erreur parsing PDF" });
   }
 };
 
