@@ -16,6 +16,9 @@ const AstuceSchema = new mongoose.Schema(
       ],
       default: [], // 🔥 TRÈS IMPORTANT
     },
+    pdfUrl: {
+  type: String,
+},
 
     order: { type: Number, default: 0 },
   },
