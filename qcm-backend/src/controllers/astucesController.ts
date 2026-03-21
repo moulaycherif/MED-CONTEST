@@ -1,7 +1,7 @@
 import Astuce from "../models/Astuce";
 import { Request, Response } from "express";
-const pdfParseLib = require("pdf-parse");
-const pdfParse = pdfParseLib.default || pdfParseLib; // ✅ ULTRA SAFE
+const pdfParse = (...args: any) =>
+  require("pdf-parse").default(...args);
 
 /* 🔵 ASTUCES PAR CHAPITRE (ÉTUDIANT) */
 export const getAstucesByChapter = async (req: Request, res: Response) => {
