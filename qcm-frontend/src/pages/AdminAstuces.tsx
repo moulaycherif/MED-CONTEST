@@ -9,6 +9,8 @@ import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
+const [pdfUrl, setPdfUrl] = useState("");
+
 /* ===================== TYPES ===================== */
 
 interface TipCase {
@@ -82,16 +84,13 @@ const AdminAstuces: React.FC = () => {
 
   try {
     const res = await axios.post(
-  `${API_BASE_URL}/api/astuces/upload-pdf`,
-  formData,
-  {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  }
-);
+      `${API_BASE_URL}/api/astuces/upload-pdf`,
+      formData
+    );
 
-    setCases(res.data.cases);
+    setPdfUrl(res.data.url);
+
+    alert("✅ PDF uploadé avec succès");
 
   } catch (err) {
     console.error("❌ Erreur upload PDF :", err);
@@ -159,6 +158,7 @@ const AdminAstuces: React.FC = () => {
         title,
         description,
         cases,
+        pdfUrl, // ✅ AJOUT
       });
 
       alert("✅ Astuce enregistrée avec succès");
