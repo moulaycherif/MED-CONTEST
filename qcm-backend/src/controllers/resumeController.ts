@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 import Resume from "../models/resume";
-import { supabase } from "../config/supabase";
+import { supabase } from "../utils/supabase";
 import StudentActivity from "../models/StudentActivity";
 
 // 📌 Récupérer les résumés par matière
