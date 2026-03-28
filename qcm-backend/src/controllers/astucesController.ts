@@ -1,6 +1,6 @@
 import Astuce from "../models/Astuce";
 import { Request, Response } from "express";
-import { supabase } from "../config/supabase";
+const pdfParse = require("pdf-parse");
 
 /* 🔵 ASTUCES PAR CHAPITRE (ÉTUDIANT) */
 export const getAstucesByChapter = async (req: Request, res: Response) => {
@@ -45,43 +45,33 @@ export const createAstuce = async (req: Request, res: Response) => {
   }
 };
 
-/* 🟢 UPLOAD ASTUCE (ADMIN) */
+
 export const uploadAstucePdf = async (req: Request, res: Response) => {
   try {
-    console.log("📥 Upload PDF Supabase");
+    console.log("📥 Route upload PDF appelée");
 
     if (!req.file) {
-      return res.status(400).json({ message: "Aucun fichier" });
+      return res.status(400).json({ message: "Aucun fichier reçu" });
     }
 
-    const file = req.file;
+    const data = await pdfParse(req.file.buffer);
 
-    const fileName = `pdfs/${Date.now()}-${file.originalname}`;
+    console.log("📄 TEXTE PDF :", data.text);
 
-    const { error } = await supabase.storage
-      .from("astuces") // ⚠️ bucket
-      .upload(fileName, file.buffer, {
-        contentType: file.mimetype,
-      });
+    const blocks = data.text.split(/Cas\s*\d+/i);
 
-    if (error) {
-      console.error("❌ Supabase error:", error);
-      return res.status(500).json({ message: "Erreur upload Supabase" });
-    }
+    const cases = blocks
+      .filter((b: string) => b.trim().length > 20)
+      .map((b: string, i: number) => ({
+        title: `Cas ${i + 1}`,
+        content: b.trim(),
+      }));
 
-    const { data } = supabase.storage
-      .from("astuces")
-      .getPublicUrl(fileName);
+    res.json({ cases });
 
-    console.log("✅ URL PDF :", data.publicUrl);
-
-    return res.json({
-      url: data.publicUrl,
-    });
-
-  } catch (err) {
-    console.error("❌ Upload PDF error:", err);
-    return res.status(500).json({ message: "Erreur serveur" });
+  } catch (error) {
+    console.error("❌ Erreur PDF:", error);
+    res.status(500).json({ message: "Erreur parsing PDF" });
   }
 };
 
