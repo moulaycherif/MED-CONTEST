@@ -5,6 +5,8 @@ import TipTapEditor from "../components/TipTapEditor";
 
 const [pdfUrl, setPdfUrl] = useState("");
 
+console.log("AdminAstuces :",axios);
+
 /* ===================== TYPES ===================== */
 
 interface TipCase {
