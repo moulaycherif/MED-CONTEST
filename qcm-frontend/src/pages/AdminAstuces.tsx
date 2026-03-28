@@ -2,16 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import TipTapEditor from "../components/TipTapEditor";
-
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker?url";
 
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = pdfWorker;
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-
-
-const [pdfUrl, setPdfUrl] = useState("");
 
 /* ===================== TYPES ===================== */
 
@@ -86,13 +82,16 @@ const AdminAstuces: React.FC = () => {
 
   try {
     const res = await axios.post(
-      `${API_BASE_URL}/api/astuces/upload-pdf`,
-      formData
-    );
+  `${API_BASE_URL}/api/astuces/upload-pdf`,
+  formData,
+  {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }
+);
 
-    setPdfUrl(res.data.url);
-
-    alert("✅ PDF uploadé avec succès");
+    setCases(res.data.cases);
 
   } catch (err) {
     console.error("❌ Erreur upload PDF :", err);
@@ -160,7 +159,6 @@ const AdminAstuces: React.FC = () => {
         title,
         description,
         cases,
-        pdfUrl, // ✅ AJOUT
       });
 
       alert("✅ Astuce enregistrée avec succès");
