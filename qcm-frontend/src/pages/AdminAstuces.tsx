@@ -2,10 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import TipTapEditor from "../components/TipTapEditor";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
-import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker?url";
-
-const [pdfUrl, setPdfUrl] = useState("");
 
 /* ===================== TYPES ===================== */
 
@@ -37,38 +33,9 @@ const AdminAstuces: React.FC = () => {
     { title: "", content: "" },
   ]);
 
-  /* ===================== CLEAN TEXT ===================== */
+  const [pdfUrl, setPdfUrl] = useState("");
 
-  const cleanText = (text: string) => {
-    return text
-      .replace(/([a-z])([A-Z])/g, "$1 $2")
-      .replace(/\s+/g, " ")
-      .replace(/e\s*ˊ/g, "é")
-      .replace(/\\=/g, "=")
-      .replace(/\\frac/g, "\\frac");
-  };
-
-  /* ===================== PDF → CASES ===================== */
-
-  const processPdfText = (text: string) => {
-    console.log("📄 PDF brut :", text);
-
-    const blocks = text.split(/Cas\s*\d+/i);
-
-    const newCases = blocks
-      .filter((b) => b.trim().length > 20)
-      .map((b, i) => ({
-        title: `Cas ${i + 1}`,
-        content: cleanText(b.trim()),
-      }));
-
-    if (newCases.length > 0) {
-      setCases(newCases);
-    } else {
-      alert("⚠️ Aucun cas détecté dans le PDF");
-    }
-  };
-
+  
   /* ===================== UPLOAD PDF ===================== */
 
   const handlePdfUpload = async (e: any) => {
