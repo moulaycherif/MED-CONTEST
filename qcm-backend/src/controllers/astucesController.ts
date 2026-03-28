@@ -1,14 +1,14 @@
 import Astuce from "../models/Astuce";
 import { Request, Response } from "express";
-const pdfParse = require("pdf-parse");
+import { supabase } from "../config/supabase";
 
-/* 🔵 ASTUCES PAR CHAPITRE (ÉTUDIANT) */
+/* 🔵 ASTUCES PAR CHAPITRE */
 export const getAstucesByChapter = async (req: Request, res: Response) => {
   try {
     const { chapter } = req.params;
 
     const astuces = await Astuce.find({
-      chapter: { $regex: chapter, $options: "i" }, // 🔥 match flexible
+      chapter: { $regex: chapter, $options: "i" },
     }).sort({ order: 1 });
 
     res.json(astuces);
@@ -18,11 +18,10 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
   }
 };
 
-/* 🟢 CRÉATION ASTUCE (ADMIN) */
+/* 🟢 CRÉATION ASTUCE */
 export const createAstuce = async (req: Request, res: Response) => {
   try {
-    const { subject, chapter, title, description, cases } = req.body;
-    console.log("BODY :", req.body);
+    const { subject, chapter, title, description, cases, pdfUrl } = req.body;
 
     if (!subject || !chapter || !title) {
       return res.status(400).json({ message: "Champs obligatoires manquants" });
@@ -34,6 +33,7 @@ export const createAstuce = async (req: Request, res: Response) => {
       title,
       description,
       cases,
+      pdfUrl, // 🔥 IMPORTANT
     });
 
     await astuce.save();
@@ -45,44 +45,38 @@ export const createAstuce = async (req: Request, res: Response) => {
   }
 };
 
-
+/* 📄 UPLOAD PDF (SANS PARSING) */
 export const uploadAstucePdf = async (req: Request, res: Response) => {
   try {
-    console.log("📥 Route upload PDF appelée");
+    console.log("📥 Upload PDF");
 
     if (!req.file) {
-      return res.status(400).json({ message: "Aucun fichier reçu" });
+      return res.status(400).json({ message: "Aucun fichier" });
     }
 
-    const data = await pdfParse(req.file.buffer);
+    const file = req.file;
 
-    console.log("📄 TEXTE PDF :", data.text);
+    const fileName = `astuces/${Date.now()}-${file.originalname}`;
 
-    const blocks = data.text.split(/Cas\s*\d+/i);
+    const { error } = await supabase.storage
+      .from("documents")
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+      });
 
-    const cases = blocks
-      .filter((b: string) => b.trim().length > 20)
-      .map((b: string, i: number) => ({
-        title: `Cas ${i + 1}`,
-        content: b.trim(),
-      }));
+    if (error) {
+      console.error("Erreur upload Supabase:", error);
+      return res.status(500).json({ message: "Erreur upload" });
+    }
 
-    res.json({ cases });
+    const { data } = supabase.storage
+      .from("documents")
+      .getPublicUrl(fileName);
+
+    return res.json({ pdfUrl: data.publicUrl });
 
   } catch (error) {
-    console.error("❌ Erreur PDF:", error);
-    res.status(500).json({ message: "Erreur parsing PDF" });
+    console.error("❌ Erreur upload PDF:", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
-};
-
-// helper interne
-const parsePdfToCases = (text: string) => {
-  const blocks = text.split(/Cas\s*\d+/i);
-
-  return blocks
-    .filter((b) => b.trim().length > 20)
-    .map((b, i) => ({
-      title: `Cas ${i + 1}`,
-      content: b.trim(),
-    }));
 };
