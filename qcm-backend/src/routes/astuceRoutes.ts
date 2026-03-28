@@ -12,6 +12,8 @@ const upload = multer();
 
 const router = Router();
 
+console.log("astuceRoutes :",uploadAstucePdf);
+
 /* 🔵 ADMIN — LISTE TOUTES LES ASTUCES */
 router.get("/", async (req, res) => {
   try {
