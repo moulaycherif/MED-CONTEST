@@ -5,14 +5,6 @@ import TipTapEditor from "../components/TipTapEditor";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker?url";
 
-<<<<<<< HEAD
-const [pdfUrl, setPdfUrl] = useState("");
-=======
-(pdfjsLib as any).GlobalWorkerOptions.workerSrc = pdfWorker;
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
->>>>>>> 7319696136728877111d34afa8ce2e09829afa27
-
 console.log("AdminAstuces :",axios);
 
 /* ===================== TYPES ===================== */
