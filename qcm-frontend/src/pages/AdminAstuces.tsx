@@ -5,7 +5,7 @@ import TipTapEditor from "../components/TipTapEditor";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker?url";
 
-console.log("AdminAstuces :",axios);
+const [pdfUrl, setPdfUrl] = useState("");
 
 /* ===================== TYPES ===================== */
 
@@ -89,8 +89,8 @@ const AdminAstuces: React.FC = () => {
   }
 );
 
-    setCases(res.data.cases);
-
+setPdfUrl(res.data.pdfUrl); // 🔥 IMPORTANT
+    
   } catch (err) {
     console.error("❌ Erreur upload PDF :", err);
   }
@@ -157,6 +157,7 @@ const AdminAstuces: React.FC = () => {
         title,
         description,
         cases,
+        pdfUrl, // 🔥 IMPORTANT
       });
 
       alert("✅ Astuce enregistrée avec succès");
