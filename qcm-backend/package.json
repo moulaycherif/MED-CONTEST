@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.84.0",
+    "axios": "^1.14.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dayjs": "^1.11.19",
@@ -21,6 +22,7 @@
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.17.2",
+    "react-router-dom": "^6.30.3",
     "socket.io": "^4.8.1",
     "xlsx": "^0.18.5"
   },
