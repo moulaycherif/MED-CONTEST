@@ -10,11 +10,6 @@ import "katex/dist/katex.min.css";
 import katex from "katex";
 import parse from "html-react-parser";
 
-<<<<<<< HEAD
-console.log("StudentAstuceDetail :",useParams);
-
-=======
->>>>>>> 7319696136728877111d34afa8ce2e09829afa27
 function cleanWordText(text: string) {
   return text
     // apostrophes Word → normales
