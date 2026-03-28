@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useParams, useNavigate } from "react-router-dom";
@@ -9,8 +9,6 @@ import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import katex from "katex";
 import parse from "html-react-parser";
-
-console.log(useParams);
 
 function cleanWordText(text: string) {
   return text
@@ -80,7 +78,6 @@ interface Tip {
   title: string;
   description: string;
   cases: TipCase[];
-  pdfUrl?: string; // ✅ AJOUT
 }
 
 const StudentAstuceDetail: React.FC = () => {
@@ -122,26 +119,10 @@ const StudentAstuceDetail: React.FC = () => {
         <h1 className="text-3xl font-bold mt-2">{tip.title}</h1>
 
         {tip.description && (
-  <div className="prose max-w-none mt-3">
-    {renderWithMath(tip.description)}
-  </div>
-)}
-
-{/* 📄 PDF */}
-{tip.pdfUrl && (
-  <div className="mt-8">
-    <h2 className="text-xl font-semibold mb-4">
-      📄 Document PDF
-    </h2>
-
-    <iframe
-      src={`${tip.pdfUrl}#toolbar=1`}
-      width="100%"
-      height="600px"
-      className="border rounded-xl shadow"
-    />
-  </div>
-)}
+          <div className="prose max-w-none mt-3">
+            {renderWithMath(tip.description)}
+          </div>
+        )}
       </div>
 
       {/* CAS / ASTUCES */}
