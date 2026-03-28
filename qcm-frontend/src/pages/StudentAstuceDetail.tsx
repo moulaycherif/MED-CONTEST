@@ -10,6 +10,8 @@ import "katex/dist/katex.min.css";
 import katex from "katex";
 import parse from "html-react-parser";
 
+console.log(useParams);
+
 function cleanWordText(text: string) {
   return text
     // apostrophes Word → normales
