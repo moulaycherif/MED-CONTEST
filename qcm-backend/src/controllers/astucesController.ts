@@ -59,7 +59,7 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
     const fileName = `astuces/${Date.now()}-${file.originalname}`;
 
     const { error } = await supabase.storage
-      .from("documents")
+      .from("astuces") // ✅ ICI
       .upload(fileName, file.buffer, {
         contentType: file.mimetype,
       });
@@ -70,7 +70,7 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
     }
 
     const { data } = supabase.storage
-      .from("documents")
+      .from("astuces") // ✅ ICI AUSSI
       .getPublicUrl(fileName);
 
     return res.json({ pdfUrl: data.publicUrl });
