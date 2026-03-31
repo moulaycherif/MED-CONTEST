@@ -32,8 +32,8 @@ export const createAstuce = async (req: Request, res: Response) => {
       chapter,
       title,
       description,
-      cases,
-      pdfUrl, // 🔥 IMPORTANT
+      cases: Array.isArray(cases) ? cases : [], // 🔥 FIX
+      pdfUrl: pdfUrl || null,
     });
 
     await astuce.save();
