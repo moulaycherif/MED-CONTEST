@@ -141,6 +141,9 @@ const AdminAstuces: React.FC = () => {
     }
 
     try {
+      const cleanCases = cases.filter(
+  (c) => c && c.content && c.content.trim() !== ""
+);
       await axios.post(`${API_BASE_URL}/api/astuces`, {
         subject,
         chapter,

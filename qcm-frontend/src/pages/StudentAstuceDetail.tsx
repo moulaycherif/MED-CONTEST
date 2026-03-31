@@ -136,19 +136,17 @@ const StudentAstuceDetail: React.FC = () => {
 
       {/* ================= PDF ================= */}
       {tip.pdfUrl && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">
-            📄 Document PDF
-          </h2>
+  <div className="mt-8">
+    <h2 className="text-xl font-semibold mb-4">📄 Document PDF</h2>
 
-          <iframe
-            src={tip.pdfUrl}
-            width="100%"
-            height="600px"
-            className="border rounded-xl shadow"
-          />
-        </div>
-      )}
+    <iframe
+      src={tip.pdfUrl}
+      width="100%"
+      height="600px"
+      className="border rounded-xl shadow"
+    />
+  </div>
+)}
 
       {/* ================= CASES ================= */}
 
@@ -168,24 +166,28 @@ const StudentAstuceDetail: React.FC = () => {
     ))}
   </div>
 )}       
-            {(tip.cases || []).filter(Boolean).map((c, index) => (
-            <div
-              key={index}
-              className="border rounded-xl p-5 bg-white shadow"
-            >
+            {Array.isArray(tip.cases) && tip.cases.length > 0 && (
+  <div className="space-y-6">
+    {tip.cases
+      .filter((c) => c && typeof c === "object")
+      .map((c, index) => (
+        <div
+          key={index}
+          className="border rounded-xl p-5 bg-white shadow"
+        >
               <h2 className="text-xl font-semibold mb-3">
-                🔹 {c?.title || `Cas ${index + 1}`}
+                🔹 {c.title || `Cas ${index + 1}`}
               </h2>
 
               {/* EXPLICATION */}
-              {c?.explanation && (
+              {c.explanation && (
                 <div className="prose max-w-none">
                   {renderWithMath(c.explanation)}
                 </div>
               )}
 
               {/* EXEMPLE */}
-              {c?.example && (
+              {c.example && (
                 <div className="bg-gray-100 p-4 rounded mb-4">
                   <strong>Exemple :</strong>
                   <div className="prose max-w-none">
