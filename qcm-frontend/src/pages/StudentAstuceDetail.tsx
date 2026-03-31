@@ -151,15 +151,24 @@ const StudentAstuceDetail: React.FC = () => {
       )}
 
       {/* ================= CASES ================= */}
-      {!tip.pdfUrl && (
-        <div className="space-y-6">
-          {(tip.cases || []).length === 0 && (
-            <div className="text-gray-500">
-              Aucun contenu disponible
-            </div>
-          )}
 
-          {(tip.cases || []).map((c, index) => (
+{tip.pdfUrl && (
+  <iframe src={tip.pdfUrl} width="100%" height="600px" />
+)}
+
+{(tip.cases || []).length > 0 && (
+  <div className="space-y-6">
+    {(tip.cases || []).filter(Boolean).map((c, index) => (
+      <div key={index}>
+        <h2>🔹 {c?.title || `Cas ${index + 1}`}</h2>
+
+        {c?.explanation && renderWithMath(c.explanation)}
+        {c?.example && renderWithMath(c.example)}
+      </div>
+    ))}
+  </div>
+)}       
+            {(tip.cases || []).filter(Boolean).map((c, index) => (
             <div
               key={index}
               className="border rounded-xl p-5 bg-white shadow"
