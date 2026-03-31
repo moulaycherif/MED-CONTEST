@@ -206,8 +206,5 @@ const StudentAstuceDetail: React.FC = () => {
           ))}
         </div>
       )}
-    </div>
-  );
-};
 
 export default StudentAstuceDetail;
