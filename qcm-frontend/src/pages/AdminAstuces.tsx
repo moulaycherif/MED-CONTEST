@@ -149,8 +149,10 @@ const AdminAstuces: React.FC = () => {
         chapter,
         title,
         description,
-        cases: mode === "manual" ? cases : [],
-        pdfUrl: mode === "pdf" ? pdfUrl : null,
+        cases: pdfUrl ? [] : cleanCases, // 🔥 IMPORTANT
+        pdfUrl,
+        //cases: mode === "manual" ? cases : [],
+        //pdfUrl: mode === "pdf" ? pdfUrl : null,
       });
 
       alert("✅ Astuce enregistrée avec succès");
