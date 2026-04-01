@@ -7,44 +7,28 @@ import "katex/dist/katex.min.css";
 import katex from "katex";
 import parse from "html-react-parser";
 
-/* ===================== UTILS ===================== */
+/* ===================== SAFE UTILS ===================== */
 
-function cleanWordText(text: string = "") {
-  return text
-    .replace(/’/g, "'")
-    .replace(/é/g, "e")
-    .replace(/è/g, "e")
-    .replace(/à/g, "a")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/:/g, ": ")
-    .replace(/\s+/g, " ")
-    .trim();
+function safeText(text: any): string {
+  if (!text || typeof text !== "string") return "";
+  return text;
 }
 
-function autoDetectLatex(text: string = "") {
-  return text.replace(
-    /(\\frac{.*?}|\\sum.*?|\\left.*?\\right.*?|[A-Za-z0-9_]+\s*=\s*[^.]+)/g,
-    (match) => `$${match}$`
-  );
-}
-
-function renderWithMath(html: string = "") {
+function renderWithMath(html: any) {
   try {
-    let text = html.replace(/<[^>]+>/g, " ");
-    text = cleanWordText(text);
-    text = autoDetectLatex(text);
+    const safeHtml = safeText(html);
 
-    const formatted = text.replace(/\$(.*?)\$/g, (_, expr) =>
+    const formatted = safeHtml.replace(/\$(.*?)\$/g, (_, expr) =>
       katex.renderToString(expr, {
         throwOnError: false,
         displayMode: true,
-        strict: "ignore",
       })
     );
 
     return parse(formatted);
-  } catch {
-    return <span>{html}</span>;
+  } catch (err) {
+    console.error("Math render error:", err);
+    return <span>{safeText(html)}</span>;
   }
 }
 
@@ -52,6 +36,7 @@ function renderWithMath(html: string = "") {
 
 interface TipCase {
   title?: string;
+  content?: string; // ⚠️ IMPORTANT : backend utilise content
   explanation?: string;
   example?: string;
 }
@@ -62,7 +47,7 @@ interface Tip {
   chapter?: string;
   title?: string;
   description?: string;
-  cases?: TipCase[];
+  cases?: any;
   pdfUrl?: string;
 }
 
@@ -82,7 +67,15 @@ const StudentAstuceDetail: React.FC = () => {
   const fetchTip = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/astuces/${id}`);
-      setTip(res.data);
+
+      const data = res.data;
+
+      // 🔥 NORMALISATION ULTRA IMPORTANTE
+      data.cases = Array.isArray(data.cases)
+        ? data.cases.filter((c: any) => c && typeof c === "object")
+        : [];
+
+      setTip(data);
     } catch (err) {
       console.error("Erreur chargement astuce :", err);
     } finally {
@@ -90,96 +83,114 @@ const StudentAstuceDetail: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="p-10 text-center">Chargement...</div>;
+  /* ===================== LOADING ===================== */
 
-  if (!tip)
+  if (loading) {
+    return <div className="p-10 text-center">Chargement...</div>;
+  }
+
+  if (!tip) {
     return (
       <div className="p-10 text-center text-red-500">
         Astuce introuvable
       </div>
     );
+  }
 
-  const safeCases = Array.isArray(tip.cases)
-    ? tip.cases.filter((c) => c && typeof c === "object")
-    : [];
+  /* ===================== RENDER ===================== */
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
+      {/* BACK */}
       <button
         onClick={() => navigate(-1)}
         className="mb-4 text-blue-600 underline"
       >
-        ← Retour aux astuces
+        ← Retour
       </button>
 
       {/* HEADER */}
       <div className="mb-6">
         <div className="text-sm text-gray-500">
-          {tip.subject || "Matière"} • {tip.chapter || "Chapitre"}
+          {safeText(tip.subject)} • {safeText(tip.chapter)}
         </div>
 
         <h1 className="text-3xl font-bold mt-2">
-          {tip.title || "Sans titre"}
+          {safeText(tip.title) || "Sans titre"}
         </h1>
 
         {tip.description && (
-          <div className="prose max-w-none mt-3">
+          <div className="prose mt-3">
             {renderWithMath(tip.description)}
           </div>
         )}
       </div>
 
-      {/* PDF */}
+      {/* ================= PDF ================= */}
       {tip.pdfUrl && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">📄 Document PDF</h2>
+        <div className="mb-10">
+          <h2 className="text-xl font-semibold mb-4">📄 PDF</h2>
 
           <iframe
             src={tip.pdfUrl}
             width="100%"
             height="600px"
-            className="border rounded-xl shadow"
+            className="border rounded-xl"
           />
         </div>
       )}
 
-      {/* CASES */}
-      {safeCases.length > 0 && (
-        <div className="space-y-6 mt-8">
-          {safeCases.map((c, index) => (
-            <div
-              key={index}
-              className="border rounded-xl p-5 bg-white shadow"
-            >
-              <h2 className="text-xl font-semibold mb-3">
-                🔹 {c.title || `Cas ${index + 1}`}
-              </h2>
+      {/* ================= CASES ================= */}
 
-              {c.explanation && (
-                <div className="prose max-w-none">
-                  {renderWithMath(c.explanation)}
-                </div>
-              )}
+      {Array.isArray(tip.cases) && tip.cases.length > 0 && (
+        <div className="space-y-6">
+          {tip.cases.map((c: TipCase, index: number) => {
+            if (!c || typeof c !== "object") return null;
 
-              {c.example && (
-                <div className="bg-gray-100 p-4 rounded mb-4">
-                  <strong>Exemple :</strong>
-                  <div className="prose max-w-none">
-                    {renderWithMath(c.example)}
-                  </div>
-                </div>
-              )}
-
-              <button
-                className="bg-indigo-600 text-white px-4 py-2 rounded"
-                onClick={() =>
-                  navigate(`/student/quiz?tip=${tip._id}&case=${index}`)
-                }
+            return (
+              <div
+                key={index}
+                className="border rounded-xl p-5 bg-white shadow"
               >
-                🧠 S’entraîner
-              </button>
-            </div>
-          ))}
+                <h2 className="text-xl font-semibold mb-3">
+                  🔹 {c.title || `Cas ${index + 1}`}
+                </h2>
+
+                {/* CONTENU */}
+                {c.content && (
+                  <div className="prose">
+                    {renderWithMath(c.content)}
+                  </div>
+                )}
+
+                {/* EXPLANATION (fallback ancien format) */}
+                {c.explanation && (
+                  <div className="prose">
+                    {renderWithMath(c.explanation)}
+                  </div>
+                )}
+
+                {/* EXEMPLE */}
+                {c.example && (
+                  <div className="bg-gray-100 p-4 rounded mt-4">
+                    <strong>Exemple :</strong>
+                    <div className="prose">
+                      {renderWithMath(c.example)}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
+                  onClick={() =>
+                    navigate(`/student/quiz?tip=${tip._id}&case=${index}`)
+                  }
+                >
+                  🧠 S’entraîner
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
