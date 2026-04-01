@@ -31,7 +31,6 @@ function autoDetectLatex(text: string = "") {
 function renderWithMath(html: string = "") {
   try {
     let text = html.replace(/<[^>]+>/g, " ");
-
     text = cleanWordText(text);
     text = autoDetectLatex(text);
 
@@ -44,8 +43,7 @@ function renderWithMath(html: string = "") {
     );
 
     return parse(formatted);
-  } catch (err) {
-    console.error("Erreur rendu math :", err);
+  } catch {
     return <span>{html}</span>;
   }
 }
@@ -92,21 +90,18 @@ const StudentAstuceDetail: React.FC = () => {
     }
   };
 
-  /* ===================== LOADING ===================== */
+  if (loading) return <div className="p-10 text-center">Chargement...</div>;
 
-  if (loading) {
-    return <div className="p-10 text-center">Chargement...</div>;
-  }
-
-  if (!tip) {
+  if (!tip)
     return (
       <div className="p-10 text-center text-red-500">
         Astuce introuvable
       </div>
     );
-  }
 
-  /* ===================== RENDER ===================== */
+  const safeCases = Array.isArray(tip.cases)
+    ? tip.cases.filter((c) => c && typeof c === "object")
+    : [];
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -134,59 +129,38 @@ const StudentAstuceDetail: React.FC = () => {
         )}
       </div>
 
-      {/* ================= PDF ================= */}
+      {/* PDF */}
       {tip.pdfUrl && (
-  <div className="mt-8">
-    <h2 className="text-xl font-semibold mb-4">📄 Document PDF</h2>
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">📄 Document PDF</h2>
 
-    <iframe
-      src={tip.pdfUrl}
-      width="100%"
-      height="600px"
-      className="border rounded-xl shadow"
-    />
-  </div>
-)}
+          <iframe
+            src={tip.pdfUrl}
+            width="100%"
+            height="600px"
+            className="border rounded-xl shadow"
+          />
+        </div>
+      )}
 
-      {/* ================= CASES ================= */}
-
-{tip.pdfUrl && (
-  <iframe src={tip.pdfUrl} width="100%" height="600px" />
-)}
-
-{(tip.cases || []).length > 0 && (
-  <div className="space-y-6">
-    {(tip.cases || []).filter(Boolean).map((c, index) => (
-      <div key={index}>
-        <h2>🔹 {c?.title || `Cas ${index + 1}`}</h2>
-
-        {c?.explanation && renderWithMath(c.explanation)}
-        {c?.example && renderWithMath(c.example)}
-      </div>
-    ))}
-  </div>
-)}       
-            {Array.isArray(tip.cases) && tip.cases.length > 0 && (
-  <div className="space-y-6">
-    {tip.cases
-      .filter((c) => c && typeof c === "object")
-      .map((c, index) => (
-        <div
-          key={index}
-          className="border rounded-xl p-5 bg-white shadow"
-        >
+      {/* CASES */}
+      {safeCases.length > 0 && (
+        <div className="space-y-6 mt-8">
+          {safeCases.map((c, index) => (
+            <div
+              key={index}
+              className="border rounded-xl p-5 bg-white shadow"
+            >
               <h2 className="text-xl font-semibold mb-3">
                 🔹 {c.title || `Cas ${index + 1}`}
               </h2>
 
-              {/* EXPLICATION */}
               {c.explanation && (
                 <div className="prose max-w-none">
                   {renderWithMath(c.explanation)}
                 </div>
               )}
 
-              {/* EXEMPLE */}
               {c.example && (
                 <div className="bg-gray-100 p-4 rounded mb-4">
                   <strong>Exemple :</strong>
@@ -197,7 +171,7 @@ const StudentAstuceDetail: React.FC = () => {
               )}
 
               <button
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                className="bg-indigo-600 text-white px-4 py-2 rounded"
                 onClick={() =>
                   navigate(`/student/quiz?tip=${tip._id}&case=${index}`)
                 }
@@ -207,8 +181,9 @@ const StudentAstuceDetail: React.FC = () => {
             </div>
           ))}
         </div>
-      )};
-      </div>
-  )};
+      )}
+    </div>
+  );
+};
 
 export default StudentAstuceDetail;
