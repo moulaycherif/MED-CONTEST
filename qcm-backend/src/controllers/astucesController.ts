@@ -11,7 +11,19 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
       chapter: { $regex: chapter, $options: "i" },
     }).sort({ order: 1 });
 
-    res.json(astuces);
+    // 🔥 NORMALISATION (ANTI-CRASH)
+    const safeAstuces = astuces.map((tip: any) => ({
+      ...tip._doc,
+      cases: (tip.cases || [])
+        .filter(Boolean)
+        .map((c: any) => ({
+          title: c?.title || "",
+          explanation: c?.explanation || c?.content || "",
+          example: c?.example || "",
+        })),
+    }));
+
+    res.json(safeAstuces);
   } catch (error) {
     console.error("Erreur getAstucesByChapter:", error);
     res.status(500).json({ message: "Erreur serveur" });
@@ -27,12 +39,21 @@ export const createAstuce = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Champs obligatoires manquants" });
     }
 
+    // 🔥 NORMALISATION ICI AUSSI
+    const normalizedCases = (cases || [])
+      .filter((c: any) => c && (c.content || c.explanation))
+      .map((c: any) => ({
+        title: c.title || "",
+        explanation: c.explanation || c.content || "",
+        example: c.example || "",
+      }));
+
     const astuce = new Astuce({
       subject,
       chapter,
       title,
       description,
-      cases: Array.isArray(cases) ? cases : [], // 🔥 FIX
+      cases: normalizedCases,
       pdfUrl: pdfUrl || null,
     });
 
@@ -45,7 +66,7 @@ export const createAstuce = async (req: Request, res: Response) => {
   }
 };
 
-/* 📄 UPLOAD PDF (SANS PARSING) */
+/* 📄 UPLOAD PDF */
 export const uploadAstucePdf = async (req: Request, res: Response) => {
   try {
     console.log("📥 Upload PDF");
@@ -55,11 +76,10 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
     }
 
     const file = req.file;
-
     const fileName = `astuces/${Date.now()}-${file.originalname}`;
 
     const { error } = await supabase.storage
-      .from("astuces") // ✅ ICI
+      .from("astuces")
       .upload(fileName, file.buffer, {
         contentType: file.mimetype,
       });
@@ -70,7 +90,7 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
     }
 
     const { data } = supabase.storage
-      .from("astuces") // ✅ ICI AUSSI
+      .from("astuces")
       .getPublicUrl(fileName);
 
     return res.json({ pdfUrl: data.publicUrl });
