@@ -413,7 +413,21 @@ if (section === "soutien" && selectedMatiere) {
         {astuces.length === 0 ? (
           <p className="text-center text-gray-500">Aucune astuce trouvée…</p>
         ) : (
-          <AnimatedQaViewer qas={astuces} />
+          <AnimatedQaViewer
+  qas={(astuces as any || [])
+    .filter(Boolean)
+    .map((tip: any) => ({
+      ...tip,
+      cases: (tip.cases || [])
+        .filter(Boolean)
+        .map((c: any) => ({
+          title: c?.title || "",
+          explanation: c?.content || c?.explanation || "",
+          example: c?.example || "",
+        })),
+    }))
+  }
+/>
         )}
       </div>
     );

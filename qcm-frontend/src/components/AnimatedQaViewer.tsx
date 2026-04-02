@@ -1,48 +1,58 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import parse from "html-react-parser";
+import { useNavigate } from "react-router-dom";
 import katex from "katex";
+import parse from "html-react-parser";
+import "katex/dist/katex.min.css";
 
-interface TipCase {
-  title: string;
-  content: string;
+/* ===================== TYPES ===================== */
+
+interface Case {
+  title?: string;
+  explanation?: string;
+  example?: string;
 }
 
 interface Astuce {
-  title: string;
-  cases: TipCase[];
+  _id: string;
+  title?: string;
+  description?: string;
+  pdfUrl?: string;
+  cases?: Case[];
 }
 
-/* 🔥 Fonction pour rendre LaTeX */
-function renderContent(html: string) {
-  if (!html) return null;
+interface Props {
+  qas: Astuce[];
+}
 
-  // 🔧 Correction automatique (Word → LaTeX)
-  let fixed = html;
+/* ===================== MATH RENDER ===================== */
 
-  // Si contient \frac mais pas de $, on entoure automatiquement
-  if (fixed.includes("\\frac") && !fixed.includes("$")) {
-    fixed = `$${fixed}$`;
-  }
-
-  // 🔥 Remplace $...$ par KaTeX
-  const withMath = fixed.replace(
-    /\$(.*?)\$/g,
-    (_, expr) =>
+function renderWithMath(html: string = "") {
+  try {
+    // 🔥 détecte les expressions simples
+    const formatted = html.replace(/\$(.*?)\$/g, (_, expr) =>
       katex.renderToString(expr, {
         throwOnError: false,
         displayMode: true,
       })
-  );
+    );
 
-  return parse(withMath);
+    return parse(formatted);
+  } catch (err) {
+    console.error("Erreur KaTeX :", err);
+    return <span>{html}</span>;
+  }
 }
 
-const AnimatedQaViewer: React.FC<{ qas: Astuce[] }> = ({ qas }) => {
-  const [astuceIndex, setAstuceIndex] = useState(0);
-  const [caseIndex, setCaseIndex] = useState(0);
+/* ===================== COMPONENT ===================== */
 
-  if (!qas || qas.length === 0) {
+const AnimatedQaViewer: React.FC<Props> = ({ qas = [] }) => {
+  const navigate = useNavigate();
+
+  const [current, setCurrent] = useState(0);
+
+  const safeQas = (qas || []).filter(Boolean);
+
+  if (safeQas.length === 0) {
     return (
       <p className="text-center text-gray-500">
         Aucune astuce disponible
@@ -50,82 +60,109 @@ const AnimatedQaViewer: React.FC<{ qas: Astuce[] }> = ({ qas }) => {
     );
   }
 
-  const currentAstuce = qas[astuceIndex];
-  const currentCase = currentAstuce.cases[caseIndex];
+  const tip = safeQas[current];
 
   const next = () => {
-    if (caseIndex < currentAstuce.cases.length - 1) {
-      setCaseIndex(caseIndex + 1);
-    } else if (astuceIndex < qas.length - 1) {
-      setAstuceIndex(astuceIndex + 1);
-      setCaseIndex(0);
-    }
+    if (current < safeQas.length - 1) setCurrent(current + 1);
   };
 
   const prev = () => {
-    if (caseIndex > 0) {
-      setCaseIndex(caseIndex - 1);
-    } else if (astuceIndex > 0) {
-      const prevAstuce = qas[astuceIndex - 1];
-      setAstuceIndex(astuceIndex - 1);
-      setCaseIndex(prevAstuce.cases.length - 1);
-    }
+    if (current > 0) setCurrent(current - 1);
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
 
-      {/* 🔷 Titre */}
-      <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">
-        {currentAstuce.title}
-      </h2>
-
-      {/* 🧠 Carte */}
-      <motion.div
-        key={`${astuceIndex}-${caseIndex}`}
-        initial={{ opacity: 0, x: 40 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -40 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white p-6 rounded-2xl shadow-lg"
-      >
-        {/* 🔹 Cas */}
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">
-          🔹 {currentCase.title}
-        </h3>
-
-        {/* 📄 Contenu avec équations */}
-        <div className="prose max-w-none">
-          {renderContent(currentCase.content)}
-        </div>
-      </motion.div>
-
-      {/* 🔘 Navigation */}
-      <div className="flex justify-between mt-6">
+      {/* 🔥 HEADER NAVIGATION */}
+      <div className="flex justify-between items-center mb-4">
         <button
           onClick={prev}
-          disabled={astuceIndex === 0 && caseIndex === 0}
-          className="px-4 py-2 bg-gray-300 rounded-lg disabled:opacity-50"
+          disabled={current === 0}
+          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
         >
           ⬅️ Précédent
         </button>
 
+        <span className="text-sm text-gray-600">
+          Astuce {current + 1} / {safeQas.length}
+        </span>
+
         <button
           onClick={next}
-          disabled={
-            astuceIndex === qas.length - 1 &&
-            caseIndex === currentAstuce.cases.length - 1
-          }
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50"
+          disabled={current === safeQas.length - 1}
+          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
         >
           Suivant ➡️
         </button>
       </div>
 
-      {/* 🔢 Indicateur */}
-      <div className="text-center mt-4 text-sm text-gray-500">
-        Astuce {astuceIndex + 1}/{qas.length} — Cas {caseIndex + 1}/
-        {currentAstuce.cases.length}
+      {/* 🔥 CARD */}
+      <div className="bg-white shadow-xl rounded-2xl p-6">
+
+        {/* TITLE */}
+        <h2 className="text-2xl font-bold mb-2">
+          {tip?.title || "Sans titre"}
+        </h2>
+
+        {/* DESCRIPTION */}
+        {tip?.description && (
+          <div className="prose max-w-none mb-4">
+            {renderWithMath(tip.description)}
+          </div>
+        )}
+
+        {/* ================= PDF ================= */}
+        {tip?.pdfUrl && (
+          <iframe
+            src={tip.pdfUrl}
+            className="w-full h-[500px] rounded-xl border mb-6"
+          />
+        )}
+
+        {/* ================= CASES ================= */}
+        {(tip?.cases || []).length > 0 && (
+          <div className="space-y-6">
+            {(tip.cases || [])
+              .filter(Boolean)
+              .map((c, index) => (
+                <div
+                  key={index}
+                  className="border rounded-xl p-4 bg-gray-50"
+                >
+                  <h3 className="font-semibold text-lg mb-2">
+                    🔹 {c?.title || `Cas ${index + 1}`}
+                  </h3>
+
+                  {/* EXPLANATION */}
+                  {c?.explanation && (
+                    <div className="prose max-w-none mb-2">
+                      {renderWithMath(c.explanation)}
+                    </div>
+                  )}
+
+                  {/* EXAMPLE */}
+                  {c?.example && (
+                    <div className="bg-gray-200 p-3 rounded">
+                      <strong>Exemple :</strong>
+                      <div className="prose max-w-none">
+                        {renderWithMath(c.example)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ACTION */}
+                  <button
+                    className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                    onClick={() =>
+                      navigate(`/student/quiz?tip=${tip._id}&case=${index}`)
+                    }
+                  >
+                    🧠 S’entraîner
+                  </button>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );
