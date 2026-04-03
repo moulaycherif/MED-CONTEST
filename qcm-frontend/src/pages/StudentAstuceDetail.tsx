@@ -9,9 +9,10 @@ import parse from "html-react-parser";
 
 import { Document, Page, pdfjs } from "react-pdf";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-const [numPages, setNumPages] = useState(0);
+pdfjs.GlobalWorkerOptions.workerSrc =
+  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
 
 /* ===================== SAFE UTILS ===================== */
 
@@ -65,6 +66,8 @@ const StudentAstuceDetail: React.FC = () => {
 
   const [tip, setTip] = useState<Tip | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [numPages, setNumPages] = useState(0);
 
   useEffect(() => {
     if (id) fetchTip();
@@ -133,24 +136,16 @@ const StudentAstuceDetail: React.FC = () => {
       </div>
 
       {/* ================= PDF ================= */}
-      {tip.pdfUrl && (
-        <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">📄 PDF</h2>
-
-          <Document
-  file={tip.pdfUrl}
-  onLoadSuccess={({ numPages }) => setNumPages(numPages)}
->
-  {Array.from(new Array(numPages), (_, i) => (
-    <Page
-      key={i}
-      pageNumber={i + 1}
-      width={800}
-    />
-  ))}
-</Document>
-        </div>
-      )}
+      {tip.pdfUrl && numPages > 0 && (
+  <Document
+    file={tip.pdfUrl}
+    onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+  >
+    {Array.from(new Array(numPages), (_, i) => (
+      <Page key={i} pageNumber={i + 1} width={800} />
+    ))}
+  </Document>
+)}
 
       {/* ================= CASES ================= */}
 
