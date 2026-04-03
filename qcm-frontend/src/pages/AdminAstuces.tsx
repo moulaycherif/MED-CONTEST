@@ -83,6 +83,7 @@ const AdminAstuces: React.FC = () => {
     formData.append("file", file);
 
     try {
+      console.log("UPLOAD URL:", `${API_BASE_URL}/api/astuces/upload-pdf`);
       const res = await axios.post(
         `${API_BASE_URL}/api/astuces/upload-pdf`,
         formData,
