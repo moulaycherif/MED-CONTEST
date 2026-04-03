@@ -7,6 +7,12 @@ import "katex/dist/katex.min.css";
 import katex from "katex";
 import parse from "html-react-parser";
 
+import { Document, Page, pdfjs } from "react-pdf";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+const [numPages, setNumPages] = useState(0);
+
 /* ===================== SAFE UTILS ===================== */
 
 function safeText(text: any): string {
@@ -131,12 +137,18 @@ const StudentAstuceDetail: React.FC = () => {
         <div className="mb-10">
           <h2 className="text-xl font-semibold mb-4">📄 PDF</h2>
 
-          <iframe
-            src={tip.pdfUrl}
-            width="100%"
-            height="600px"
-            className="border rounded-xl"
-          />
+          <Document
+  file={tip.pdfUrl}
+  onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+>
+  {Array.from(new Array(numPages), (_, i) => (
+    <Page
+      key={i}
+      pageNumber={i + 1}
+      width={800}
+    />
+  ))}
+</Document>
         </div>
       )}
 
