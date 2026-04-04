@@ -42,6 +42,20 @@ router.post(
   uploadAstucePdf
 );
 
+/* 🔵 ADMIN — LISTE */
+router.get("/", async (req, res) => {
+  try {
+    const astuces = await Astuce.find().sort({
+      subject: 1,
+      chapter: 1,
+      order: 1,
+    });
+    res.json(astuces);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur chargement astuces" });
+  }
+});
+
 /* 🟡 ÉTUDIANT — ASTUCES PAR CHAPITRE */
 router.get("/:chapter", getAstucesByChapter);
 
