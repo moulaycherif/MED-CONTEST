@@ -9,10 +9,8 @@ import parse from "html-react-parser";
 
 import { Document, Page, pdfjs } from "react-pdf";
 
-
 pdfjs.GlobalWorkerOptions.workerSrc =
   `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-
 
 /* ===================== SAFE UTILS ===================== */
 
@@ -21,11 +19,16 @@ function safeText(text: any): string {
   return text;
 }
 
+/* 🔥 Highlight + Math */
 function renderWithMath(html: any) {
   try {
     const safeHtml = safeText(html);
 
-    const formatted = safeHtml.replace(/\$(.*?)\$/g, (_, expr) =>
+    const highlighted = safeHtml.replace(/\$(.*?)\$/g, (match) => {
+      return `<span style="background:#fff3cd;padding:2px 6px;border-radius:6px;">${match}</span>`;
+    });
+
+    const formatted = highlighted.replace(/\$(.*?)\$/g, (_, expr) =>
       katex.renderToString(expr, {
         throwOnError: false,
         displayMode: true,
@@ -43,7 +46,7 @@ function renderWithMath(html: any) {
 
 interface TipCase {
   title?: string;
-  content?: string; // ⚠️ IMPORTANT : backend utilise content
+  content?: string;
   explanation?: string;
   example?: string;
 }
@@ -54,7 +57,7 @@ interface Tip {
   chapter?: string;
   title?: string;
   description?: string;
-  cases?: any;
+  cases?: any[];
   pdfUrl?: string;
 }
 
@@ -67,7 +70,13 @@ const StudentAstuceDetail: React.FC = () => {
   const [tip, setTip] = useState<Tip | null>(null);
   const [loading, setLoading] = useState(true);
 
+  /* 🔥 PDF */
   const [numPages, setNumPages] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [scale, setScale] = useState(1.2);
+
+  /* 🔥 MODE SLIDE */
+  const [currentCase, setCurrentCase] = useState(0);
 
   useEffect(() => {
     if (id) fetchTip();
@@ -79,7 +88,6 @@ const StudentAstuceDetail: React.FC = () => {
 
       const data = res.data;
 
-      // 🔥 NORMALISATION ULTRA IMPORTANTE
       data.cases = Array.isArray(data.cases)
         ? data.cases.filter((c: any) => c && typeof c === "object")
         : [];
@@ -106,10 +114,13 @@ const StudentAstuceDetail: React.FC = () => {
     );
   }
 
+  const current = tip.cases?.[currentCase];
+
   /* ===================== RENDER ===================== */
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 max-w-5xl mx-auto">
+
       {/* BACK */}
       <button
         onClick={() => navigate(-1)}
@@ -136,70 +147,112 @@ const StudentAstuceDetail: React.FC = () => {
       </div>
 
       {/* ================= PDF ================= */}
-      {tip.pdfUrl && numPages > 0 && (
-  <Document
-    file={tip.pdfUrl}
-    onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-  >
-    {Array.from(new Array(numPages), (_, i) => (
-      <Page key={i} pageNumber={i + 1} width={800} />
-    ))}
-  </Document>
-)}
+      {tip.pdfUrl && (
+        <div className="mb-10">
 
-      {/* ================= CASES ================= */}
+          <h2 className="text-xl font-semibold mb-4">📄 Document</h2>
 
-      {Array.isArray(tip.cases) && tip.cases.length > 0 && (
-        <div className="space-y-6">
-          {tip.cases.map((c: TipCase, index: number) => {
-            if (!c || typeof c !== "object") return null;
+          {/* CONTROLS */}
+          <div className="flex gap-4 mb-4 items-center flex-wrap">
+            <button onClick={() => setPageNumber(p => Math.max(p - 1, 1))}>
+              ◀
+            </button>
 
-            return (
-              <div
-                key={index}
-                className="border rounded-xl p-5 bg-white shadow"
-              >
-                <h2 className="text-xl font-semibold mb-3">
-                  🔹 {c.title || `Cas ${index + 1}`}
-                </h2>
+            <span>
+              Page {pageNumber} / {numPages}
+            </span>
 
-                {/* CONTENU */}
-                {c.content && (
-                  <div className="prose">
-                    {renderWithMath(c.content)}
-                  </div>
-                )}
+            <button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))}>
+              ▶
+            </button>
 
-                {/* EXPLANATION (fallback ancien format) */}
-                {c.explanation && (
-                  <div className="prose">
-                    {renderWithMath(c.explanation)}
-                  </div>
-                )}
+            <button onClick={() => setScale(s => s + 0.2)}>➕</button>
+            <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
+          </div>
 
-                {/* EXEMPLE */}
-                {c.example && (
-                  <div className="bg-gray-100 p-4 rounded mt-4">
-                    <strong>Exemple :</strong>
-                    <div className="prose">
-                      {renderWithMath(c.example)}
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
-                  onClick={() =>
-                    navigate(`/student/quiz?tip=${tip._id}&case=${index}`)
-                  }
-                >
-                  🧠 S’entraîner
-                </button>
-              </div>
-            );
-          })}
+          {/* PDF */}
+          <Document
+            file={tip.pdfUrl}
+            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+          >
+            <Page pageNumber={pageNumber} scale={scale} />
+          </Document>
         </div>
       )}
+
+      {/* ================= MODE SLIDE ================= */}
+      {current && (
+        <div className="border rounded-2xl p-6 bg-white shadow-xl">
+
+          <h2 className="text-xl font-bold mb-4">
+            🔹 {current.title || `Cas ${currentCase + 1}`}
+          </h2>
+
+          {current.content && (
+            <div className="prose mb-4">
+              {renderWithMath(current.content)}
+            </div>
+          )}
+
+          {current.explanation && (
+            <div className="prose mb-4">
+              {renderWithMath(current.explanation)}
+            </div>
+          )}
+
+          {current.example && (
+            <div className="bg-gray-100 p-4 rounded mb-4">
+              <strong>Exemple :</strong>
+              <div className="prose">
+                {renderWithMath(current.example)}
+              </div>
+            </div>
+          )}
+
+          {/* 🔥 NAVIGATION SLIDE */}
+          <div className="flex justify-between mt-6">
+            <button
+              onClick={() => {
+                setCurrentCase(c => Math.max(0, c - 1));
+                setPageNumber(currentCase); // sync PDF
+              }}
+            >
+              ◀ Précédent
+            </button>
+
+            <button
+              onClick={() => {
+                setCurrentCase(c => Math.min((tip.cases?.length || 1) - 1, c + 1));
+                setPageNumber(currentCase + 2); // sync PDF
+              }}
+            >
+              Suivant ▶
+            </button>
+          </div>
+
+          {/* 🔥 ACTIONS */}
+          <div className="flex gap-4 mt-6 flex-wrap">
+
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              onClick={() => setPageNumber(currentCase + 1)}
+            >
+              📍 Aller à la page PDF
+            </button>
+
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded"
+              onClick={() =>
+                navigate(`/student/quiz?tip=${tip._id}&case=${currentCase}`)
+              }
+            >
+              🧠 Tester ce cas
+            </button>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
