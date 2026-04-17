@@ -12,14 +12,13 @@ import { Document, Page, pdfjs } from "react-pdf";
 pdfjs.GlobalWorkerOptions.workerSrc =
   `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-/* ===================== SAFE UTILS ===================== */
+/* ================= SAFE ================= */
 
 function safeText(text: any): string {
-  if (!text || typeof text !== "string") return "";
-  return text;
+  return typeof text === "string" ? text : "";
 }
 
-/* 🔥 Highlight + Math */
+/* 🔥 Math + Highlight */
 function renderWithMath(html: any) {
   try {
     const safeHtml = safeText(html);
@@ -36,13 +35,12 @@ function renderWithMath(html: any) {
     );
 
     return parse(formatted);
-  } catch (err) {
-    console.error("Math render error:", err);
+  } catch {
     return <span>{safeText(html)}</span>;
   }
 }
 
-/* ===================== TYPES ===================== */
+/* ================= TYPES ================= */
 
 interface TipCase {
   title?: string;
@@ -57,11 +55,11 @@ interface Tip {
   chapter?: string;
   title?: string;
   description?: string;
-  cases?: any[];
+  cases?: TipCase[];
   pdfUrl?: string;
 }
 
-/* ===================== COMPONENT ===================== */
+/* ================= COMPONENT ================= */
 
 const StudentAstuceDetail: React.FC = () => {
   const { id } = useParams();
@@ -70,12 +68,10 @@ const StudentAstuceDetail: React.FC = () => {
   const [tip, setTip] = useState<Tip | null>(null);
   const [loading, setLoading] = useState(true);
 
-  /* 🔥 PDF */
   const [numPages, setNumPages] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.2);
 
-  /* 🔥 MODE SLIDE */
   const [currentCase, setCurrentCase] = useState(0);
 
   useEffect(() => {
@@ -85,92 +81,49 @@ const StudentAstuceDetail: React.FC = () => {
   const fetchTip = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/astuces/${id}`);
-
       const data = res.data;
 
       data.cases = Array.isArray(data.cases)
-        ? data.cases.filter((c: any) => c && typeof c === "object")
+        ? data.cases.filter(Boolean)
         : [];
 
       setTip(data);
     } catch (err) {
-      console.error("Erreur chargement astuce :", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  /* ===================== LOADING ===================== */
-
-  if (loading) {
-    return <div className="p-10 text-center">Chargement...</div>;
-  }
-
-  if (!tip) {
-    return (
-      <div className="p-10 text-center text-red-500">
-        Astuce introuvable
-      </div>
-    );
-  }
+  if (loading) return <div className="p-10 text-center">Chargement...</div>;
+  if (!tip) return <div className="p-10 text-red-500">Introuvable</div>;
 
   const current = tip.cases?.[currentCase];
 
-  /* ===================== RENDER ===================== */
-
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-8 max-w-6xl mx-auto">
 
-      {/* BACK */}
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 text-blue-600 underline"
-      >
+      <button onClick={() => navigate(-1)} className="mb-4 text-blue-600">
         ← Retour
       </button>
 
-      {/* HEADER */}
-      <div className="mb-6">
-        <div className="text-sm text-gray-500">
-          {safeText(tip.subject)} • {safeText(tip.chapter)}
-        </div>
+      <h1 className="text-3xl font-bold">{safeText(tip.title)}</h1>
 
-        <h1 className="text-3xl font-bold mt-2">
-          {safeText(tip.title) || "Sans titre"}
-        </h1>
-
-        {tip.description && (
-          <div className="prose mt-3">
-            {renderWithMath(tip.description)}
-          </div>
-        )}
-      </div>
-
-      {/* ================= PDF ================= */}
+      {/* 🔥 PDF */}
       {tip.pdfUrl && (
-        <div className="mb-10">
+        <div className="mt-6">
 
-          <h2 className="text-xl font-semibold mb-4">📄 Document</h2>
+          <div className="flex gap-4 mb-4 items-center">
+            <button onClick={() => setPageNumber(p => Math.max(p - 1, 1))}>◀</button>
 
-          {/* CONTROLS */}
-          <div className="flex gap-4 mb-4 items-center flex-wrap">
-            <button onClick={() => setPageNumber(p => Math.max(p - 1, 1))}>
-              ◀
-            </button>
+            <span>{pageNumber} / {numPages}</span>
 
-            <span>
-              Page {pageNumber} / {numPages}
-            </span>
-
-            <button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))}>
-              ▶
-            </button>
+            <button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))}>▶</button>
 
             <button onClick={() => setScale(s => s + 0.2)}>➕</button>
             <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
           </div>
 
-          {/* PDF */}
           <Document
             file={tip.pdfUrl}
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
@@ -180,79 +133,56 @@ const StudentAstuceDetail: React.FC = () => {
         </div>
       )}
 
-      {/* ================= MODE SLIDE ================= */}
+      {/* 🔥 SLIDE */}
       {current && (
-        <div className="border rounded-2xl p-6 bg-white shadow-xl">
+        <div className="mt-10 bg-white p-6 rounded-xl shadow">
 
           <h2 className="text-xl font-bold mb-4">
-            🔹 {current.title || `Cas ${currentCase + 1}`}
+            {current.title || `Cas ${currentCase + 1}`}
           </h2>
 
           {current.content && (
-            <div className="prose mb-4">
-              {renderWithMath(current.content)}
-            </div>
-          )}
-
-          {current.explanation && (
-            <div className="prose mb-4">
-              {renderWithMath(current.explanation)}
-            </div>
+            <div className="prose">{renderWithMath(current.content)}</div>
           )}
 
           {current.example && (
-            <div className="bg-gray-100 p-4 rounded mb-4">
-              <strong>Exemple :</strong>
-              <div className="prose">
-                {renderWithMath(current.example)}
-              </div>
+            <div className="bg-gray-100 p-3 mt-4 rounded">
+              {renderWithMath(current.example)}
             </div>
           )}
 
-          {/* 🔥 NAVIGATION SLIDE */}
           <div className="flex justify-between mt-6">
+
             <button
               onClick={() => {
                 setCurrentCase(c => Math.max(0, c - 1));
-                setPageNumber(currentCase); // sync PDF
+                setPageNumber(currentCase);
               }}
             >
-              ◀ Précédent
+              ◀
             </button>
 
             <button
               onClick={() => {
                 setCurrentCase(c => Math.min((tip.cases?.length || 1) - 1, c + 1));
-                setPageNumber(currentCase + 2); // sync PDF
+                setPageNumber(currentCase + 2);
               }}
             >
-              Suivant ▶
+              ▶
             </button>
           </div>
 
-          {/* 🔥 ACTIONS */}
-          <div className="flex gap-4 mt-6 flex-wrap">
+          <button
+            className="mt-4 bg-green-600 text-white px-4 py-2 rounded"
+            onClick={() =>
+              navigate(`/student/quiz?tip=${tip._id}&case=${currentCase}`)
+            }
+          >
+            🧠 Quiz
+          </button>
 
-            <button
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-              onClick={() => setPageNumber(currentCase + 1)}
-            >
-              📍 Aller à la page PDF
-            </button>
-
-            <button
-              className="bg-green-600 text-white px-4 py-2 rounded"
-              onClick={() =>
-                navigate(`/student/quiz?tip=${tip._id}&case=${currentCase}`)
-              }
-            >
-              🧠 Tester ce cas
-            </button>
-
-          </div>
         </div>
       )}
-
     </div>
   );
 };

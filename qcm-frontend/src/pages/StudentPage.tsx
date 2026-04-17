@@ -414,7 +414,7 @@ if (section === "soutien" && selectedMatiere) {
           <p className="text-center text-gray-500">Aucune astuce trouvée…</p>
         ) : (
           <AnimatedQaViewer
-  qas={(astuces as any || [])
+  qas={(astuces || [])
     .filter(Boolean)
     .map((tip: any) => ({
       ...tip,
