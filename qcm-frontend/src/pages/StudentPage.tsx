@@ -14,6 +14,7 @@ import AnimatedQaViewer from "../components/AnimatedQaViewer";
 import { fetchAstucesByChapter, Astuce } from "../api/astuces.api";
 import StudentSummaries from "./StudentSummaries";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
+import { useNavigate } from "react-router-dom";
 
 interface Question {
   _id: string;
@@ -54,6 +55,8 @@ export default function StudentPage() {
   // Astuces
   const [astuces, setAstuces] = useState<Astuce[]>([]);
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
+
+const navigate = useNavigate();
 
   const chapterMaths = [
     "Chapitre I : Suites & Sommes",
@@ -413,21 +416,25 @@ if (section === "soutien" && selectedMatiere) {
         {astuces.length === 0 ? (
           <p className="text-center text-gray-500">Aucune astuce trouvée…</p>
         ) : (
-          <AnimatedQaViewer
-  qas={(astuces || [])
-    .filter(Boolean)
-    .map((tip: any) => ({
-      ...tip,
-      cases: (tip.cases || [])
-        .filter(Boolean)
-        .map((c: any) => ({
-          title: c?.title || "",
-          explanation: c?.content || c?.explanation || "",
-          example: c?.example || "",
-        })),
-    }))
-  }
-/>
+         <div className="grid gap-6">
+  {astuces.map((tip) => (
+    <div
+      key={tip._id}
+      className="p-6 bg-white rounded-xl shadow cursor-pointer hover:shadow-lg"
+      onClick={() => navigate(`/student/astuce/${tip._id}`)}
+    >
+      <h3 className="text-xl font-bold">{tip.title}</h3>
+
+      <p className="text-gray-500 mt-2">
+        {tip.chapter}
+      </p>
+
+      <div className="mt-3 text-blue-600">
+        👉 Voir l’astuce
+      </div>
+    </div>
+  ))}
+</div>
         )}
       </div>
     );

@@ -40,6 +40,7 @@ export default function App() {
           <Route path="/student/astuces" element={<StudentAstuces />} />
           <Route path="/student/astuces/:id" element={<StudentAstuceDetail />} />
           <Route path="/student/quiz/:tipId" element={<StudentQuiz />} />
+          <Route path="/student/astuce/:id" element={<StudentAstuceDetail />} />
 
 
           {/* 🚫 404 */}
