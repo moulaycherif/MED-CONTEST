@@ -11,10 +11,21 @@ import chimieImg from "../assets/CHIMIE.jfif";
 import svtImg from "../assets/SVT.jfif";
 import bgImage from "/Image3.jfif";
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
-import { fetchAstucesByChapter, Astuce } from "../api/astuces.api";
+import { fetchAstucesByChapter } from "../api/astuces.api";
 import StudentSummaries from "./StudentSummaries";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import { useNavigate } from "react-router-dom";
+import StudentAstuceDetail from "./StudentAstuceDetail";
+
+interface Astuce {
+  _id: string;
+  title?: string;
+  chapter?: string;
+  subject?: string;
+  description?: string;
+  cases?: any[];
+  pdfUrl?: string;
+}
 
 interface Question {
   _id: string;
@@ -120,7 +131,7 @@ useEffect(() => {
     
   if (selectedAction === "Astuces" && selectedChapter) {
     fetchAstucesByChapter(selectedChapter)
-      .then((data) => setAstuces(data))
+      .then((data) => setAstuces(data as Astuce[]))
       .catch(() => setAstuces([]));
   }
 }, [selectedAction, selectedChapter]);
@@ -430,14 +441,14 @@ if (section === "soutien" && selectedMatiere) {
          <div className="grid gap-6">
   {astuces.map((tip) => (
     <div
-      key={tip._id}
+      key={tip._id || Math.random()}
       className="p-6 bg-white rounded-xl shadow cursor-pointer hover:shadow-lg"
       onClick={() => setSelectedTipId(tip._id)}
     >
-      <h3 className="text-xl font-bold">{tip.title}</h3>
+      <h3 className="text-xl font-bold">{tip.title || "Sans titre"}</h3>
 
       <p className="text-gray-500 mt-2">
-        {tip.chapter}
+        {tip.chapter || ""}
       </p>
 
       <div className="mt-3 text-blue-600">

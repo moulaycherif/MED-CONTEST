@@ -62,9 +62,9 @@ interface Tip {
 /* ================= COMPONENT ================= */
 
 const StudentAstuceDetail = ({ id, onBack }: any) => {
-  const { id } = useParams();
-  const navigate = useNavigate();
 
+  if (!id) return <div>Astuce introuvable</div>;
+  
   const [tip, setTip] = useState<Tip | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -125,12 +125,8 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
           </div>
 
           <Document
-  file={{
-    url: tip.pdfUrl,
-    withCredentials: false,
-  }}
+  file={tip.pdfUrl}
   onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-  loading="Chargement PDF..."
 >
   <Page
     pageNumber={pageNumber}
@@ -184,8 +180,8 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
           <button
             className="mt-4 bg-green-600 text-white px-4 py-2 rounded"
             onClick={() =>
-              navigate(`/student/quiz?tip=${tip._id}&case=${currentCase}`)
-            }
+  window.location.href = `/student/quiz/${tip._id}?case=${currentCase}`
+}
           >
             🧠 Quiz
           </button>
