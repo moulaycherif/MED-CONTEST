@@ -58,6 +58,8 @@ export default function StudentPage() {
 
 const navigate = useNavigate();
 
+const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
+
   const chapterMaths = [
     "Chapitre I : Suites & Sommes",
     "Chapitre II : Limites, Continuité & Dérivabilité",
@@ -164,6 +166,15 @@ useEffect(() => {
 
   // --- Rendu principal ---
   const renderCenterContent = () => {
+
+    if (selectedTipId) {
+  return (
+    <StudentAstuceDetail
+      id={selectedTipId}
+      onBack={() => setSelectedTipId(null)}
+    />
+  );
+}
 
    // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
     
@@ -421,7 +432,7 @@ if (section === "soutien" && selectedMatiere) {
     <div
       key={tip._id}
       className="p-6 bg-white rounded-xl shadow cursor-pointer hover:shadow-lg"
-      onClick={() => navigate(`/student/astuce/${tip._id}`)}
+      onClick={() => setSelectedTipId(tip._id)}
     >
       <h3 className="text-xl font-bold">{tip.title}</h3>
 

@@ -61,7 +61,7 @@ interface Tip {
 
 /* ================= COMPONENT ================= */
 
-const StudentAstuceDetail: React.FC = () => {
+const StudentAstuceDetail = ({ id, onBack }: any) => {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -103,7 +103,7 @@ const StudentAstuceDetail: React.FC = () => {
   return (
     <div className="p-8 max-w-6xl mx-auto">
 
-      <button onClick={() => navigate(-1)} className="mb-4 text-blue-600">
+      <button onClick={onBack} className="mb-4 text-blue-600">
         ← Retour
       </button>
 
@@ -125,11 +125,20 @@ const StudentAstuceDetail: React.FC = () => {
           </div>
 
           <Document
-            file={tip.pdfUrl}
-            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-          >
-            <Page pageNumber={pageNumber} scale={scale} />
-          </Document>
+  file={{
+    url: tip.pdfUrl,
+    withCredentials: false,
+  }}
+  onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+  loading="Chargement PDF..."
+>
+  <Page
+    pageNumber={pageNumber}
+    scale={scale}
+    renderAnnotationLayer={false}
+    renderTextLayer={true}
+  />
+</Document>
         </div>
       )}
 
