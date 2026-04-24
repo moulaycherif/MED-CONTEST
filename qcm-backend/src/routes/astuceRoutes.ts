@@ -56,6 +56,22 @@ router.get("/", async (req, res) => {
   }
 });
 
+// 🔥 IMPORTANT : AVANT /:chapter
+router.get("/detail/:id", async (req, res) => {
+  try {
+    const astuce = await Astuce.findById(req.params.id);
+
+    if (!astuce) {
+      return res.status(404).json({ message: "Astuce introuvable" });
+    }
+
+    res.json(astuce);
+  } catch (err) {
+    console.error("Erreur get astuce by id:", err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 /* 🟡 ÉTUDIANT — ASTUCES PAR CHAPITRE */
 router.get("/:chapter", getAstucesByChapter);
 
