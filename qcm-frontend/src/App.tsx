@@ -26,7 +26,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
 
           {/* 👩‍🎓 Espace étudiant */}
-          <Route path="/student" element={<StudentPage />} />
+          <Route path="/student/*" element={<StudentPage />} />
 
           {/* 👨‍💼 Espace admin */}
           <Route path="/admin" element={<AdminDashboard />} />
@@ -38,7 +38,7 @@ export default function App() {
           <Route path="/admin/exercises" element={<AdminExercises />} />
           <Route path="/admin/astuces" element={<AdminAstuces />} />
           <Route path="/student/astuces" element={<StudentAstuces />} />
-          <Route path="/student/astuces/:id" element={<StudentAstuceDetail />} />
+          <Route path="/student/astuce/:id" element={<StudentAstuceDetail />} />
           <Route path="/student/quiz/:tipId" element={<StudentQuiz />} />
           <Route path="/student/astuce/:id" element={<StudentAstuceDetail />} />
 

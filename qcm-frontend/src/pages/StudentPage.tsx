@@ -440,6 +440,7 @@ if (section === "soutien" && selectedMatiere) {
         ) : (
          <div className="grid gap-6">
   {astuces.map((tip) => (
+    
     <div
       key={tip._id || Math.random()}
       className="p-6 bg-white rounded-xl shadow cursor-pointer hover:shadow-lg"
@@ -454,7 +455,9 @@ if (section === "soutien" && selectedMatiere) {
       <div className="mt-3 text-blue-600">
         👉 Voir l’astuce
       </div>
+      console.log("TIP:", tip);
     </div>
+    
   ))}
 </div>
         )}
