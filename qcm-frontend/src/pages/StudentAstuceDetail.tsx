@@ -63,6 +63,8 @@ interface Tip {
 
 const StudentAstuceDetail = ({ id, onBack }: any) => {
 
+  console.log("TIP:", id);
+
   if (!id) return <div>Astuce introuvable</div>;
   
   const [tip, setTip] = useState<Tip | null>(null);
