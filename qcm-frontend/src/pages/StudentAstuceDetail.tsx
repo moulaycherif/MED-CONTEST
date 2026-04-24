@@ -80,7 +80,7 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
 
   const fetchTip = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/astuces/${id}`);
+      const res = await axios.get(`${API_BASE_URL}/api/astuces/detail/${id}`);
       const data = res.data;
 
       data.cases = Array.isArray(data.cases)
