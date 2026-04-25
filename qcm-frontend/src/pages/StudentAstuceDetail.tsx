@@ -146,14 +146,7 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
     renderTextLayer={true}
   />
 </Document>
-  <Page
-    pageNumber={pageNumber}
-    scale={scale}
-    renderAnnotationLayer={false}
-    renderTextLayer={true}
-  />
-</Document>
-        </div>
+         </div>
       )}
 
       {/* 🔥 SLIDE */}
