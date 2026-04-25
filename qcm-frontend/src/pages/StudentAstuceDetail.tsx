@@ -9,8 +9,9 @@ import parse from "html-react-parser";
 
 import { Document, Page, pdfjs } from "react-pdf";
 
+  // 🔥 LIGNE MAGIQUE (OBLIGATOIRE)
 pdfjs.GlobalWorkerOptions.workerSrc =
-  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+  `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 /* ================= SAFE ================= */
 
@@ -127,9 +128,24 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
           </div>
 
           <Document
-  file={tip.pdfUrl}
+  file={{
+    url: tip.pdfUrl,
+    withCredentials: false,
+  }}
   onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+  onLoadError={(err) => console.error("❌ PDF ERROR:", err)}
+  options={{
+    cMapUrl: "https://unpkg.com/pdfjs-dist/cmaps/",
+    cMapPacked: true,
+  }}
 >
+  <Page
+    pageNumber={pageNumber}
+    scale={scale}
+    renderAnnotationLayer={false}
+    renderTextLayer={true}
+  />
+</Document>
   <Page
     pageNumber={pageNumber}
     scale={scale}
