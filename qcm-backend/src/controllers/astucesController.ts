@@ -7,20 +7,22 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
   try {
     const { chapter } = req.params;
 
+    console.log("📘 Chapter reçu :", chapter);
+
     const astuces = await Astuce.find({
-      chapter: { $regex: chapter, $options: "i" },
-    }).sort({ order: 1 });
+      chapter: { $regex: chapter.trim(), $options: "i" },
+    });
+
+    console.log("📊 Astuces trouvées :", astuces.length);
 
     const safeAstuces = astuces.map((tip: any) => ({
-      ...tip._doc,
-      cases: (tip.cases || [])
-        .filter(Boolean)
-        .map((c: any) => ({
-          title: c?.title || "",
-          content: c?.content || c?.explanation || "",
-          explanation: c?.explanation || c?.content || "",
-          example: c?.example || "",
-        })),
+      _id: tip._id,
+      subject: tip.subject,
+      chapter: tip.chapter,
+      title: tip.title,
+      description: tip.description,
+      pdfUrl: tip.pdfUrl,
+      cases: (tip.cases || []).filter(Boolean),
     }));
 
     res.json(safeAstuces);
