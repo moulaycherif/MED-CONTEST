@@ -12,6 +12,8 @@ const upload = multer();
 
 const router = Router();
 
+console.log("✅ astuceRoutes chargé");
+
 console.log("astuceRoutes :",uploadAstucePdf);
 
 /* 🔵 ADMIN — LISTE TOUTES LES ASTUCES */
@@ -42,22 +44,10 @@ router.post(
   uploadAstucePdf
 );
 
-/* 🔵 ADMIN — LISTE */
-router.get("/", async (req, res) => {
-  try {
-    const astuces = await Astuce.find().sort({
-      subject: 1,
-      chapter: 1,
-      order: 1,
-    });
-    res.json(astuces);
-  } catch (err) {
-    res.status(500).json({ message: "Erreur chargement astuces" });
-  }
-});
-
 // 🔥 IMPORTANT : AVANT /:chapter
 router.get("/detail/:id", async (req, res) => {
+  console.log("🔥 ROUTE DETAIL APPELÉE");
+  res.send("OK");
   try {
     const astuce = await Astuce.findById(req.params.id);
 
