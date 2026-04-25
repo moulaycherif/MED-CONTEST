@@ -1,8 +1,14 @@
 import api from "./axios";
 
 export interface Astuce {
-  question: string;
-  answer: string;
+  _id: string;
+  subject: string;
+  chapter: string;
+  title: string;
+  description?: string;
+  cases: any[];
+  pdfUrl?: string | null;
+  order?: number;
 }
 
 export async function fetchAstucesByChapter(chapter: string) {
