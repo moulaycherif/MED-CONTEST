@@ -132,7 +132,8 @@ useEffect(() => {
     if (!selectedChapter) return; // 🔥 IMPORTANT
     
   if (selectedAction === "Astuces" && selectedChapter) {
-    fetchAstucesByChapter(selectedChapter)
+    
+    fetchAstucesByChapter(selectedChapter.split(":")[0])
       .then((data) => setAstuces(data as Astuce[]))
       .catch(() => setAstuces([]));
   }
