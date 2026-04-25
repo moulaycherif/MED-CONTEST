@@ -9,9 +9,11 @@ import parse from "html-react-parser";
 
 import { Document, Page, pdfjs } from "react-pdf";
 
-  // 🔥 LIGNE MAGIQUE (OBLIGATOIRE)
-pdfjs.GlobalWorkerOptions.workerSrc =
-  `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// 🔥 SOLUTION MODERNE VITE
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.js",
+  import.meta.url
+).toString();
 
 /* ================= SAFE ================= */
 
