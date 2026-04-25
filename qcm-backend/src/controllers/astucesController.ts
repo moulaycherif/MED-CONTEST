@@ -14,6 +14,7 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
     });
 
     console.log("📊 Astuces trouvées :", astuces.length);
+    console.log("📊 Résultat Mongo :", astuces);
 
     const safeAstuces = astuces.map((tip: any) => ({
       _id: tip._id,
