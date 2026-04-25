@@ -46,19 +46,19 @@ router.post(
 
 // 🔥 IMPORTANT : AVANT /:chapter
 router.get("/detail/:id", async (req, res) => {
-  console.log("🔥 ROUTE DETAIL APPELÉE");
-  res.send("OK");
   try {
+    console.log("🔥 ROUTE DETAIL APPELÉE");
+
     const astuce = await Astuce.findById(req.params.id);
 
     if (!astuce) {
       return res.status(404).json({ message: "Astuce introuvable" });
     }
 
-    res.json(astuce);
+    return res.json(astuce); // 🔥 IMPORTANT
   } catch (err) {
     console.error("Erreur get astuce by id:", err);
-    res.status(500).json({ message: "Erreur serveur" });
+    return res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
