@@ -3,8 +3,14 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+
   resolve: {
-    dedupe: ["react", "react-dom"],
-   
+    alias: {
+      "pdfjs-dist": "pdfjs-dist/build/pdf"
+    }
   },
+
+  optimizeDeps: {
+    include: ["pdfjs-dist/build/pdf"]
+  }
 });

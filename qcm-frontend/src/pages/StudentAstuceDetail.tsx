@@ -9,11 +9,6 @@ import parse from "html-react-parser";
 
 import { Document, Page, pdfjs } from "react-pdf";
 
-// 🔥 SOLUTION MODERNE VITE
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.js",
-  import.meta.url
-).toString();
 
 /* ================= SAFE ================= */
 
@@ -136,16 +131,16 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
   }}
   onLoadSuccess={({ numPages }) => setNumPages(numPages)}
   onLoadError={(err) => console.error("❌ PDF ERROR:", err)}
-  options={{
-    cMapUrl: "https://unpkg.com/pdfjs-dist/cmaps/",
-    cMapPacked: true,
-  }}
+  //options={{
+//    cMapUrl: "https://unpkg.com/pdfjs-dist/cmaps/",
+    //cMapPacked: true,
+  //}}
 >
   <Page
     pageNumber={pageNumber}
     scale={scale}
     renderAnnotationLayer={false}
-    renderTextLayer={true}
+    renderTextLayer={false}
   />
 </Document>
          </div>
