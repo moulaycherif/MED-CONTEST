@@ -7,15 +7,10 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
   try {
     const { chapter } = req.params;
 
-    console.log("📘 Chapter reçu :", chapter);
-
     const astuces = await Astuce.find({
       chapter: { $regex: chapter.trim(), $options: "i" },
     });
-
-    console.log("📊 Astuces trouvées :", astuces.length);
-    console.log("📊 Résultat Mongo :", astuces);
-
+    
     const safeAstuces = astuces.map((tip: any) => ({
       _id: tip._id,
       subject: tip.subject,

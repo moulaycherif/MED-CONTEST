@@ -12,9 +12,6 @@ const upload = multer();
 
 const router = Router();
 
-console.log("✅ astuceRoutes chargé");
-
-console.log("astuceRoutes :",uploadAstucePdf);
 
 /* 🔵 ADMIN — LISTE TOUTES LES ASTUCES */
 router.get("/", async (req, res) => {
@@ -47,7 +44,6 @@ router.post(
 // 🔥 IMPORTANT : AVANT /:chapter
 router.get("/detail/:id", async (req, res) => {
   try {
-    console.log("🔥 ROUTE DETAIL APPELÉE");
 
     const astuce = await Astuce.findById(req.params.id);
 
