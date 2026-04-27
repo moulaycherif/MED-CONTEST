@@ -92,8 +92,6 @@ const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
 
 const [exams, setExams] = useState<{ _id: string; title: string }[]>([]);
 
-console.log("ASTUCES:", astuces);
-
 useEffect(() => {
   axios
     .get(`${API_BASE_URL}/api/questions/exams`)
@@ -458,7 +456,7 @@ if (section === "soutien" && selectedMatiere) {
       <div className="mt-3 text-blue-600">
         👉 Voir l’astuce
       </div>
-      console.log("TIP:", tip);
+      
     </div>
     
   ))}
