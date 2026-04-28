@@ -45,6 +45,7 @@ interface TipCase {
   content?: string;
   explanation?: string;
   example?: string;
+  image?: string; // 🔥 AJOUT
 }
 
 interface Tip {
@@ -71,6 +72,13 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
   const [scale, setScale] = useState(1.2);
 
   const [currentCase, setCurrentCase] = useState(0);
+
+  useEffect(() => {
+  const el = document.getElementById(`page_${pageNumber}`);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth" });
+  }
+}, [pageNumber]);
 
   useEffect(() => {
     if (id) fetchTip();
@@ -111,17 +119,40 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
       {tip.pdfUrl && (
         <div className="mt-6">
 
-          <div className="flex gap-4 mb-4 items-center">
-            <button onClick={() => setPageNumber(p => Math.max(p - 1, 1))}>◀</button>
+          {/* 🔥 TOOLBAR PREMIUM */}
+<div className="sticky top-0 z-10 bg-white border p-3 rounded-lg shadow flex flex-wrap gap-4 items-center justify-between">
 
-            <span>{pageNumber} / {numPages}</span>
+  {/* Navigation */}
+  <div className="flex items-center gap-2">
+    <button onClick={() => setPageNumber(p => Math.max(p - 1, 1))}>◀</button>
 
-            <button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))}>▶</button>
+    <span className="text-sm font-medium">
+      Page {pageNumber} / {numPages}
+    </span>
 
-            <button onClick={() => setScale(s => s + 0.2)}>➕</button>
-            <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
-          </div>
+    <button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))}>▶</button>
+  </div>
 
+  {/* Zoom */}
+  <div className="flex items-center gap-2">
+    <button onClick={() => setScale(s => s + 0.2)}>➕</button>
+    <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
+  </div>
+
+  {/* Scroll direct */}
+  <div className="flex items-center gap-2">
+    <input
+      type="number"
+      min={1}
+      max={numPages}
+      value={pageNumber}
+      onChange={(e) => setPageNumber(Number(e.target.value))}
+      className="w-16 border px-2 py-1 rounded"
+    />
+    <span className="text-sm">Go</span>
+  </div>
+
+</div>
           <Document
   file={{
     url: tip.pdfUrl,
@@ -134,12 +165,16 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
     //cMapPacked: true,
   //}}
 >
+ {Array.from(new Array(numPages), (_, i) => (
+  <div id={`page_${i + 1}`} key={i}>
   <Page
-    pageNumber={pageNumber}
+    pageNumber={i + 1}
     scale={scale}
-    renderAnnotationLayer={false}
     renderTextLayer={false}
+    renderAnnotationLayer={false}
   />
+</div>
+))}
 </Document>
          </div>
       )}
@@ -161,6 +196,14 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
               {renderWithMath(current.example)}
             </div>
           )}
+
+          {current.image && (
+  <img
+    src={current.image}
+    alt="astuce"
+    className="mt-4 rounded-lg shadow max-h-[400px] object-contain"
+  />
+)}
 
           <div className="flex justify-between mt-6">
 
