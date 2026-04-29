@@ -122,14 +122,9 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
           {/* 🔥 TOOLBAR PREMIUM */}
 <div className="sticky top-0 z-10 bg-white border p-3 rounded-lg shadow flex flex-wrap gap-4 items-center justify-between">
 
-  {/* Navigation */}
- 
-    <span className="text-sm font-medium">
-      ZOOM
-    </span> 
 
   {/* Zoom */}
-  <div className="flex items-center gap-2">
+  <div className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"> ZOOM
     <button onClick={() => setScale(s => s + 0.2)}>➕</button>
     <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
   </div>
