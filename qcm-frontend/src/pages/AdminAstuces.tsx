@@ -106,6 +106,26 @@ const AdminAstuces: React.FC = () => {
     }
   };
 
+  const handleImageUpload = async (e: any, index: number) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/api/astuces/upload-image`,
+      formData
+    );
+
+    updateCase(index, "image", res.data.imageUrl);
+
+  } catch (err) {
+    console.error("❌ upload image:", err);
+  }
+};
+
   /* ===================== CASES ===================== */
 
   const updateCase = (
@@ -276,6 +296,16 @@ const AdminAstuces: React.FC = () => {
                   }
                   className="border p-2 w-full mb-2"
                 />
+
+                <input
+  type="file"
+  accept="image/*"
+  onChange={(e) => handleImageUpload(e, index)}
+/>
+
+{c.image && (
+  <img src={c.image} className="mt-2 rounded max-h-40" />
+)}
 
                 <TipTapEditor
                   value={c.content}
