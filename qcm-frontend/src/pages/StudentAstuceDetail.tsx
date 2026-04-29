@@ -130,17 +130,6 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
   </div>
 
   {/* Scroll direct */}
-  <div className="flex items-center gap-2">
-    <input
-      type="number"
-      min={1}
-      max={numPages}
-      value={pageNumber}
-      onChange={(e) => setPageNumber(Number(e.target.value))}
-      className="w-16 border px-2 py-1 rounded"
-    />
-    <span className="text-sm">Go</span>
-  </div>
 
 </div>
           <Document
