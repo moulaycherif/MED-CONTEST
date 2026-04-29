@@ -118,12 +118,24 @@ const AdminAstuces: React.FC = () => {
   formData.append("file", file);
 
   try {
+    console.log("🚀 CASES AVANT ENVOI:", cases);
     const res = await axios.post(
       `${API_BASE_URL}/api/astuces/upload-image`,
       formData
     );
 
-    updateCase(index, "image", res.data.imageUrl);
+    const imageUrl = res.data.imageUrl;
+
+    setCases((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        image: imageUrl,
+      };
+      return updated;
+    });
+
+    console.log("✅ IMAGE UPLOADED:", imageUrl);
 
   } catch (err) {
     console.error("❌ upload image:", err);
