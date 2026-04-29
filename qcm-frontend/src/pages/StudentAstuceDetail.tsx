@@ -119,7 +119,6 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
       {tip.pdfUrl && (
         <div className="mt-6">
 
-<<<<<<< HEAD
           {/* 🔥 TOOLBAR PREMIUM */}
 <div className="sticky top-0 z-10 bg-white border p-3 rounded-lg shadow flex flex-wrap gap-4 items-center justify-between">
 
@@ -155,7 +154,6 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
 
 </div>
           <Document
-=======
   {/* Zoom */}
   <div className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"> ZOOM
     <button onClick={() => setScale(s => s + 0.2)}>➕</button>
@@ -163,7 +161,6 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
   </div>
 
   <Document
->>>>>>> 0c4f270087c61d016abb6e1fabed94c3ca4cf4e9
   file={{
     url: tip.pdfUrl,
     withCredentials: false,
