@@ -4,6 +4,9 @@ html, body, #root {
   margin: 0;
   background: none;
 }
+html {
+  scroll-behavior: smooth;
+}
 
 @tailwind base;
 @tailwind components;

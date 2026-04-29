@@ -6,8 +6,11 @@ import TipTapEditor from "../components/TipTapEditor";
 /* ===================== TYPES ===================== */
 
 interface TipCase {
-  title: string;
-  content: string;
+  title?: string;
+  content?: string;
+  explanation?: string;
+  example?: string;
+  image?: string; // 🔥 AJOUT
 }
 
 interface Tip {
