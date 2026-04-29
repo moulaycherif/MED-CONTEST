@@ -123,15 +123,16 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
 <div className="sticky top-0 z-10 bg-white border p-3 rounded-lg shadow flex flex-wrap gap-4 items-center justify-between">
 
   {/* Navigation */}
-  <div className="flex items-center gap-2">
-    <button onClick={() => setPageNumber(p => Math.max(p - 1, 1))}>◀</button>
+  //<div className="flex items-center gap-2">
+    //<button onClick={() => setPageNumber(p => Math.max(p - 1, 1))}>◀</button>
 
     <span className="text-sm font-medium">
-      Page {pageNumber} / {numPages}
+      ZOOM
+  // Page {pageNumber} / {numPages}
     </span>
 
-    <button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))}>▶</button>
-  </div>
+    //<button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))}>▶</button>
+  //</div>
 
   {/* Zoom */}
   <div className="flex items-center gap-2">
