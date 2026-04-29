@@ -154,13 +154,6 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
 
 </div>
           <Document
-  {/* Zoom */}
-  <div className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"> ZOOM
-    <button onClick={() => setScale(s => s + 0.2)}>➕</button>
-    <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
-  </div>
-
-  <Document
   file={{
     url: tip.pdfUrl,
     withCredentials: false,
