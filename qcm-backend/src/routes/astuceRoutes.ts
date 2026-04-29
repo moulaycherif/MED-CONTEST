@@ -5,6 +5,7 @@ import {
   uploadAstucePdf
 } from "../controllers/astucesController";
 import Astuce from "../models/Astuce";
+import { supabase } from "../config/supabase";
 
 import multer from "multer";
 
@@ -39,6 +40,39 @@ router.post(
     next();
   },
   uploadAstucePdf
+);
+
+router.post(
+  "/upload-image",
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "Aucun fichier" });
+      }
+
+      // 🔥 Upload vers Supabase (comme PDF)
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+
+      const { data, error } = await supabase.storage
+        .from("astuces")
+        .upload(`images/${fileName}`, req.file.buffer, {
+          contentType: req.file.mimetype,
+        });
+
+      if (error) throw error;
+
+      const { data: publicUrl } = supabase.storage
+        .from("astuces")
+        .getPublicUrl(`images/${fileName}`);
+
+      res.json({ imageUrl: publicUrl.publicUrl });
+
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Erreur upload image" });
+    }
+  }
 );
 
 // 🔥 IMPORTANT : AVANT /:chapter

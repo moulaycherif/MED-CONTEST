@@ -11,6 +11,8 @@ const TipSchema = new mongoose.Schema(
     cases: [
       {
         title: String,
+        content: String,
+        image: String, // 🔥 IMPORTANT
         explanation: String,
         example: String,
       },
