@@ -40,6 +40,8 @@ const AdminAstuces: React.FC = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const [cases, setCases] = useState<TipCase[]>([
     { title: "", content: "" },
   ]);
@@ -55,9 +57,9 @@ const AdminAstuces: React.FC = () => {
     }
   }, [mode]);
 
-  useEffect(() => {
-  console.log("📦 DATA DB:", tips);
-}, [tips]);
+ useEffect(() => {
+  console.log("📦 CASES UPDATED:", cases);
+}, [cases]);
 
   /* ===================== FETCH ===================== */
 
@@ -110,15 +112,16 @@ const AdminAstuces: React.FC = () => {
     }
   };
 
-  const handleImageUpload = async (e: any, index: number) => {
+ const handleImageUpload = async (e: any, index: number) => {
   const file = e.target.files[0];
   if (!file) return;
+
+  setUploadingImage(true);
 
   const formData = new FormData();
   formData.append("file", file);
 
   try {
-    console.log("🚀 CASES AVANT ENVOI:", cases);
     const res = await axios.post(
       `${API_BASE_URL}/api/astuces/upload-image`,
       formData
@@ -135,10 +138,12 @@ const AdminAstuces: React.FC = () => {
       return updated;
     });
 
-    console.log("✅ IMAGE UPLOADED:", imageUrl);
+    console.log("✅ IMAGE SET IN STATE:", imageUrl);
 
   } catch (err) {
     console.error("❌ upload image:", err);
+  } finally {
+    setUploadingImage(false);
   }
 };
 
@@ -174,6 +179,11 @@ const AdminAstuces: React.FC = () => {
       alert("⚠️ Veuillez uploader un PDF");
       return;
     }
+
+    if (uploadingImage) {
+  alert("⏳ Upload image en cours...");
+  return;
+}
 
     if (
   mode === "manual" &&
@@ -354,11 +364,12 @@ const AdminAstuces: React.FC = () => {
 
         {/* ================= SAVE ================= */}
         <button
-          onClick={createTip}
-          className="bg-indigo-600 text-white px-4 py-2 rounded mt-6"
-        >
-          💾 Enregistrer
-        </button>
+  onClick={createTip}
+  disabled={uploadingImage}
+  className="bg-indigo-600 text-white px-4 py-2 rounded mt-6 disabled:opacity-50"
+>
+  💾 Enregistrer
+</button>
       </div>
 
       {/* ================= LIST ================= */}
