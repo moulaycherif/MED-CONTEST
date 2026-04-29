@@ -159,14 +159,19 @@ const AdminAstuces: React.FC = () => {
       return;
     }
 
-    if (mode === "manual" && cases.some((c) => !c.content.trim())) {
-      alert("⚠️ Chaque cas doit contenir du contenu");
-      return;
-    }
+    if (
+  mode === "manual" &&
+  cases.some((c) => !c.content?.trim() && !c.image)
+) {
+  alert("⚠️ Chaque cas doit avoir du texte ou une image");
+  return;
+}
 
     try {
       const cleanCases = cases.filter(
-  (c) => c && c.content && c.content.trim() !== ""
+  (c) =>
+    (c.content && c.content.trim() !== "") ||
+    (c.image && c.image !== "")
 );
       await axios.post(`${API_BASE_URL}/api/astuces`, {
         subject,
@@ -343,22 +348,72 @@ const AdminAstuces: React.FC = () => {
       {/* ================= LIST ================= */}
       <h2 className="text-2xl mb-4">📚 Astuces</h2>
 
-      {tips.map((tip) => (
-        <div key={tip._id} className="border p-4 mb-2">
-          <b>
-            {tip.subject} — {tip.chapter}
-          </b>
-          <div>{tip.title}</div>
+<div className="grid md:grid-cols-2 gap-4">
+  {tips.map((tip) => {
+    const hasPDF = !!tip.pdfUrl;
+    const hasImage = tip.cases?.some((c) => c.image);
+    const hasText = tip.cases?.some((c) => c.content);
 
-          {tip.pdfUrl && (
-            <span className="text-green-600">📄 PDF</span>
+    return (
+      <div
+        key={tip._id}
+        className="border p-4 rounded-xl shadow hover:shadow-lg transition"
+      >
+        <div className="text-sm text-gray-500">
+          {tip.subject} — {tip.chapter}
+        </div>
+
+        <h3 className="font-bold text-lg">{tip.title}</h3>
+
+        {/* 🔥 TYPE BADGE */}
+        <div className="mt-2">
+          {hasPDF && (
+            <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
+              📄 PDF
+            </span>
           )}
 
-          {!tip.pdfUrl && (
-            <span className="text-blue-600">✍️ Manuel</span>
+          {!hasPDF && hasImage && (
+            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-sm">
+              🖼️ Image
+            </span>
+          )}
+
+          {!hasPDF && !hasImage && hasText && (
+            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm">
+              ✍️ Texte
+            </span>
           )}
         </div>
-      ))}
+
+        {/* 🔥 PREVIEW PDF */}
+        {hasPDF && (
+          <div className="mt-3 text-sm text-gray-600">
+            📄 Astuce en format PDF
+          </div>
+        )}
+
+        {/* 🔥 PREVIEW IMAGE */}
+        {!hasPDF && hasImage && (
+          <img
+            src={tip.cases.find((c) => c.image)?.image}
+            className="mt-3 rounded-lg max-h-40 object-cover w-full"
+          />
+        )}
+
+        {/* 🔥 PREVIEW TEXTE */}
+        {!hasPDF && !hasImage && hasText && (
+          <div
+            className="mt-3 text-gray-700 line-clamp-3 text-sm"
+            dangerouslySetInnerHTML={{
+              __html: tip.cases[0]?.content || "",
+            }}
+          />
+        )}
+      </div>
+    );
+  })}
+</div>
     </div>
   );
 };
