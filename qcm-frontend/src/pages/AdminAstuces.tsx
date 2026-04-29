@@ -44,8 +44,6 @@ const AdminAstuces: React.FC = () => {
     { title: "", content: "" },
   ]);
 
-  console.log("📦 DATA DB:", tips);
-
   /* ===================== RESET MODE ===================== */
 
   useEffect(() => {
@@ -56,6 +54,10 @@ const AdminAstuces: React.FC = () => {
       setPdfUrl("");
     }
   }, [mode]);
+
+  useEffect(() => {
+  console.log("📦 DATA DB:", tips);
+}, [tips]);
 
   /* ===================== FETCH ===================== */
 
