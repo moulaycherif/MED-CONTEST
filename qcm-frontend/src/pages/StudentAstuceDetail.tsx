@@ -132,11 +132,7 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
   }}
   onLoadSuccess={({ numPages }) => setNumPages(numPages)}
   onLoadError={(err) => console.error("❌ PDF ERROR:", err)}
-  //options={{
-//    cMapUrl: "https://unpkg.com/pdfjs-dist/cmaps/",
-    //cMapPacked: true,
-  //}}
->
+ >
  {Array.from(new Array(numPages), (_, i) => (
   <div id={`page_${i + 1}`} key={i}>
   <Page
@@ -177,27 +173,6 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
     className="max-h-24 object-contain"
   />
 )}
-
-          <div className="flex justify-between mt-6">
-
-            <button
-              onClick={() => {
-                setCurrentCase(c => Math.max(0, c - 1));
-                setPageNumber(currentCase);
-              }}
-            >
-              ◀
-            </button>
-
-            <button
-              onClick={() => {
-                setCurrentCase(c => Math.min((tip.cases?.length || 1) - 1, c + 1));
-                setPageNumber(currentCase + 2);
-              }}
-            >
-              ▶
-            </button>
-          </div>
 
           <button
             className="mt-4 bg-green-600 text-white px-4 py-2 rounded"

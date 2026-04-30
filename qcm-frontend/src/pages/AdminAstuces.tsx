@@ -46,15 +46,6 @@ const AdminAstuces: React.FC = () => {
     { title: "", content: "" },
   ]);
 
-// 👇 ICI
-useEffect(() => {
-  console.log("⚠️ MODE CHANGED:", mode);
-}, [mode]);
-
-useEffect(() => {
-  console.log("📦 CASES UPDATED:", cases);
-}, [cases]);
-
 const addCase = () => {
   setCases((prev) => [
     ...prev,
@@ -182,15 +173,11 @@ const removeCase = (index: number) => {
   const createTip = async () => {
   const casesCopy = [...cases]; // 🔥 IMPORTANT
 
-  console.log("🚀 CASES AVANT FILTER:", casesCopy);
-
   const cleanCases = casesCopy.filter(
     (c) =>
       (c.content && c.content.trim() !== "") ||
       (c.image && c.image.trim() !== "")
   );
-
-  console.log("🚀 CASES APRÈS FILTER:", cleanCases);
 
   await axios.post(`${API_BASE_URL}/api/astuces`, {
     subject,
@@ -406,7 +393,7 @@ const removeCase = (index: number) => {
   <img
     src={tip.cases.find((c) => c.image)?.image}
     loading="lazy"
-    className="max-h-32 object-contain"
+    className="max-h-24 object-contain"
   />
 </div>
         )}
