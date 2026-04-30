@@ -375,7 +375,13 @@ const removeCase = (index: number) => {
         {/* ================= SAVE ================= */}
         <button
   onClick={() => {
-    console.log("🚀 FINAL CASES:", cases);
+    console.log("🚀 FINAL PAYLOAD:", {
+  subject,
+  chapter,
+  title,
+  cases: cleanCases,
+  pdfUrl
+});
     createTip();
   }}
   disabled={uploadingImage}
