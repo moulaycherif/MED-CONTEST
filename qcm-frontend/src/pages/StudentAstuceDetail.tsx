@@ -173,7 +173,7 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
   <img
     src={current.image}
     alt="astuce"
-    className="mt-4 rounded-lg shadow max-h-[400px] object-contain"
+    className="mt-4 rounded-lg shadow max-h-[200px] object-contain"
   />
 )}
 
