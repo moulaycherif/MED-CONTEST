@@ -402,10 +402,13 @@ const removeCase = (index: number) => {
 
         {/* 🔥 PREVIEW IMAGE */}
         {!hasPDF && hasImage && (
-          <img
-            src={tip.cases.find((c) => c.image)?.image}
-            className="mt-3 rounded-lg max-h-40 object-cover w-full"
-          />
+          <div className="mt-3 flex justify-center bg-gray-50 p-2 rounded">
+  <img
+    src={tip.cases.find((c) => c.image)?.image}
+    loading="lazy"
+    className="max-h-40 object-contain"
+  />
+</div>
         )}
 
         {/* 🔥 PREVIEW TEXTE */}
