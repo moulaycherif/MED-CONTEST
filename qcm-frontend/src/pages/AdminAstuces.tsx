@@ -46,6 +46,17 @@ const AdminAstuces: React.FC = () => {
     { title: "", content: "" },
   ]);
 
+const addCase = () => {
+  setCases((prev) => [
+    ...prev,
+    { title: "", content: "", image: "" }
+  ]);
+};
+
+const removeCase = (index: number) => {
+  setCases((prev) => prev.filter((_, i) => i !== index));
+};
+
   /* ===================== RESET MODE ===================== */
 
   useEffect(() => {
@@ -363,11 +374,13 @@ const AdminAstuces: React.FC = () => {
 
         {/* ================= SAVE ================= */}
         <button
-  onClick={createTip}
+  onClick={() => {
+    console.log("🚀 FINAL CASES:", cases);
+    createTip();
+  }}
   disabled={uploadingImage}
   className="bg-indigo-600 text-white px-4 py-2 rounded mt-6 disabled:opacity-50"
 >
-  console.log("🚀 FINAL CASES:", cases);
   💾 Enregistrer
 </button>
       </div>
