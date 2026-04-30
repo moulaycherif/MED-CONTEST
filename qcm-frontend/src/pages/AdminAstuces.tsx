@@ -65,10 +65,6 @@ const removeCase = (index: number) => {
   }
 }, [mode]);
 
- useEffect(() => {
-  console.log("📦 CASES UPDATED:", cases);
-}, [cases]);
-
   /* ===================== FETCH ===================== */
 
   useEffect(() => {
@@ -145,8 +141,6 @@ const removeCase = (index: number) => {
       };
       return updated;
     });
-
-    console.log("✅ IMAGE SET IN STATE:", imageUrl);
 
   } catch (err) {
     console.error("❌ upload image:", err);
@@ -375,13 +369,7 @@ const removeCase = (index: number) => {
         {/* ================= SAVE ================= */}
         <button
   onClick={() => {
-    console.log("🚀 FINAL PAYLOAD:", {
-  subject,
-  chapter,
-  title,
-  cases,
-  pdfUrl
-});
+   
     createTip();
   }}
   disabled={uploadingImage}
