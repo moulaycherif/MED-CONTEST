@@ -31,7 +31,7 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
 /* 🟢 CRÉATION ASTUCE */
 export const createAstuce = async (req: Request, res: Response) => {
   try {
-    console.log("📥 BODY REÇU:", req.body); // 🔥 ICI
+    
     const { subject, chapter, title, description, cases, pdfUrl } = req.body;
 
     if (!subject || !chapter || !title) {
