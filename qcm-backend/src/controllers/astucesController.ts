@@ -31,6 +31,7 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
 /* 🟢 CRÉATION ASTUCE */
 export const createAstuce = async (req: Request, res: Response) => {
   try {
+    console.log("📥 BODY REÇU:", req.body); // 🔥 ICI
     const { subject, chapter, title, description, cases, pdfUrl } = req.body;
 
     if (!subject || !chapter || !title) {
@@ -38,13 +39,20 @@ export const createAstuce = async (req: Request, res: Response) => {
     }
 
     const normalizedCases = (cases || [])
-      .filter((c: any) => c && (c.content || c.explanation))
-      .map((c: any) => ({
-        title: c.title || "",
-        content: c.content || c.explanation || "",
-        explanation: c.explanation || c.content || "",
-        example: c.example || "",
-      }));
+  .filter((c: any) =>
+    c && (
+      (c.content && c.content.trim() !== "") ||
+      (c.explanation && c.explanation.trim() !== "") ||
+      (c.image && c.image.trim() !== "") // 🔥 AJOUT
+    )
+  )
+  .map((c: any) => ({
+    title: c.title || "",
+    content: c.content || c.explanation || "",
+    explanation: c.explanation || c.content || "",
+    example: c.example || "",
+    image: c.image || "", // 🔥 AJOUT
+  }));
 
     const astuce = new Astuce({
       subject,

@@ -12,6 +12,7 @@ const AstuceSchema = new mongoose.Schema(
         {
           title: { type: String },
           content: { type: String },
+           image: { type: String }, // 🔥 AJOUT ICI
         },
       ],
       default: [], // 🔥 TRÈS IMPORTANT
