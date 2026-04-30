@@ -119,41 +119,13 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
       {tip.pdfUrl && (
         <div className="mt-6">
 
-          {/* 🔥 TOOLBAR PREMIUM */}
-<div className="sticky top-0 z-10 bg-white border p-3 rounded-lg shadow flex flex-wrap gap-4 items-center justify-between">
-
-  {/* Navigation */}
-  <div className="flex items-center gap-2">
-    <button onClick={() => setPageNumber(p => Math.max(p - 1, 1))}>◀</button>
-
-    <span className="text-sm font-medium">
-      Page {pageNumber} / {numPages}
-    </span>
-
-    <button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))}>▶</button>
-  </div>
-
   {/* Zoom */}
-  <div className="flex items-center gap-2">
+  <div className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"> ZOOM
     <button onClick={() => setScale(s => s + 0.2)}>➕</button>
     <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
   </div>
 
-  {/* Scroll direct */}
-  <div className="flex items-center gap-2">
-    <input
-      type="number"
-      min={1}
-      max={numPages}
-      value={pageNumber}
-      onChange={(e) => setPageNumber(Number(e.target.value))}
-      className="w-16 border px-2 py-1 rounded"
-    />
-    <span className="text-sm">Go</span>
-  </div>
-
-</div>
-          <Document
+  <Document
   file={{
     url: tip.pdfUrl,
     withCredentials: false,
