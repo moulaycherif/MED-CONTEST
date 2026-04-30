@@ -100,9 +100,9 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
     <div className="border rounded-xl shadow bg-white">
       {/* TOOLBAR */}
       <div className="flex gap-2 p-2 border-b bg-gray-100">
-        <button onClick={() => editor.chain().focus().toggleBold().run()}>
-          <b>B</b>
-        </button>
+        // <button onClick={() => editor.chain().focus().toggleBold().run()}>
+//          <b>B</b>
+        // </button>
 
         <button onClick={() => editor.chain().focus().toggleItalic().run()}>
           <i>I</i>
