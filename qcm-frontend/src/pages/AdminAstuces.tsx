@@ -46,6 +46,15 @@ const AdminAstuces: React.FC = () => {
     { title: "", content: "" },
   ]);
 
+// 👇 ICI
+useEffect(() => {
+  console.log("⚠️ MODE CHANGED:", mode);
+}, [mode]);
+
+useEffect(() => {
+  console.log("📦 CASES UPDATED:", cases);
+}, [cases]);
+
 const addCase = () => {
   setCases((prev) => [
     ...prev,
@@ -193,19 +202,21 @@ const removeCase = (index: number) => {
   alert("⚠️ Chaque cas doit avoir du texte ou une image");
   return;
 }
+ // 👇 ICI
+  console.log("🚀 CASES AVANT FILTER:", cases);
 
     try {
       const cleanCases = cases.filter(
   (c) =>
     (c.content && c.content.trim() !== "") ||
-    (c.image && c.image !== "")
+    (c.image && c.image.trim() !== "")
 );
       await axios.post(`${API_BASE_URL}/api/astuces`, {
         subject,
         chapter,
         title,
         description,
-        cases: pdfUrl ? [] : cleanCases, // 🔥 IMPORTANT
+        cases: mode === "manual" ? cleanCases : [], // 🔥 IMPORTANT
         pdfUrl,
         //cases: mode === "manual" ? cases : [],
         //pdfUrl: mode === "pdf" ? pdfUrl : null,
@@ -220,7 +231,7 @@ const removeCase = (index: number) => {
       setChapter("");
       setTitle("");
       setDescription("");
-      setCases([{ title: "", content: "" }]);
+      setCases([{ title: "", content: "", image: "" }]);
       setPdfUrl("");
     } catch (err) {
       console.error("❌ Erreur création astuce :", err);
