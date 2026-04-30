@@ -180,64 +180,30 @@ const removeCase = (index: number) => {
   /* ===================== CREATE ===================== */
 
   const createTip = async () => {
-    if (!subject || !chapter || !title) {
-      alert("⚠️ Matière, chapitre et titre sont obligatoires");
-      return;
-    }
+  const casesCopy = [...cases]; // 🔥 IMPORTANT
 
-    if (mode === "pdf" && !pdfUrl) {
-      alert("⚠️ Veuillez uploader un PDF");
-      return;
-    }
+  console.log("🚀 CASES AVANT FILTER:", casesCopy);
 
-    if (uploadingImage) {
-  alert("⏳ Upload image en cours...");
-  return;
-}
+  const cleanCases = casesCopy.filter(
+    (c) =>
+      (c.content && c.content.trim() !== "") ||
+      (c.image && c.image.trim() !== "")
+  );
 
-    if (
-  mode === "manual" &&
-  cases.some((c) => !c.content?.trim() && !c.image)
-) {
-  alert("⚠️ Chaque cas doit avoir du texte ou une image");
-  return;
-}
- // 👇 ICI
-  console.log("🚀 CASES AVANT FILTER:", cases);
+  console.log("🚀 CASES APRÈS FILTER:", cleanCases);
 
-    try {
-      const cleanCases = cases.filter(
-  (c) =>
-    (c.content && c.content.trim() !== "") ||
-    (c.image && c.image.trim() !== "")
-);
-      await axios.post(`${API_BASE_URL}/api/astuces`, {
-        subject,
-        chapter,
-        title,
-        description,
-        cases: mode === "manual" ? cleanCases : [], // 🔥 IMPORTANT
-        pdfUrl,
-        //cases: mode === "manual" ? cases : [],
-        //pdfUrl: mode === "pdf" ? pdfUrl : null,
-      });
+  await axios.post(`${API_BASE_URL}/api/astuces`, {
+    subject,
+    chapter,
+    title,
+    description,
+    cases: mode === "manual" ? cleanCases : [],
+    pdfUrl,
+  });
 
-      alert("✅ Astuce enregistrée avec succès");
-
-      fetchTips();
-
-      /* RESET */
-      setSubject("");
-      setChapter("");
-      setTitle("");
-      setDescription("");
-      setCases([{ title: "", content: "", image: "" }]);
-      setPdfUrl("");
-    } catch (err) {
-      console.error("❌ Erreur création astuce :", err);
-      alert("Erreur lors de la création");
-    }
-  };
+  // 👉 RESET APRÈS (ok ici)
+  setCases([{ title: "", content: "", image: "" }]);
+};
 
   /* ===================== RENDER ===================== */
 
@@ -379,12 +345,8 @@ const removeCase = (index: number) => {
 
         {/* ================= SAVE ================= */}
         <button
-  onClick={() => {
-   
-    createTip();
-  }}
+  onClick={createTip}  // 👈 direct, pas de wrapper inutile
   disabled={uploadingImage}
-  className="bg-indigo-600 text-white px-4 py-2 rounded mt-6 disabled:opacity-50"
 >
   💾 Enregistrer
 </button>
