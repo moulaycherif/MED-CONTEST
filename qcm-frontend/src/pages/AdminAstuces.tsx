@@ -49,13 +49,10 @@ const AdminAstuces: React.FC = () => {
   /* ===================== RESET MODE ===================== */
 
   useEffect(() => {
-    if (mode === "pdf") {
-      setCases([{ title: "", content: "" }]);
-    }
-    if (mode === "manual") {
-      setPdfUrl("");
-    }
-  }, [mode]);
+  if (mode === "pdf") {
+    setCases([{ title: "", content: "" }]);
+  }
+}, [mode]);
 
  useEffect(() => {
   console.log("📦 CASES UPDATED:", cases);
@@ -149,23 +146,22 @@ const AdminAstuces: React.FC = () => {
 
   /* ===================== CASES ===================== */
 
-  const updateCase = (
-    index: number,
-    field: keyof TipCase,
-    value: string
-  ) => {
-    const updated = [...cases];
-    updated[index][field] = value;
-    setCases(updated);
-  };
+ const updateCase = (
+  index: number,
+  field: keyof TipCase,
+  value: string
+) => {
+  setCases((prev) => {
+    const updated = [...prev];
 
-  const addCase = () => {
-    setCases([...cases, { title: "", content: "" }]);
-  };
+    updated[index] = {
+      ...updated[index],
+      [field]: value,
+    };
 
-  const removeCase = (index: number) => {
-    setCases(cases.filter((_, i) => i !== index));
-  };
+    return updated;
+  });
+};
 
   /* ===================== CREATE ===================== */
 
@@ -331,7 +327,10 @@ const AdminAstuces: React.FC = () => {
                 <input
   type="file"
   accept="image/*"
-  onChange={(e) => handleImageUpload(e, index)}
+  onChange={(e) => {
+    if (!e.target.files?.length) return;
+    handleImageUpload(e, index);
+  }}
 />
 
 {c.image && (
@@ -368,6 +367,7 @@ const AdminAstuces: React.FC = () => {
   disabled={uploadingImage}
   className="bg-indigo-600 text-white px-4 py-2 rounded mt-6 disabled:opacity-50"
 >
+  console.log("🚀 FINAL CASES:", cases);
   💾 Enregistrer
 </button>
       </div>
