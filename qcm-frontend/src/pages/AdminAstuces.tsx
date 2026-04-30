@@ -379,7 +379,7 @@ const removeCase = (index: number) => {
   subject,
   chapter,
   title,
-  cases: cleanCases,
+  cases,
   pdfUrl
 });
     createTip();
