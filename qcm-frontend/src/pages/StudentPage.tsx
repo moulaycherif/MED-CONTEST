@@ -43,6 +43,12 @@ interface Question {
   note: number;
 }
 
+interface TipCase {
+  title?: string;
+  content?: string;
+  image?: string;
+}
+
 export default function StudentPage() {
   // Navigation
   
@@ -70,6 +76,8 @@ export default function StudentPage() {
 const navigate = useNavigate();
 
 const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
+
+const [selectedTip, setSelectedTip] = useState<Astuce | null>(null);
 
   const chapterMaths = [
     "Chapitre I : Suites & Sommes",
@@ -430,40 +438,82 @@ if (section === "soutien" && selectedMatiere) {
 
   // 👉 1) ASTUCES
   if (selectedChapter && selectedAction === "Astuces") {
-    return (
-      <div className="p-6">
-        <h2 className="text-3xl font-bold text-center mb-6">
-          💡 {selectedChapter} — Astuces
-        </h2>
+   return (
+  <div className="p-6">
+    <h2 className="text-3xl font-bold text-center mb-6">
+      💡 {selectedChapter} — Astuces
+    </h2>
 
-        {astuces.length === 0 ? (
-          <p className="text-center text-gray-500">Aucune astuce trouvée…</p>
-        ) : (
-         <div className="grid gap-6">
-  {astuces.map((tip) => (
-    
-    <div
-      key={tip._id || Math.random()}
-      className="p-6 bg-white rounded-xl shadow cursor-pointer hover:shadow-lg"
-      onClick={() => setSelectedTipId(tip._id)}
-    >
-      <h3 className="text-xl font-bold">{tip.title || "Sans titre"}</h3>
-
-      <p className="text-gray-500 mt-2">
-        {tip.chapter || ""}
+    {astuces.length === 0 ? (
+      <p className="text-center text-gray-500">
+        Aucune astuce trouvée…
       </p>
+    ) : (
+      <>
+        {/* 🔥 BULLES */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          {astuces.map((tip) => (
+            <button
+              key={tip._id}
+              onClick={() => setSelectedTip(tip as Tip)}
+              className={`px-4 py-2 rounded-full transition ${
+                selectedTip?._id === tip._id
+                  ? "bg-indigo-600 text-white"
+                  : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+              }`}
+            >
+              {tip.title}
+            </button>
+          ))}
+        </div>
 
-      <div className="mt-3 text-blue-600">
-        👉 Voir l’astuce
-      </div>
-      
-    </div>
-    
-  ))}
-</div>
+        {/* 🔥 CONTENU */}
+        {selectedTip && (
+          <div className="bg-white p-6 rounded-xl shadow mt-4">
+            <h2 className="text-xl font-bold mb-4">
+              {selectedTip.title}
+            </h2>
+
+            {selectedTip.pdfUrl && (
+              <iframe
+                src={selectedTip.pdfUrl}
+                className="w-full h-[500px] rounded"
+              />
+            )}
+
+            {!selectedTip.pdfUrl &&
+              selectedTip.cases?.map((c, i) => (
+                <div key={i} className="mb-6">
+                  {c.title && (
+                    <h3 className="font-semibold mb-2">
+                      {c.title}
+                    </h3>
+                  )}
+
+                  {c.image && (
+                    <div className="flex justify-center mb-3">
+                      <img
+                        src={c.image}
+                        className="max-h-60 object-contain rounded"
+                      />
+                    </div>
+                  )}
+
+                  {c.content && (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: c.content,
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+          </div>
         )}
-      </div>
-    );
+      </>
+    )}
+  </div>
+);
   }
 
   // 👉 2) RÉSUMÉS
