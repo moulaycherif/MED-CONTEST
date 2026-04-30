@@ -202,7 +202,7 @@ const removeCase = (index: number) => {
   });
 
   // 👉 RESET APRÈS (ok ici)
-  setCases([{ title: "", content: "", image: "" }]);
+  // setCases([{ title: "", content: "", image: "" }]);
 };
 
   /* ===================== RENDER ===================== */
