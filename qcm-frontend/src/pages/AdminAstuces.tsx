@@ -406,7 +406,7 @@ const removeCase = (index: number) => {
   <img
     src={tip.cases.find((c) => c.image)?.image}
     loading="lazy"
-    className="max-h-40 object-contain"
+    className="max-h-32 object-contain"
   />
 </div>
         )}
