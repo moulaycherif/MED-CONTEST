@@ -26,7 +26,11 @@ const TipTapEditor: React.FC<Props> = ({ value, onChange }) => {
     content: value,
 
     onUpdate({ editor }) {
-      onChange(editor.getHTML());
+      let html = editor.getHTML();
+
+      html = convertMathMLToLatex(html)
+
+      onChange(html);
     },
 
    editorProps: {
