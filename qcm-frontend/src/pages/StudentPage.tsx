@@ -515,7 +515,9 @@ if (section === "soutien" && selectedMatiere) {
             {/* 📄 PDF */}
 
 {selectedTip.pdfUrl && (
+  <div className="max-w-3xl mx-auto">
   <PdfViewer url={selectedTip.pdfUrl} />
+</div>
 )}
 
             {/* 🧠 CASES */}
