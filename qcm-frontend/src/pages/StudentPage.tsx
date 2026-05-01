@@ -79,6 +79,21 @@ const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
 
 const [selectedTip, setSelectedTip] = useState<Astuce | null>(null);
 
+ // ✅ ESC pour fermer le modal
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedTip(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleEsc);
+
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, []);
+
   const chapterMaths = [
     "Chapitre I : Suites & Sommes",
     "Chapitre II : Limites, Continuité & Dérivabilité",
@@ -438,83 +453,102 @@ if (section === "soutien" && selectedMatiere) {
 
   // 👉 1) ASTUCES
   if (selectedChapter && selectedAction === "Astuces") {
-   return (
-  <div className="p-6">
-    <h2 className="text-3xl font-bold text-center mb-6">
-      💡 {selectedChapter} — Astuces
-    </h2>
+  return (
+    <div className="p-6 relative">
+      <h2 className="text-3xl font-bold text-center mb-8">
+        💡 {selectedChapter} — Astuces
+      </h2>
 
-    {astuces.length === 0 ? (
-      <p className="text-center text-gray-500">
-        Aucune astuce trouvée…
-      </p>
-    ) : (
-      <>
-        {/* 🔥 BULLES */}
-        <div className="flex flex-wrap gap-3 mb-6">
+      {astuces.length === 0 ? (
+        <p className="text-center text-gray-500">
+          Aucune astuce trouvée…
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-3 justify-center">
           {astuces.map((tip) => (
-            <button
+            <motion.button
               key={tip._id}
-              onClick={() => setSelectedTip(tip as Tip)}
-              className={`px-4 py-2 rounded-full transition ${
-                selectedTip?._id === tip._id
-                  ? "bg-indigo-600 text-white"
-                  : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
-              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSelectedTip(tip)}
+              className="px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow transition"
             >
               {tip.title}
-            </button>
+            </motion.button>
           ))}
         </div>
+      )}
 
-        {/* 🔥 CONTENU */}
-        {selectedTip && (
-          <div className="bg-white p-6 rounded-xl shadow mt-4">
-            <h2 className="text-xl font-bold mb-4">
+      {/* 🔥 MODAL */}
+      {selectedTip && (
+        <motion.div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          onClick={() => setSelectedTip(null)}
+        >
+          {/* STOP CLICK PROPAGATION */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative"
+            initial={{ scale: 0.8, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 120 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* ❌ CLOSE */}
+            <button
+              onClick={() => setSelectedTip(null)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl"
+            >
+              ✖
+            </button>
+
+            {/* 📌 TITLE */}
+            <h2 className="text-2xl font-bold mb-4 text-center">
               {selectedTip.title}
             </h2>
 
+            {/* 📄 PDF */}
             {selectedTip.pdfUrl && (
               <iframe
                 src={selectedTip.pdfUrl}
-                className="w-full h-[500px] rounded"
+                className="w-full h-[500px] rounded-xl border"
               />
             )}
 
+            {/* 🧠 CASES */}
             {!selectedTip.pdfUrl &&
               selectedTip.cases?.map((c, i) => (
-                <div key={i} className="mb-6">
+                <div key={i} className="mb-8">
                   {c.title && (
-                    <h3 className="font-semibold mb-2">
+                    <h3 className="font-semibold text-lg mb-2 text-indigo-700">
                       {c.title}
                     </h3>
                   )}
 
                   {c.image && (
-                    <div className="flex justify-center mb-3">
+                    <div className="flex justify-center mb-4">
                       <img
                         src={c.image}
-                        className="max-h-60 object-contain rounded"
+                        className="max-h-72 object-contain rounded-xl shadow"
                       />
                     </div>
                   )}
 
                   {c.content && (
                     <div
-                      dangerouslySetInnerHTML={{
-                        __html: c.content,
-                      }}
+                      className="prose max-w-none"
+                      dangerouslySetInnerHTML={{ __html: c.content }}
                     />
                   )}
                 </div>
               ))}
-          </div>
-        )}
-      </>
-    )}
-  </div>
-);
-  }
+          </motion.div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
 
   // 👉 2) RÉSUMÉS
   if (selectedChapter && selectedAction === "Résumé") {
