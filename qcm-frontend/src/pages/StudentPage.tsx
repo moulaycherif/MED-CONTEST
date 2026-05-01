@@ -16,6 +16,7 @@ import StudentSummaries from "./StudentSummaries";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import { useNavigate } from "react-router-dom";
 import StudentAstuceDetail from "./StudentAstuceDetail";
+import { Document, Page } from "react-pdf";
 
 interface Astuce {
   _id: string;
@@ -78,6 +79,8 @@ const navigate = useNavigate();
 const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
 
 const [selectedTip, setSelectedTip] = useState<Astuce | null>(null);
+
+const [numPages, setNumPages] = useState<number>(0);
 
  // ✅ ESC pour fermer le modal
   useEffect(() => {
@@ -509,16 +512,17 @@ if (section === "soutien" && selectedMatiere) {
             </h2>
 
             {/* 📄 PDF */}
-            {selectedTip.pdfUrl && (
-  <div className="text-center">
-    <a
-      href={selectedTip.pdfUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
-    >
-      📄 Ouvrir le PDF
-    </a>
+
+{selectedTip.pdfUrl && (
+  <div className="flex flex-col items-center">
+    <Document
+  file={selectedTip.pdfUrl}
+  onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+>
+  {Array.from(new Array(numPages), (_, i) => (
+    <Page key={i} pageNumber={i + 1} />
+  ))}
+</Document>
   </div>
 )}
 
