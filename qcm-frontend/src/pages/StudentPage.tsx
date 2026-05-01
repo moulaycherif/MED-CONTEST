@@ -17,6 +17,7 @@ import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import { useNavigate } from "react-router-dom";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import { Document, Page } from "react-pdf";
+import PdfViewer from "../components/PdfViewer";
 
 interface Astuce {
   _id: string;
@@ -514,16 +515,7 @@ if (section === "soutien" && selectedMatiere) {
             {/* 📄 PDF */}
 
 {selectedTip.pdfUrl && (
-  <div className="flex flex-col items-center">
-    <Document
-  file={selectedTip.pdfUrl}
-  onLoadSuccess={({ numPages }) => setNumPages(numPages)}
->
-  {Array.from(new Array(numPages), (_, i) => (
-    <Page key={i} pageNumber={i + 1} />
-  ))}
-</Document>
-  </div>
+  <PdfViewer url={selectedTip.pdfUrl} />
 )}
 
             {/* 🧠 CASES */}
