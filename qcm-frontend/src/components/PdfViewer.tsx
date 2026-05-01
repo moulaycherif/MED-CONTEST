@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 
 const [scale, setScale] = useState(1);
-const isClient = typeof window !== "undefined";
 
 // 🔥 IMPORTANT
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
@@ -33,7 +32,7 @@ const PdfViewer: React.FC<Props> = ({ url }) => {
   <button onClick={() => setScale(scale - 0.2)}>➖</button>
   <button onClick={() => setScale(scale + 0.2)}>➕</button>
 </div>
-if (!isClient) return null;
+
     </div>
     
   );
