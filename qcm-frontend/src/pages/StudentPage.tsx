@@ -510,11 +510,17 @@ if (section === "soutien" && selectedMatiere) {
 
             {/* 📄 PDF */}
             {selectedTip.pdfUrl && (
-              <iframe
-                src={selectedTip.pdfUrl}
-                className="w-full h-[500px] rounded-xl border"
-              />
-            )}
+  <div className="text-center">
+    <a
+      href={selectedTip.pdfUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
+    >
+      📄 Ouvrir le PDF
+    </a>
+  </div>
+)}
 
             {/* 🧠 CASES */}
             {!selectedTip.pdfUrl &&
