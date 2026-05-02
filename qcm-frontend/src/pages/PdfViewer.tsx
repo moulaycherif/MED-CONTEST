@@ -1,32 +1,40 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+
+const [scale, setScale] = useState(1);
+
+// 🔥 IMPORTANT
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface Props {
   url: string;
-  page?: number;
 }
 
-const PdfViewer: React.FC<Props> = ({ url, page = 1 }) => {
-  const [numPages, setNumPages] = useState(0);
-  const [scale, setScale] = useState(1.2);
+const PdfViewer: React.FC<Props> = ({ url }) => {
+  const [numPages, setNumPages] = useState<number>(0);
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow">
-
-      {/* 🔥 CONTROLS */}
-      <div className="flex gap-3 mb-3">
-        <button onClick={() => setScale(s => s + 0.2)}>➕</button>
-        <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
-      </div>
-
+    <div className="flex flex-col items-center">
       <Document
         file={url}
         onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+        loading={<p>Chargement du PDF...</p>}
       >
-        <Page pageNumber={page} scale={scale} />
+        {Array.from(new Array(numPages), (_, i) => (
+          <Page
+            key={i}
+            pageNumber={i + 1} scale={scale}
+            width={800} // 🔥 ajuste selon ton layout
+          />
+        ))}
       </Document>
+      <div className="flex gap-2 mb-4">
+  <button onClick={() => setScale(scale - 0.2)}>➖</button>
+  <button onClick={() => setScale(scale + 0.2)}>➕</button>
+</div>
 
     </div>
+    
   );
 };
 
