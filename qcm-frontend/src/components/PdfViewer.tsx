@@ -1,40 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 
-
-// 🔥 IMPORTANT
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-interface Props {
-  url: string;
-}
+const PdfViewer = ({ url }: { url: string }) => {
+  const [file, setFile] = useState<string | null>(null);
 
-const PdfViewer: React.FC<Props> = ({ url }) => {
-  const [numPages, setNumPages] = useState<number>(0);
-  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const loadPdf = async () => {
+      try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        setFile(blobUrl);
+      } catch (err) {
+        console.error("❌ Erreur chargement PDF:", err);
+      }
+    };
+
+    loadPdf();
+  }, [url]);
+
+  useEffect(() => {
+  return () => {
+    if (file) URL.revokeObjectURL(file);
+  };
+}, [file]);
+
+  if (!file) return <p>Chargement du PDF...</p>;
 
   return (
-    <div className="flex flex-col items-center">
-      <Document
-        file={url}
-        onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-        loading={<p>Chargement du PDF...</p>}
-      >
-        {Array.from(new Array(numPages), (_, i) => (
-          <Page
-            key={i}
-            pageNumber={i + 1} scale={scale}
-            width={800} // 🔥 ajuste selon ton layout
-          />
-        ))}
+    <div className="flex justify-center">
+      <Document file={file}>
+        <Page pageNumber={1} />
       </Document>
-      <div className="flex gap-2 mb-4">
-  <button onClick={() => setScale(scale - 0.2)}>➖</button>
-  <button onClick={() => setScale(scale + 0.2)}>➕</button>
-</div>
-
     </div>
-    
   );
 };
 
