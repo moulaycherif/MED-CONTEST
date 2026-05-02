@@ -3,11 +3,9 @@ import { Document, Page } from "react-pdf";
 
 import { pdfjs } from "react-pdf";
 
-// 🔥 IMPORTANT : version automatique compatible
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+// 🔥 HARD FIX (version exacte)
+pdfjs.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.296/pdf.worker.min.js";
 
 interface Props {
   url: string;
