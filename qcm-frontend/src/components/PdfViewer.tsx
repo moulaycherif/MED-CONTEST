@@ -2,9 +2,12 @@ import { useState } from "react";
 import { Document, Page } from "react-pdf";
 
 import { pdfjs } from "react-pdf";
-import workerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
 
-pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+// 🔥 SOLUTION VITE COMPATIBLE
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/legacy/build/pdf.worker.min.js",
+  import.meta.url
+).toString();
 
 interface Props {
   url: string;
