@@ -25,7 +25,7 @@
     "katex": "^0.16.39",
     "lucide-react": "^0.542.0",
     "mathml-to-latex": "^1.5.0",
-    
+    "pdfjs-dist": "^5.7.284",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
@@ -49,5 +49,4 @@
     "typescript": "^5.9.2",
     "vite": "^5.4.21"
   }
-  
 }
