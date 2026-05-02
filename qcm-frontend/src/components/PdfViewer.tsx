@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
 
-// ✅ Worker (tu l’as déjà OK)
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+import { pdfjs } from "react-pdf";
+
+// 🔥 IMPORTANT : version automatique compatible
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
 
 interface Props {
   url: string;
