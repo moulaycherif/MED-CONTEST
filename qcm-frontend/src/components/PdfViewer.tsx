@@ -1,41 +1,59 @@
-import { useState } from "react";
-import { Document, Page } from "react-pdf";
+import { useEffect, useState } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
 
-import { pdfjs } from "react-pdf";
-
-// 🔥 SOLUTION SIMPLE ET STABLE
+// ✅ Worker (tu l’as déjà OK)
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 interface Props {
   url: string;
 }
 
-console.log("PDFVIEWER")
 const PdfViewer: React.FC<Props> = ({ url }) => {
+  const [file, setFile] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
-  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const loadPdf = async () => {
+      try {
+        console.log("🔗 Fetch PDF:", url);
+
+        const res = await fetch(url);
+
+        if (!res.ok) {
+          throw new Error("HTTP error " + res.status);
+        }
+
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        setFile(blobUrl);
+      } catch (err) {
+        console.error("❌ Erreur chargement PDF:", err);
+      }
+    };
+
+    loadPdf();
+  }, [url]);
+
+  useEffect(() => {
+    return () => {
+      if (file) URL.revokeObjectURL(file);
+    };
+  }, [file]);
+
+  if (!file) return <p>Chargement du PDF...</p>;
 
   return (
     <div className="flex flex-col items-center">
       <Document
-        file={{ url }}
+        file={file}
         onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-        loading={<p>Chargement du PDF...</p>}
-        options={{
-          disableRange: true,
-          disableStream: true,
-          disableAutoFetch: true,
-        }}
+        onLoadError={(err) => console.error("❌ PDF error:", err)}
       >
         {Array.from(new Array(numPages), (_, i) => (
-          <Page key={i} pageNumber={i + 1} scale={scale} />
+          <Page key={i} pageNumber={i + 1} />
         ))}
       </Document>
-
-      <div className="flex gap-2 mt-4">
-        <button onClick={() => setScale(scale - 0.2)}>➖</button>
-        <button onClick={() => setScale(scale + 0.2)}>➕</button>
-      </div>
     </div>
   );
 };
