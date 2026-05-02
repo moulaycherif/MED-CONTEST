@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 
-// ✅ Worker obligatoire
-
-pdfjs.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+// ✅ 🔥 SOLUTION VITE OFFICIELLE
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.js",
+  import.meta.url
+).toString();
 
 interface Props {
   url: string;
@@ -27,15 +28,10 @@ const PdfViewer: React.FC<Props> = ({ url }) => {
         }}
       >
         {Array.from(new Array(numPages), (_, i) => (
-          <Page
-            key={i}
-            pageNumber={i + 1}
-            scale={scale}
-          />
+          <Page key={i} pageNumber={i + 1} scale={scale} />
         ))}
       </Document>
 
-      {/* Zoom */}
       <div className="flex gap-2 mt-4">
         <button onClick={() => setScale(scale - 0.2)}>➖</button>
         <button onClick={() => setScale(scale + 0.2)}>➕</button>
