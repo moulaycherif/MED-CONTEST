@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 
-const [scale, setScale] = useState(1);
 
 // 🔥 IMPORTANT
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -12,6 +11,7 @@ interface Props {
 
 const PdfViewer: React.FC<Props> = ({ url }) => {
   const [numPages, setNumPages] = useState<number>(0);
+  const [scale, setScale] = useState(1);
 
   return (
     <div className="flex flex-col items-center">
