@@ -10,6 +10,7 @@ interface Props {
   url: string;
 }
 
+console.log("PDFVIEWER")
 const PdfViewer: React.FC<Props> = ({ url }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [scale, setScale] = useState(1);
