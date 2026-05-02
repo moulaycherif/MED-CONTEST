@@ -12,6 +12,7 @@ import AdminAstuces from "./pages/AdminAstuces";
 import StudentAstuces from "./pages/StudentAstuces";
 import StudentAstuceDetail from "./pages/StudentAstuceDetail";
 import StudentQuiz from "./pages/StudentQuiz";
+import PdfPage from "./pages/PdfPage";
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/student/astuce/:id" element={<StudentAstuceDetail />} />
           <Route path="/student/quiz/:tipId" element={<StudentQuiz />} />
           <Route path="/student/astuce/:id" element={<StudentAstuceDetail />} />
+          <Route path="/student/pdf/:id" element={<PdfPage />} /> {/* 🔥 ICI */}
 
 
           {/* 🚫 404 */}

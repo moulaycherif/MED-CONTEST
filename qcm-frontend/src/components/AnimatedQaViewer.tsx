@@ -113,12 +113,16 @@ const AnimatedQaViewer: React.FC<Props> = ({ qas = [] }) => {
 
         {/* ================= PDF ================= */}
         {tip?.pdfUrl && (
-          <iframe
-            src={tip.pdfUrl}
-            className="w-full h-[500px] rounded-xl border mb-6"
-          />
-        )}
-
+  <div className="text-center mb-6">
+    <button
+      onClick={() => navigate(`/student/pdf/${tip._id}`)}
+      
+      className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
+    >
+      📄 Voir le PDF
+    </button>
+  </div>
+)}
         {/* ================= CASES ================= */}
         {(tip?.cases || []).length > 0 && (
           <div className="space-y-6">
