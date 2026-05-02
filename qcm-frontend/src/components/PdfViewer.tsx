@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 
 // ✅ Worker obligatoire
+
 pdfjs.GlobalWorkerOptions.workerSrc =
-  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 interface Props {
   url: string;
