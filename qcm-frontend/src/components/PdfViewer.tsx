@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
 
-// ✅ 🔥 SOLUTION VITE OFFICIELLE
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.js",
-  import.meta.url
-).toString();
+import { pdfjs } from "react-pdf";
+import workerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
+
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 interface Props {
   url: string;
