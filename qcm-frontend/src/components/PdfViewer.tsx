@@ -1,60 +1,32 @@
-import { Document, Page } from "react-pdf";
 import { useState } from "react";
-import { pdfjs } from "react-pdf";
-
-// ✅ Worker stable (Vite-safe)
-
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface Props {
-  url: string;
+  url?: string;
 }
 
 const PdfViewer = ({ url }: Props) => {
-  
-  // 🚨 SAFE GUARD
+  const [error, setError] = useState(false);
+
   if (!url) return null;
 
-  const [numPages, setNumPages] = useState(0);
-  const [loading, setLoading] = useState(true);
-
   return (
-    <div className="bg-gray-100 py-10 flex flex-col items-center min-h-[500px]">
+    <div className="bg-gray-100 py-10 flex justify-center">
+      <div className="bg-white rounded-xl shadow-md w-full max-w-4xl overflow-hidden">
 
-      {/* 🔥 SKELETON LOADING */}
-      {loading && (
-        <div className="w-[800px] space-y-4 animate-pulse">
-          <div className="h-10 bg-gray-300 rounded" />
-          <div className="h-[600px] bg-gray-300 rounded-xl" />
-        </div>
-      )}
-
-      <Document
-        file={url}
-        loading={null}
-        onLoadSuccess={({ numPages }) => {
-          setNumPages(numPages);
-          setLoading(false);
-        }}
-        onLoadError={(err) => {
-          console.error("❌ PDF ERROR:", err);
-          setLoading(false);
-        }}
-      >
-        {Array.from(new Array(numPages), (_, i) => (
-          <div
-            key={i}
-            className="mb-6 bg-white rounded-xl shadow-md overflow-hidden"
-          >
-            <Page
-              pageNumber={i + 1}
-              width={800}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
+        {!error ? (
+          <iframe
+            src={`${url}#toolbar=0&navpanes=0&navpanes=0&scrollbar=0&view=FitH`}
+            className="w-full h-[85vh]"
+            style={{ border: "none" }}
+            onError={() => setError(true)}
+          />
+        ) : (
+          <div className="p-10 text-center text-red-500">
+            ❌ Impossible de charger le PDF
           </div>
-        ))}
-      </Document>
+        )}
+
+      </div>
     </div>
   );
 };
