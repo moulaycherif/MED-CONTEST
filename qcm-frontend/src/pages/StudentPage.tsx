@@ -485,7 +485,7 @@ if (section === "soutien" && selectedMatiere) {
 
       {/* 🔥 MODAL */}
       {selectedTip && (
-        console.log("StudentPage :", selectedTip?.pdfUrl),
+        
         <motion.div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
           initial={{ opacity: 0, y: 20 }}
@@ -518,7 +518,7 @@ if (section === "soutien" && selectedMatiere) {
 
             {selectedTip?.pdfUrl && (
               
-              <PdfViewer url={selectedTip?.pdfUrl} />
+              <PdfViewer key={selectedTip._id} url={selectedTip?.pdfUrl} />
               
             )}
 

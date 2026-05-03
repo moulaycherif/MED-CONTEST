@@ -11,7 +11,7 @@ interface Props {
 }
 
 const PdfViewer = ({ url }: Props) => {
-  console.log("PDFVIEWER :",url)
+  
   // 🚨 SAFE GUARD
   if (!url) return null;
 
