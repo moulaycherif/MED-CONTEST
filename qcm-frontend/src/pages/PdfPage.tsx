@@ -1,21 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import PdfViewer from "../components/PdfViewer";
 import { API_BASE_URL } from "../config";
-
-/* ===================== TYPES ===================== */
+import PdfViewer from "../components/PdfViewer";
 
 interface Tip {
   _id: string;
   pdfUrl?: string;
 }
 
-/* ===================== COMPONENT ===================== */
-
 const PdfPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-
   const [tip, setTip] = useState<Tip | null>(null);
 
   useEffect(() => {
@@ -29,21 +24,8 @@ const PdfPage: React.FC = () => {
       });
   }, [id]);
 
-  if (!tip) {
-    return (
-      <p className="text-center mt-10 text-gray-500">
-        Chargement du PDF...
-      </p>
-    );
-  }
-
-  if (!tip.pdfUrl) {
-    return (
-      <p className="text-center mt-10 text-red-500">
-        Aucun PDF disponible
-      </p>
-    );
-  }
+  if (!tip) return <p className="text-center mt-10">Chargement...</p>;
+  if (!tip.pdfUrl) return <p>Aucun PDF</p>;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">

@@ -7,8 +7,6 @@ import "katex/dist/katex.min.css";
 import katex from "katex";
 import parse from "html-react-parser";
 
-import { Document, Page, pdfjs } from "react-pdf";
-
 
 /* ================= SAFE ================= */
 
@@ -67,18 +65,7 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
   const [tip, setTip] = useState<Tip | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [numPages, setNumPages] = useState(0);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.2);
-
   const [currentCase, setCurrentCase] = useState(0);
-
-  useEffect(() => {
-  const el = document.getElementById(`page_${pageNumber}`);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth" });
-  }
-}, [pageNumber]);
 
   useEffect(() => {
     if (id) fetchTip();
@@ -125,25 +112,17 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
     <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
   </div>
 
-  <Document
-  file={{
-    url: tip.pdfUrl,
-    withCredentials: false,
-  }}
-  onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-  onLoadError={(err) => console.error("❌ PDF ERROR:", err)}
- >
- {Array.from(new Array(numPages), (_, i) => (
-  <div id={`page_${i + 1}`} key={i}>
-  <Page
-    pageNumber={i + 1}
-    scale={scale}
-    renderTextLayer={false}
-    renderAnnotationLayer={false}
-  />
-</div>
-))}
-</Document>
+  
+  {/* 🔥 PDF */}
+{tip.pdfUrl && (
+  <div className="mt-6">
+    <iframe
+      src={tip.pdfUrl}
+      className="w-full h-[800px] rounded-xl shadow"
+      style={{ border: "none" }}
+    />
+  </div>
+)}
          </div>
       )}
 

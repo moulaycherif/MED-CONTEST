@@ -16,8 +16,6 @@ import StudentSummaries from "./StudentSummaries";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import { useNavigate } from "react-router-dom";
 import StudentAstuceDetail from "./StudentAstuceDetail";
-import { Document, Page } from "react-pdf";
-import PdfViewer from "../components/PdfViewer";
 
 interface Astuce {
   _id: string;
@@ -514,11 +512,12 @@ if (section === "soutien" && selectedMatiere) {
 
             {/* 📄 PDF */}
 
-{selectedTip.pdfUrl && (
-  <div className="max-w-3xl mx-auto">
-  <PdfViewer url={selectedTip.pdfUrl} />
-</div>
-)}
+            {selectedTip.pdfUrl && (
+              <iframe
+                src={selectedTip.pdfUrl}
+                className="w-full h-[500px] rounded"
+              />
+            )}
 
             {/* 🧠 CASES */}
             {!selectedTip.pdfUrl &&
