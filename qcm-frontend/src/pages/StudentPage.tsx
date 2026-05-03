@@ -156,7 +156,7 @@ useEffect(() => {
     
   if (selectedAction === "Astuces" && selectedChapter) {
     
-    fetchAstucesByChapter(selectedChapter.split(":")[0])
+    fetchAstucesByChapter(selectedChapter)
       .then((data) => setAstuces(data as Astuce[]))
       .catch(() => setAstuces([]));
   }
