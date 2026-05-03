@@ -514,9 +514,10 @@ if (section === "soutien" && selectedMatiere) {
 
             {/* 📄 PDF */}
 
-            {selectedTip.pdfUrl && (
+            {selectedTip?.pdfUrl && (
+
+              <PdfViewer key={selectedTip._id} url={selectedTip.pdfUrl} />
               
-              <PdfViewer url={selectedTip.pdfUrl} />
             )}
 
             {/* 🧠 CASES */}
