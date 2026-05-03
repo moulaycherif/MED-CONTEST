@@ -518,7 +518,7 @@ if (section === "soutien" && selectedMatiere) {
 
             {selectedTip?.pdfUrl && (
               
-              <PdfViewer key={selectedTip._id} url={selectedTip.pdfUrl} />
+              <PdfViewer key={selectedTip._id} url={selectedTip?.pdfUrl} />
               
             )}
 
