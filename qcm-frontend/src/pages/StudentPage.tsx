@@ -485,6 +485,7 @@ if (section === "soutien" && selectedMatiere) {
 
       {/* 🔥 MODAL */}
       {selectedTip && (
+        console.log("StudentPage :", selectedTip, selectedTip?.pdfUrl),
         <motion.div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
           initial={{ opacity: 0, y: 20 }}
@@ -508,12 +509,12 @@ if (section === "soutien" && selectedMatiere) {
             </button>
 
             {/* 📌 TITLE */}
+
             <h2 className="text-2xl font-bold mb-4 text-center">
               {selectedTip.title}
             </h2>
 
             {/* 📄 PDF */}
-            console.log("StudentPage :",selectedTip,selectedTip.pdfUrl)
 
             {selectedTip?.pdfUrl && (
               
