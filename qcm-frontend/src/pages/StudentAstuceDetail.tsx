@@ -7,6 +7,8 @@ import "katex/dist/katex.min.css";
 import katex from "katex";
 import parse from "html-react-parser";
 
+import PdfViewer from "../components/PdfViewer";
+
 
 /* ================= SAFE ================= */
 
@@ -106,21 +108,11 @@ const StudentAstuceDetail = ({ id, onBack }: any) => {
       {tip.pdfUrl && (
         <div className="mt-6">
 
-  {/* Zoom */}
-  <div className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"> ZOOM
-    <button onClick={() => setScale(s => s + 0.2)}>➕</button>
-    <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>➖</button>
-  </div>
-
   
   {/* 🔥 PDF */}
 {tip.pdfUrl && (
   <div className="mt-6">
-    <iframe
-      src={tip.pdfUrl}
-      className="w-full h-[800px] rounded-xl shadow"
-      style={{ border: "none" }}
-    />
+    <PdfViewer url={tip.pdfUrl} />
   </div>
 )}
          </div>
