@@ -513,9 +513,10 @@ if (section === "soutien" && selectedMatiere) {
             </h2>
 
             {/* 📄 PDF */}
+            console.log("StudentPage :",selectedTip,selectedTip.pdfUrl);
 
             {selectedTip?.pdfUrl && (
-
+              
               <PdfViewer key={selectedTip._id} url={selectedTip.pdfUrl} />
               
             )}
