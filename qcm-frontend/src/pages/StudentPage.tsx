@@ -75,8 +75,8 @@ export default function StudentPage() {
   const [astuces, setAstuces] = useState<Astuce[]>([]);
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
-  const [summaries, setSummaries] = useState<any[]>([]);
-const [selectedSummary, setSelectedSummary] = useState<any | null>(null);
+  const [resumes, setresumes] = useState<any[]>([]);
+const [selectedresume, setSelectedresume] = useState<any | null>(null);
 
 const navigate = useNavigate();
 
@@ -170,9 +170,9 @@ useEffect(() => {
  useEffect(() => {
   if (selectedAction === "Résumé" && selectedChapter) {
     axios
-      .get(`${API_BASE_URL}/api/summaries/${encodeURIComponent(selectedChapter.split(":")[0])}`)
-      .then(res => setSummaries(res.data))
-      .catch(() => setSummaries([]));
+      .get(`${API_BASE_URL}/api/resumes/${encodeURIComponent(selectedChapter.split(":")[0])}`)
+      .then(res => setresumes(res.data))
+      .catch(() => setresumes([]));
   }
 }, [selectedAction, selectedChapter]);
 
@@ -577,16 +577,16 @@ if (selectedChapter && selectedAction === "Résumé") {
         📘 {selectedChapter} — Résumés
       </h2>
 
-      {summaries.length === 0 ? (
+      {resumes.length === 0 ? (
         <p className="text-center text-gray-500">
           Aucun résumé trouvé…
         </p>
       ) : (
         <div className="flex flex-wrap gap-3 justify-center">
-          {summaries.map((sum) => (
+          {resumes.map((sum) => (
             <button
               key={sum._id}
-              onClick={() => setSelectedSummary(sum)}
+              onClick={() => setSelectedresume(sum)}
               className="px-5 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 shadow"
             >
               {sum.title}
@@ -596,10 +596,10 @@ if (selectedChapter && selectedAction === "Résumé") {
       )}
 
       {/* 🔥 MODAL IDENTIQUE ASTUCES */}
-      {selectedSummary && (
+      {selectedresume && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-          onClick={() => setSelectedSummary(null)}
+          onClick={() => setSelectedresume(null)}
         >
           <div
             className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative"
@@ -607,24 +607,24 @@ if (selectedChapter && selectedAction === "Résumé") {
           >
             {/* CLOSE */}
             <button
-              onClick={() => setSelectedSummary(null)}
+              onClick={() => setSelectedresume(null)}
               className="absolute top-3 right-3 text-xl"
             >
               ✖
             </button>
 
             <h2 className="text-2xl font-bold mb-4 text-center">
-              {selectedSummary.title}
+              {selectedresume.title}
             </h2>
 
             {/* 📄 PDF */}
-            {selectedSummary.pdfUrl && (
-              <PdfViewer url={selectedSummary.pdfUrl} />
+            {selectedresume.pdfUrl && (
+              <PdfViewer url={selectedresume.pdfUrl} />
             )}
 
             {/* 🧠 CONTENU */}
-            {!selectedSummary.pdfUrl &&
-              selectedSummary.cases?.map((c, i) => (
+            {!selectedresume.pdfUrl &&
+              selectedresume.cases?.map((c, i) => (
                 <div key={i} className="mb-6">
                   {c.title && (
                     <h3 className="font-semibold text-lg mb-2">
