@@ -615,7 +615,7 @@ if (selectedChapter && selectedAction === "Résumé") {
         shadow-2xl 
         w-full 
         max-w-4xl 
-        max-h-[90vh] 
+        max-h-[70vh] 
         flex 
         flex-col
       "
