@@ -506,7 +506,7 @@ if (section === "soutien" && selectedMatiere) {
       {selectedTip && (
         
         <motion.div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           onClick={() => setSelectedTip(null)}
