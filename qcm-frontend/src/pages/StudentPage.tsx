@@ -363,7 +363,7 @@ useEffect(() => {
             <motion.div
               key={exam._id}
               whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+              className="relative cursor-pointer rounded-2xl overflow-y-auto shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
                 resetQcm();
                 setSection("qcm");
@@ -408,7 +408,7 @@ if (section === "matiere" && selectedMatiere) {
         <motion.div
           key={exam._id}
           whileHover={{ scale: 1.05 }}
-          className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+          className="relative cursor-pointer rounded-2xl overflow-y-auto shadow-lg bg-white/90 hover:bg-white transition-all"
           onClick={() => {
             resetQcm();
             setSection("qcm");
@@ -513,7 +513,7 @@ if (section === "soutien" && selectedMatiere) {
         >
           {/* STOP CLICK PROPAGATION */}
           <motion.div
-            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden p-6 relative"
+            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative"
             initial={{ scale: 0.8, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 120 }}
@@ -677,7 +677,7 @@ if (selectedChapter && selectedAction === "Résumé") {
         <motion.div
           key={index}
           whileHover={{ scale: 1.05 }}
-          className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+          className="relative cursor-pointer rounded-2xl overflow-y-auto shadow-lg bg-white/90 hover:bg-white transition-all"
           onClick={() => setSelectedChapter(chapter)}
         >
           <img
@@ -794,7 +794,7 @@ if (selectedChapter && selectedAction === "Résumé") {
 
       {/* ✅ Colonne centrale */}
       <motion.div
-        className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-hidden relative"
+        className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
