@@ -648,7 +648,7 @@ if (selectedChapter && selectedAction === "Résumé") {
         
         <iframe
   src={selectedresume.pdfUrl + "#toolbar=0"}
-  className="w-full h-auto max-h-[70vh] rounded-xl shadow-md"
+  className="w-full h-auto max-h-[90vh] rounded-xl shadow-md"
 />
 
       </div>
