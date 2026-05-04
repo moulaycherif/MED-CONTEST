@@ -19,7 +19,7 @@ const PdfViewer = ({ url }: Props) => {
             className="w-full h-[85vh]"
             style={{
               border: "none",
-              transform: "scale(1.2)",     // 🔥 ZOOM
+              // transform: "scale(1.2)",     // 🔥 ZOOM
               transformOrigin: "top center"
             }}
             onError={() => setError(true)}
