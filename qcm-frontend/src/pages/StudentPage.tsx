@@ -12,7 +12,7 @@ import svtImg from "../assets/SVT.jfif";
 import bgImage from "/Image3.jfif";
 import AnimatedQaViewer from "../components/AnimatedQaViewer";
 import { fetchAstucesByChapter } from "../api/astuces.api";
-import StudentSummaries from "./StudentSummaries";
+
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import { useNavigate } from "react-router-dom";
 import StudentAstuceDetail from "./StudentAstuceDetail";
@@ -74,6 +74,9 @@ export default function StudentPage() {
   // Astuces
   const [astuces, setAstuces] = useState<Astuce[]>([]);
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
+
+  const [summaries, setSummaries] = useState<any[]>([]);
+const [selectedSummary, setSelectedSummary] = useState<any | null>(null);
 
 const navigate = useNavigate();
 
@@ -557,26 +560,90 @@ if (section === "soutien" && selectedMatiere) {
 }
 
   // 👉 2) RÉSUMÉS
-  if (selectedChapter && selectedAction === "Résumé") {
-    return (
-      <div className="p-6">
-        <h2 className="text-3xl font-bold text-center mb-6">
-          📘 Résumés {selectedMatiere} - {selectedChapter}
-        </h2>
-
-        <div className="bg-gray-100 py-10 flex justify-center">
-  <div className="bg-white rounded-xl shadow-md w-full max-w-3xl p-6">
-
-    <StudentSummaries
-      selectedSubject={selectedMatiere}
-      selectedChapter={selectedChapter}
-    />
-
-  </div>
-</div>
-      </div>
-    );
+  useEffect(() => {
+  if (selectedAction === "Résumé" && selectedChapter) {
+    axios
+      .get(`${API_BASE_URL}/api/summaries/${encodeURIComponent(selectedChapter.split(":")[0])}`)
+      .then(res => setSummaries(res.data))
+      .catch(() => setSummaries([]));
   }
+}, [selectedAction, selectedChapter]);
+
+if (selectedChapter && selectedAction === "Résumé") {
+  return (
+    <div className="p-6 relative">
+      <h2 className="text-3xl font-bold text-center mb-8">
+        📘 {selectedChapter} — Résumés
+      </h2>
+
+      {summaries.length === 0 ? (
+        <p className="text-center text-gray-500">
+          Aucun résumé trouvé…
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-3 justify-center">
+          {summaries.map((sum) => (
+            <button
+              key={sum._id}
+              onClick={() => setSelectedSummary(sum)}
+              className="px-5 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 shadow"
+            >
+              {sum.title}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 🔥 MODAL IDENTIQUE ASTUCES */}
+      {selectedSummary && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setSelectedSummary(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* CLOSE */}
+            <button
+              onClick={() => setSelectedSummary(null)}
+              className="absolute top-3 right-3 text-xl"
+            >
+              ✖
+            </button>
+
+            <h2 className="text-2xl font-bold mb-4 text-center">
+              {selectedSummary.title}
+            </h2>
+
+            {/* 📄 PDF */}
+            {selectedSummary.pdfUrl && (
+              <PdfViewer url={selectedSummary.pdfUrl} />
+            )}
+
+            {/* 🧠 CONTENU */}
+            {!selectedSummary.pdfUrl &&
+              selectedSummary.cases?.map((c, i) => (
+                <div key={i} className="mb-6">
+                  {c.title && (
+                    <h3 className="font-semibold text-lg mb-2">
+                      {c.title}
+                    </h3>
+                  )}
+
+                  {c.content && (
+                    <div
+                      dangerouslySetInnerHTML={{ __html: c.content }}
+                    />
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
   // 👉 3) EXERCICES (placeholders)
   if (selectedChapter && selectedAction === "Exercices") {
