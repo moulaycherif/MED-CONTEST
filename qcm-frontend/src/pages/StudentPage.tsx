@@ -604,39 +604,55 @@ if (selectedChapter && selectedAction === "Résumé") {
 
       {/* 🔥 MODAL */}
       {selectedresume && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-          onClick={() => setSelectedresume(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedresume(null)}
-              className="absolute top-3 right-3 text-xl"
-            >
-              ✖
-            </button>
+  <div
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+    onClick={() => setSelectedresume(null)}
+  >
+    <div
+      className="
+        bg-white 
+        rounded-2xl 
+        shadow-2xl 
+        w-full 
+        max-w-4xl 
+        max-h-[90vh] 
+        flex 
+        flex-col
+      "
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* ❌ CLOSE */}
+      <button
+        onClick={() => setSelectedresume(null)}
+        className="absolute top-3 right-3 text-xl"
+      >
+        ✖
+      </button>
 
-            <h2 className="text-2xl font-bold mb-4 text-center">
-              {selectedresume.chapter}
-            </h2>
+      {/* 🧠 TITLE */}
+      <h2 className="text-2xl font-bold p-4 text-center border-b">
+        {selectedresume.chapter}
+      </h2>
 
-            {/* PDF CLEAN */}
-            <div className="flex justify-end gap-2 mb-2">
-  <button onClick={() => setPdfHeight("30vh")}>➖</button>
-  <button onClick={() => setPdfHeight("50vh")}>➕</button>
-</div>
+      {/* 📄 PDF CONTAINER */}
+      <div className="flex-1 overflow-y-auto bg-gray-100 p-6">
+        
+        <iframe
+          src={selectedresume.pdfUrl + "#toolbar=0&navpanes=0&scrollbar=0"}
+          className="
+            w-full 
+            min-h-[400px] 
+            max-h-[70vh] 
+            bg-white 
+            rounded-xl 
+            shadow-md
+          "
+        />
 
-<iframe
-  src={`${selectedresume.pdfUrl}#toolbar=0`}
-  className="w-full rounded-xl shadow-sm"
-  style={{ height: pdfHeight, border: "none" }}
-/>
-          </div>
-        </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
