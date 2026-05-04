@@ -604,56 +604,22 @@ if (selectedChapter && selectedAction === "Résumé") {
 
       {/* 🔥 MODAL */}
       {selectedresume && (
-  <div
-    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-    onClick={() => setSelectedresume(null)}
-  >
-    <div
-      className="
-        bg-white 
-        rounded-2xl 
-        shadow 
-        w-full 
-        max-w-4xl 
-        max-h-[90vh] 
-        flex 
-        flex-col
-      "
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* ❌ CLOSE */}
-      <button
-        onClick={() => setSelectedresume(null)}
-        className="absolute top-3 right-3 text-xl"
-      >
-        ✖
-      </button>
+  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+  
+  <h2 className="text-xl font-bold p-4 text-center border-b">
+    {selectedresume.chapter}
+  </h2>
 
-      {/* 🧠 TITLE */}
-      <h2 className="text-2xl font-bold p-4 text-center border-b">
-        {selectedresume.chapter}
-      </h2>
+  <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
+    
+    <iframe
+      src={selectedresume.pdfUrl + "#toolbar=0"}
+      className="w-full max-w-2xl h-[60vh] rounded-xl shadow-md bg-white"
+    />
 
-      {/* 📄 PDF CONTAINER */}
-      <div className="
-  bg-white 
-  rounded-2xl 
-  shadow-2xl 
-  w-full 
-  max-w-3xl 
-  max-h-[80vh] 
-  overflow-y-auto
-  p-4
-">
-        
-        <iframe
-  src={selectedresume.pdfUrl + "#toolbar=0"}
-  className="w-full h-auto max-h-[90vh] rounded-xl shadow-md"
-/>
-
-      </div>
-    </div>
   </div>
+</div>
+
 )}
     </div>
   );
