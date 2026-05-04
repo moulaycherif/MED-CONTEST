@@ -564,7 +564,16 @@ if (section === "soutien" && selectedMatiere) {
           📘 Résumés {selectedMatiere} - {selectedChapter}
         </h2>
 
-        <StudentSummaries selectedSubject={selectedMatiere} selectedChapter={selectedChapter} />
+        <div className="bg-gray-100 py-10 flex justify-center">
+  <div className="bg-white rounded-xl shadow-md w-full max-w-3xl p-6">
+
+    <StudentSummaries
+      selectedSubject={selectedMatiere}
+      selectedChapter={selectedChapter}
+    />
+
+  </div>
+</div>
       </div>
     );
   }
