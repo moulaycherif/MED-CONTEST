@@ -167,12 +167,21 @@ useEffect(() => {
   }
 }, [selectedAction, selectedChapter]);
 
- useEffect(() => {
+useEffect(() => {
   if (selectedAction === "Résumé" && selectedChapter) {
+
+    console.log("📘 FETCH SUMMARY CHAPTER =", selectedChapter);
+
     axios
-      .get(`${API_BASE_URL}/api/resumes/${encodeURIComponent(selectedChapter.split(":")[0])}`)
-      .then(res => setresumes(res.data))
-      .catch(() => setresumes([]));
+      .get(`${API_BASE_URL}/api/summaries/${encodeURIComponent(selectedChapter.split(":")[0])}`)
+      .then(res => {
+        console.log("📘 SUMMARY RESPONSE =", res.data);
+        setresumes(res.data);
+      })
+      .catch((err) => {
+        console.error("❌ SUMMARY ERROR =", err);
+        setresumes([]);
+      });
   }
 }, [selectedAction, selectedChapter]);
 
