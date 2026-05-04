@@ -86,6 +86,9 @@ const [selectedTip, setSelectedTip] = useState<Astuce | null>(null);
 
 const [numPages, setNumPages] = useState<number>(0);
 const [pdfHeight, setPdfHeight] = useState("60vh");
+const [focusMode, setFocusMode] = useState(false);
+const isShortResume =
+  selectedresume?.chapter?.length < 30;
 
  // ✅ ESC pour fermer le modal
   useEffect(() => {
@@ -493,7 +496,10 @@ if (section === "soutien" && selectedMatiere) {
               key={tip._id}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setSelectedTip(tip)}
+              onClick={() => {
+  setSelectedTip(tip);
+  setFocusMode(true);
+}}
               className="px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow transition"
             >
               {tip.title}
@@ -506,7 +512,9 @@ if (section === "soutien" && selectedMatiere) {
       {selectedTip && (
         
         <motion.div
-          className="fixed inset-0 bg-indigo/50 backdrop-blur-sm flex items-center justify-center z-50"
+  className={`fixed inset-0 flex items-center justify-center z-50 transition ${
+    focusMode ? "bg-violet-900/80 backdrop-blur-md" : "bg-white/50 backdrop-blur-sm"
+  }`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           onClick={() => setSelectedTip(null)}
@@ -521,7 +529,10 @@ if (section === "soutien" && selectedMatiere) {
           >
             {/* ❌ CLOSE */}
             <button
-              onClick={() => setSelectedTip(null)}
+              onClick={() => {
+  setSelectedTip(null);
+  setFocusMode(false);
+}}
               className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl"
             >
               ✖
@@ -601,20 +612,26 @@ if (selectedChapter && selectedAction === "Résumé") {
           ))}
         </div>
       )}
+      
 
       {/* 🔥 MODAL */}
       {selectedresume && (
-  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+        
+ <div
+  className={`bg-white rounded-2xl shadow-2xl w-full max-w-2xl 
+  ${isShortResume ? "max-h-[55vh]" : "max-h-[75vh]"} 
+  flex flex-col`}
+>
   
-  <h2 className="text-xl font-bold p-4 text-center border-b">
-    {selectedresume.chapter}
-  </h2>
+  <h2 className="text-lg font-bold p-3 text-center border-b">
+  {selectedresume.chapter}
+</h2>
 
-  <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
+  <div className="flex-1 overflow-y-auto p-2">
     
     <iframe
       src={selectedresume.pdfUrl + "#toolbar=0"}
-      className="w-full max-w-2xl h-[60vh] rounded-xl shadow-md bg-white"
+      className="w-full h-full min-h-[300px] rounded-b-2xl"
     />
 
   </div>
@@ -708,7 +725,7 @@ if (selectedChapter && selectedAction === "Résumé") {
   // --- Structure principale ---
   return (
     <div
-      className="h-screen w-screen flex text-black"
+      className="h-screen w-screen flex text-black overflow-hidden"
       style={{
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
@@ -794,7 +811,7 @@ if (selectedChapter && selectedAction === "Résumé") {
 
       {/* ✅ Colonne centrale */}
       <motion.div
-        className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative"
+        className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto scrollbar-hide relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
