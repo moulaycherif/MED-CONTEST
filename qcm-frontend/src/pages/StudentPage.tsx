@@ -612,10 +612,10 @@ if (selectedChapter && selectedAction === "Résumé") {
       className="
         bg-white 
         rounded-2xl 
-        shadow-2xl 
+        shadow 
         w-full 
         max-w-4xl 
-        max-h-[70vh] 
+        max-h-[90vh] 
         flex 
         flex-col
       "
@@ -635,19 +635,21 @@ if (selectedChapter && selectedAction === "Résumé") {
       </h2>
 
       {/* 📄 PDF CONTAINER */}
-      <div className="flex-1 overflow-y-auto bg-gray-100 p-6">
+      <div className="
+  bg-white 
+  rounded-2xl 
+  shadow-2xl 
+  w-full 
+  max-w-3xl 
+  max-h-[80vh] 
+  overflow-y-auto
+  p-4
+">
         
         <iframe
-          src={selectedresume.pdfUrl + "#toolbar=0&navpanes=0&scrollbar=0"}
-          className="
-            w-full 
-            min-h-[400px] 
-            max-h-[70vh] 
-            bg-white 
-            rounded-xl 
-            shadow-md
-          "
-        />
+  src={selectedresume.pdfUrl + "#toolbar=0"}
+  className="w-full h-auto max-h-[70vh] rounded-xl shadow-md"
+/>
 
       </div>
     </div>
