@@ -85,6 +85,7 @@ const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
 const [selectedTip, setSelectedTip] = useState<Astuce | null>(null);
 
 const [numPages, setNumPages] = useState<number>(0);
+const [pdfHeight, setPdfHeight] = useState("60vh");
 
  // ✅ ESC pour fermer le modal
   useEffect(() => {
@@ -181,18 +182,6 @@ useEffect(() => {
       .catch(() => setAstuces([]));
   }
 }, [selectedAction, selectedChapter]);
-
-  // Hauteur dynamique
-const getPdfHeight = (url?: string) => {
-  if (!url) return "500px";
-
-  // 👉 adapte selon ton contenu
-  if (url.toLowerCase().includes("resume")) {
-    return "60vh"; // résumé → plus compact
-  }
-
-  return "85vh"; // contenu long
-};
 
   // 🔹 Changement de réponse
   const handleAnswerChange = (id: string, value: string) => {
@@ -635,14 +624,16 @@ if (selectedChapter && selectedAction === "Résumé") {
             </h2>
 
             {/* PDF CLEAN */}
-            <iframe
-              src={`${selectedresume.pdfUrl}#toolbar=0`}
-               className="w-full rounded-xl shadow"
-               style={{
-                  height: getPdfHeight(selectedresume?.pdfUrl),
-                  border: "none",
-            }}
-            />
+            <div className="flex justify-end gap-2 mb-2">
+  <button onClick={() => setPdfHeight("50vh")}>➖</button>
+  <button onClick={() => setPdfHeight("70vh")}>➕</button>
+</div>
+
+<iframe
+  src={`${selectedresume.pdfUrl}#toolbar=0`}
+  className="w-full rounded-xl shadow"
+  style={{ height: pdfHeight, border: "none" }}
+/>
           </div>
         </div>
       )}
