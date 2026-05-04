@@ -513,7 +513,7 @@ if (section === "soutien" && selectedMatiere) {
         >
           {/* STOP CLICK PROPAGATION */}
           <motion.div
-            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative"
+            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden p-6 relative"
             initial={{ scale: 0.8, y: 50, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 120 }}
@@ -609,7 +609,7 @@ if (selectedChapter && selectedAction === "Résumé") {
           onClick={() => setSelectedresume(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6"
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -810,7 +810,7 @@ if (selectedChapter && selectedAction === "Résumé") {
 
       {/* ✅ Colonne centrale */}
       <motion.div
-        className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative"
+        className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-hidden relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
