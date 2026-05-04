@@ -500,7 +500,7 @@ if (section === "soutien" && selectedMatiere) {
   setSelectedTip(tip);
   setFocusMode(true);
 }}
-              className="px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow transition"
+              className="px-5 py-2 rounded-full bg-white-100 text-indigo-700 hover:bg-white-200 shadow transition"
             >
               {tip.title}
             </motion.button>
