@@ -43,7 +43,7 @@ export default function HomePage() {
 
   {/* Paragraphe 3 */}
   <p className="text-gray-700">
-    Cette application est un moyen efficace pour vous préparer aux concours avec des QCM interactifs,
+    Cette application est un moyen efficace pour vous préparer aux concours avec des QCE interactifs,
     un suivi intelligent et un espace d’astuces pour réviser plus rapidement.
   </p>
 </motion.div>
@@ -91,9 +91,9 @@ export default function HomePage() {
             whileHover={{ scale: 1.05 }}
             className="p-6 bg-blue-50 rounded-2xl shadow"
           >
-            <h3 className="text-xl font-semibold text-blue-600 mb-3">📚 QCM par matière</h3>
+            <h3 className="text-xl font-semibold text-blue-600 mb-3">📚 QCE par Conours / Matière</h3>
             <p className="text-gray-600">
-              Des centaines de QCM classés par spécialité et par niveau.
+              Tous les concours traités globalement ou par matière.
             </p>
           </motion.div>
           <motion.div
@@ -109,9 +109,9 @@ export default function HomePage() {
             whileHover={{ scale: 1.05 }}
             className="p-6 bg-purple-50 rounded-2xl shadow"
           >
-            <h3 className="text-xl font-semibold text-purple-600 mb-3">👨‍🏫 Espace enseignant</h3>
+            <h3 className="text-xl font-semibold text-purple-600 mb-3">👨‍🏫 Espace SOUTIEN</h3>
             <p className="text-gray-600">
-              Les enseignants peuvent créer, modifier et partager leurs QCM.
+              Sous forme d'astuces, de complément de cours et des exercices.
             </p>
           </motion.div>
         </div>

@@ -257,7 +257,7 @@ useEffect(() => {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold text-center mb-4 text-blue-800">
-        📘 QCM — {currentExam}
+        📘 QCE — {currentExam}
       </h2>
 
       {questions.map((q, idx) => {

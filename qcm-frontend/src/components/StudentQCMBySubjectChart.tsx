@@ -11,14 +11,14 @@ export default function StudentQCMBySubjectChart({ data }: any) {
   if (!data || data.length === 0) {
     return (
       <div className="bg-white p-4 rounded-xl shadow h-[350px] flex items-center justify-center text-gray-400">
-        Aucun QCM
+        Aucun QCE
       </div>
     );
   }
 
   return (
     <div className="bg-white p-4 rounded-xl shadow h-[350px]">
-      <h3 className="font-semibold mb-3">📊 QCM par matière</h3>
+      <h3 className="font-semibold mb-3">📊 QCE par matière</h3>
 
       <div className="w-full h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
