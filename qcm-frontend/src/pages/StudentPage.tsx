@@ -104,12 +104,9 @@ const [numPages, setNumPages] = useState<number>(0);
   useEffect(() => {
   if (selectedAction !== "Résumé" || !selectedChapter) return;
 
-  console.log("📘 FETCH RESUME CHAPTER =", selectedChapter);
-
   axios
     .get(`${API_BASE_URL}/api/resume/by-chapter/${encodeURIComponent(selectedChapter)}`)
     .then(res => {
-      console.log("✅ RESUMES =", res.data);
       setresumes(res.data);
     })
     .catch(err => {
@@ -184,6 +181,18 @@ useEffect(() => {
       .catch(() => setAstuces([]));
   }
 }, [selectedAction, selectedChapter]);
+
+  // Hauteur dynamique
+const getPdfHeight = (url?: string) => {
+  if (!url) return "500px";
+
+  // 👉 adapte selon ton contenu
+  if (url.toLowerCase().includes("resume")) {
+    return "60vh"; // résumé → plus compact
+  }
+
+  return "85vh"; // contenu long
+};
 
   // 🔹 Changement de réponse
   const handleAnswerChange = (id: string, value: string) => {
@@ -627,9 +636,12 @@ if (selectedChapter && selectedAction === "Résumé") {
 
             {/* PDF CLEAN */}
             <iframe
-              src={`${selectedresume.pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-              className="w-full h-[80vh] rounded-xl shadow"
-              style={{ border: "none" }}
+              src={`${selectedresume.pdfUrl}#toolbar=0`}
+               className="w-full rounded-xl shadow"
+               style={{
+                  height: getPdfHeight(selectedresume?.pdfUrl),
+                  border: "none",
+            }}
             />
           </div>
         </div>
