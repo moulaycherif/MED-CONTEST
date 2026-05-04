@@ -101,6 +101,24 @@ const [numPages, setNumPages] = useState<number>(0);
     };
   }, []);
 
+  useEffect(() => {
+  if (selectedAction !== "Résumé" || !selectedChapter) return;
+
+  console.log("📘 FETCH RESUME CHAPTER =", selectedChapter);
+
+  axios
+    .get(`${API_BASE_URL}/api/resume/by-chapter/${encodeURIComponent(selectedChapter)}`)
+    .then(res => {
+      console.log("✅ RESUMES =", res.data);
+      setresumes(res.data);
+    })
+    .catch(err => {
+      console.error("❌ SUMMARY ERROR =", err);
+      setresumes([]);
+    });
+
+}, [selectedAction, selectedChapter]);
+
   const chapterMaths = [
     "Chapitre I : Suites & Sommes",
     "Chapitre II : Limites, Continuité & Dérivabilité",
@@ -164,24 +182,6 @@ useEffect(() => {
     fetchAstucesByChapter(selectedChapter)
       .then((data) => setAstuces(data as Astuce[]))
       .catch(() => setAstuces([]));
-  }
-}, [selectedAction, selectedChapter]);
-
-useEffect(() => {
-  if (selectedAction === "Résumé" && selectedChapter) {
-
-    console.log("📘 FETCH SUMMARY CHAPTER =", selectedChapter);
-
-    axios
-      .get(`${API_BASE_URL}/api/summaries/${encodeURIComponent(selectedChapter.split(":")[0])}`)
-      .then(res => {
-        console.log("📘 SUMMARY RESPONSE =", res.data);
-        setresumes(res.data);
-      })
-      .catch((err) => {
-        console.error("❌ SUMMARY ERROR =", err);
-        setresumes([]);
-      });
   }
 }, [selectedAction, selectedChapter]);
 
@@ -598,23 +598,22 @@ if (selectedChapter && selectedAction === "Résumé") {
               onClick={() => setSelectedresume(sum)}
               className="px-5 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 shadow"
             >
-              {sum.title}
+              {sum.chapter}
             </button>
           ))}
         </div>
       )}
 
-      {/* 🔥 MODAL IDENTIQUE ASTUCES */}
+      {/* 🔥 MODAL */}
       {selectedresume && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
           onClick={() => setSelectedresume(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative"
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* CLOSE */}
             <button
               onClick={() => setSelectedresume(null)}
               className="absolute top-3 right-3 text-xl"
@@ -623,31 +622,15 @@ if (selectedChapter && selectedAction === "Résumé") {
             </button>
 
             <h2 className="text-2xl font-bold mb-4 text-center">
-              {selectedresume.title}
+              {selectedresume.chapter}
             </h2>
 
-            {/* 📄 PDF */}
-            {selectedresume.pdfUrl && (
-              <PdfViewer url={selectedresume.pdfUrl} />
-            )}
-
-            {/* 🧠 CONTENU */}
-            {!selectedresume.pdfUrl &&
-              selectedresume.cases?.map((c, i) => (
-                <div key={i} className="mb-6">
-                  {c.title && (
-                    <h3 className="font-semibold text-lg mb-2">
-                      {c.title}
-                    </h3>
-                  )}
-
-                  {c.content && (
-                    <div
-                      dangerouslySetInnerHTML={{ __html: c.content }}
-                    />
-                  )}
-                </div>
-              ))}
+            {/* PDF CLEAN */}
+            <iframe
+              src={`${selectedresume.pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+              className="w-full h-[80vh] rounded-xl shadow"
+              style={{ border: "none" }}
+            />
           </div>
         </div>
       )}
