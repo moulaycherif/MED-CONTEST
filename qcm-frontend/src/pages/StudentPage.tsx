@@ -167,6 +167,15 @@ useEffect(() => {
   }
 }, [selectedAction, selectedChapter]);
 
+ useEffect(() => {
+  if (selectedAction === "Résumé" && selectedChapter) {
+    axios
+      .get(`${API_BASE_URL}/api/summaries/${encodeURIComponent(selectedChapter.split(":")[0])}`)
+      .then(res => setSummaries(res.data))
+      .catch(() => setSummaries([]));
+  }
+}, [selectedAction, selectedChapter]);
+
   // 🔹 Changement de réponse
   const handleAnswerChange = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -560,15 +569,7 @@ if (section === "soutien" && selectedMatiere) {
 }
 
   // 👉 2) RÉSUMÉS
-  useEffect(() => {
-  if (selectedAction === "Résumé" && selectedChapter) {
-    axios
-      .get(`${API_BASE_URL}/api/summaries/${encodeURIComponent(selectedChapter.split(":")[0])}`)
-      .then(res => setSummaries(res.data))
-      .catch(() => setSummaries([]));
-  }
-}, [selectedAction, selectedChapter]);
-
+ 
 if (selectedChapter && selectedAction === "Résumé") {
   return (
     <div className="p-6 relative">
