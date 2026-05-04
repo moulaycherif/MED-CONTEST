@@ -625,13 +625,13 @@ if (selectedChapter && selectedAction === "Résumé") {
 
             {/* PDF CLEAN */}
             <div className="flex justify-end gap-2 mb-2">
-  <button onClick={() => setPdfHeight("50vh")}>➖</button>
-  <button onClick={() => setPdfHeight("70vh")}>➕</button>
+  <button onClick={() => setPdfHeight("30vh")}>➖</button>
+  <button onClick={() => setPdfHeight("50vh")}>➕</button>
 </div>
 
 <iframe
   src={`${selectedresume.pdfUrl}#toolbar=0`}
-  className="w-full rounded-xl shadow"
+  className="w-full rounded-xl shadow-sm"
   style={{ height: pdfHeight, border: "none" }}
 />
           </div>
