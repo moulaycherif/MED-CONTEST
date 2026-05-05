@@ -15,9 +15,13 @@ const PdfViewer = ({ url }: Props) => {
 
         {!error ? (
           <iframe
-            src={`${url}#toolbar=0&navpanes=0&navpanes=0&scrollbar=0&view=FitH`}
+            src={`${url}#toolbar=0&navpanes=0&view=FitH`}
             className="w-full h-[85vh]"
-            style={{ border: "none" }}
+            style={{
+              border: "none",
+              // transform: "scale(1.2)",     // 🔥 ZOOM
+              transformOrigin: "top center"
+            }}
             onError={() => setError(true)}
           />
         ) : (
