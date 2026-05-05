@@ -19,6 +19,8 @@ import StudentAstuceDetail from "./StudentAstuceDetail";
 
 import PdfViewer from "../components/PdfViewer";
 
+import { BlockMath, InlineMath } from "react-katex";
+
 interface Astuce {
   _id: string;
   title?: string;
@@ -572,11 +574,27 @@ if (section === "soutien" && selectedMatiere) {
                   )}
 
                   {c.content && (
-                    <div
-                      className="prose max-w-none"
-                      dangerouslySetInnerHTML={{ __html: c.content }}
-                    />
+                    
+
+function renderContent(content: string) {
+  // 🔥 Sépare texte et latex
+  const parts = content.split(/(\$\$.*?\$\$|\$.*?\$)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("$$")) {
+      return <BlockMath key={index} math={part.slice(2, -2)} />;
+    }
+    if (part.startsWith("$")) {
+      return <InlineMath key={index} math={part.slice(1, -1)} />;
+    }
+    return <span key={index}>{part}</span>;
+  });
+  <div className="prose prose-lg max-w-none bg-white p-6 rounded-xl shadow">
+  {renderContent(c.content)}
+</div>
+}
                   )}
+                  
                 </div>
               ))}
           </motion.div>
