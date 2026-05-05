@@ -191,13 +191,15 @@ useEffect(() => {
 
 function cleanLatex(content: string) {
   return content
-    .replace(/\\below/g, "_")
+    .replace(/\\below\{([^}]*)\}/g, "_{$1}") // 🔥 vrai fix
     .replace(/\\rightarrow/g, "\\to")
-    .replace(/\\,/g, " ") // espaces propres
-    .replace(/\s+/g, " "); // nettoyage espaces
+    .replace(/cos/g, "\\cos")
+    .replace(/sin/g, "\\sin")
+    .replace(/\\ /g, " ")
+    .replace(/\n/g, "\n\n"); // meilleure lisibilité
 }
-
 function renderContent(content: string) {
+   const cleaned = cleanLatex(content); // 🔥 AJOUT ICI
   const parts = content.split(/(\$\$.*?\$\$|\$.*?\$)/g);
 
   return parts.map((part, index) => {
