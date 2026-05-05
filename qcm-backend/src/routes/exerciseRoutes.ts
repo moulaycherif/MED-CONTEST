@@ -39,7 +39,7 @@ router.get("/", async (req, res) => {
 });
 
 // ❌ Supprimer
-router.delete("/:id", authenticateStudent, verifyAdmin, async (req, res) => {
+router.delete("/:id", verifyAdmin, async (req, res) => {
   await Exercise.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 });
