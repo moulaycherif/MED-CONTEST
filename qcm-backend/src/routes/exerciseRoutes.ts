@@ -1,12 +1,13 @@
 import express from "express";
 import Exercise from "../models/Exercise";
 import { verifyAdmin } from "../middleware/verifyAdmin";
-import { authenticateStudent } from "../middleware/authMiddleware";
+
+import { authenticateAdmin } from "../middleware/authAdmin";
 
 const router = express.Router();
 
 // ➕ Ajouter UNE question
-router.post("/", verifyAdmin, async (req, res) => {
+router.post("/", authenticateAdmin, verifyAdmin, async (req, res) => {
   const { subject, chapter, question, options, correctAnswer } = req.body;
 
   const exercise = await Exercise.create({
