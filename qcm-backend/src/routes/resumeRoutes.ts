@@ -190,4 +190,19 @@ router.delete("/:id", async (req, res) => {
   } 
 });
 
+router.get("/by-chapter/:chapter", async (req, res) => {
+  try {
+    const chapter = req.params.chapter;
+
+    const resumes = await Resume.find({
+      chapter: { $regex: chapter, $options: "i" }
+    }).sort({ createdAt: -1 });
+
+    res.json(resumes);
+  } catch (err) {
+    console.error("❌ ERROR FETCH RESUMES:", err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 export default router;
