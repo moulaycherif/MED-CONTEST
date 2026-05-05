@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const StudentActivitySchema = new mongoose.Schema(
   {
     student: { type: mongoose.Schema.Types.ObjectId, ref: "Student" },
-    type: { type: String, required: true }, // RESUME | ASTUCE | QCM | EXERCICE
+    type: { type: String, required: true }, // RESUME | ASTUCE | QCM | EXERCISE
     subject: String,
     chapter: String,
     referenceId: String,
