@@ -87,13 +87,22 @@ const AdminExercises: React.FC = () => {
   const handleSubmit = async () => {
   try {
     const token = localStorage.getItem("adminToken"); // 🔥 IMPORTANT
-    await axios.post(`${API_BASE_URL}/api/exercises`, {
-      subject,
-      chapter,
-      question,
-      options,
-      correctAnswer,
-    });
+    console.log("TOKEN =", token);
+    await axios.post(
+  `${API_BASE_URL}/api/exercises`,
+  {
+    subject,
+    chapter,
+    question,
+    options,
+    correctAnswer,
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
     alert("✅ Exercice ajouté");
 
