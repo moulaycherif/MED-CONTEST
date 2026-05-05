@@ -199,8 +199,9 @@ function cleanLatex(content: string) {
     .replace(/\n/g, "\n\n"); // meilleure lisibilité
 }
 function renderContent(content: string) {
-   const cleaned = cleanLatex(content); // 🔥 AJOUT ICI
-  const parts = content.split(/(\$\$.*?\$\$|\$.*?\$)/g);
+  const cleaned = cleanLatex(content);
+
+  const parts = cleaned.split(/(\$\$.*?\$\$|\$.*?\$|\\\(.*?\\\))/g);
 
   return parts.map((part, index) => {
     if (part.startsWith("$$")) {
@@ -208,6 +209,9 @@ function renderContent(content: string) {
     }
     if (part.startsWith("$")) {
       return <InlineMath key={index} math={part.slice(1, -1)} />;
+    }
+    if (part.startsWith("\\(")) {
+      return <InlineMath key={index} math={part.slice(2, -2)} />;
     }
     return <span key={index}>{part}</span>;
   });
@@ -601,7 +605,7 @@ if (section === "soutien" && selectedMatiere) {
                   {c.content && (
   <div className="prose prose-lg max-w-none bg-white p-6 rounded-xl shadow">
     
- {renderContent(cleanLatex(c.content || ""))}
+ {renderContent(c.content || "")}
 </div>
                   )}
                   
