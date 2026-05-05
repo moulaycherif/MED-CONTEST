@@ -191,27 +191,30 @@ useEffect(() => {
 
 function cleanLatex(content: string) {
   return content
+    // HTML → normal
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+
     // Word → KaTeX
     .replace(/\\\(/g, "$")
     .replace(/\\\)/g, "$")
 
-    // Fix \below
+    // Fix limites
     .replace(/\\below\{([^}]*)\}/g, "_{$1}")
+
+    // Ensembles
+    .replace(/\\aleph/g, "\\mathbb{N}")
 
     // Opérateurs
     .replace(/\\rightarrow/g, "\\to")
-    .replace(/\\textless/g, "<")
-    .replace(/\\textgreater/g, ">")
 
-    // Fonctions math
+    // Fonctions
     .replace(/cos/g, "\\cos")
     .replace(/sin/g, "\\sin")
 
-    // Nettoyage espaces
-    .replace(/\\ /g, " ")
-
-    // Sauts ligne propres
-    .replace(/\n/g, "\n\n");
+    // Nettoyage
+    .replace(/\\ /g, " ");
 }
 function renderContent(content: string) {
   const cleaned = cleanLatex(content); // ✅ utiliser le texte corrigé
