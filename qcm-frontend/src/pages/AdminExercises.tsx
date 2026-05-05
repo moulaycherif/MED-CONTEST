@@ -17,14 +17,37 @@ const AdminExercises: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
 
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", "", "", ""]);
+  const [correctAnswer, setCorrectAnswer] = useState("");
+
+  const [subject, setSubject] = useState("");
+  const [chapter, setChapter] = useState("");
+ 
   // 🔹 Charger tous les quiz
   useEffect(() => {
     fetchQuizzes();
   }, []);
 
+  <button
+  onClick={async () => {
+    await axios.post(`${API_BASE_URL}/api/exercises`, {
+      subject: selectedSubject,
+      chapter: selectedChapter,
+      question,
+      options,
+      correctAnswer,
+    });
+
+    fetchQuizzes();
+  }}
+>
+  Ajouter
+</button>
+
   const fetchQuizzes = async () => {
   try {
-    const res = await axios.get<Quiz[]>(`${API_BASE_URL}/quiz`);
+    const res = await axios.get(`${API_BASE_URL}/api/exercises`);
 
     const data = res.data;
     setQuizzes(data);
@@ -61,6 +84,30 @@ const AdminExercises: React.FC = () => {
     );
   });
 
+  const handleSubmit = async () => {
+  try {
+    await axios.post(`${API_BASE_URL}/api/exercises`, {
+      subject,
+      chapter,
+      question,
+      options,
+      correctAnswer,
+    });
+
+    alert("✅ Exercice ajouté");
+
+    // reset
+    setQuestion("");
+    setOptions(["", "", "", ""]);
+    setCorrectAnswer("");
+
+    fetchQuizzes(); // refresh liste
+  } catch (err) {
+    console.error(err);
+    alert("❌ Erreur ajout exercice");
+  }
+};
+
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-center">
@@ -92,6 +139,63 @@ const AdminExercises: React.FC = () => {
           ))}
         </select>
       </div>
+
+<div className="mb-8 p-4 border rounded-lg shadow">
+  <h2 className="text-xl font-bold mb-4">➕ Ajouter un exercice</h2>
+
+  <input
+    type="text"
+    placeholder="Matière"
+    value={subject}
+    onChange={(e) => setSubject(e.target.value)}
+    className="border p-2 mb-2 w-full"
+  />
+
+  <input
+    type="text"
+    placeholder="Chapitre"
+    value={chapter}
+    onChange={(e) => setChapter(e.target.value)}
+    className="border p-2 mb-2 w-full"
+  />
+
+  <textarea
+    placeholder="Question"
+    value={question}
+    onChange={(e) => setQuestion(e.target.value)}
+    className="border p-2 mb-2 w-full"
+  />
+
+  {options.map((opt, i) => (
+    <input
+      key={i}
+      type="text"
+      placeholder={`Option ${i + 1}`}
+      value={opt}
+      onChange={(e) => {
+        const newOptions = [...options];
+        newOptions[i] = e.target.value;
+        setOptions(newOptions);
+      }}
+      className="border p-2 mb-2 w-full"
+    />
+  ))}
+
+  <input
+    type="text"
+    placeholder="Bonne réponse"
+    value={correctAnswer}
+    onChange={(e) => setCorrectAnswer(e.target.value)}
+    className="border p-2 mb-2 w-full"
+  />
+
+  <button
+    onClick={handleSubmit}
+    className="bg-green-600 text-white px-4 py-2 rounded"
+  >
+    Ajouter
+  </button>
+</div>
 
       {/* TABLEAU */}
       <table className="w-full border border-gray-300">

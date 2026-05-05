@@ -92,6 +92,11 @@ const [focusMode, setFocusMode] = useState(false);
 const isShortResume =
   selectedresume?.chapter?.length < 30;
 
+const [exercises, setExercises] = useState<any[]>([]);
+const [exerciseAnswers, setExerciseAnswers] = useState<{[id:string]:string}>({});
+const [exerciseSubmitted, setExerciseSubmitted] = useState(false);
+const [exerciseScore, setExerciseScore] = useState<number | null>(null);
+
  // ✅ ESC pour fermer le modal
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -187,6 +192,20 @@ useEffect(() => {
       .catch(() => setAstuces([]));
   }
 }, [selectedAction, selectedChapter]);
+
+useEffect(() => {
+  if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
+    axios
+      .get(`${API_BASE_URL}/api/exercises`, {
+        params: {
+          subject: selectedMatiere,
+          chapter: selectedChapter,
+        },
+      })
+      .then(res => setExercises(res.data))
+      .catch(() => setExercises([]));
+  }
+}, [selectedAction, selectedChapter, selectedMatiere]);
 
 
 function cleanLatex(content: string) {
@@ -708,26 +727,83 @@ if (selectedChapter && selectedAction === "Résumé") {
    </div>
    )}
 
-  // 👉 3) EXERCICES (placeholders)
-  if (selectedChapter && selectedAction === "Exercices") {
-    return (
-      <div className="p-6">
-        <h2 className="text-3xl font-bold text-center mb-6">
-          🧩 {selectedChapter} — Exercices
-        </h2>
-        <p className="text-center text-gray-600">
-          Exercices à venir…
-        </p>
-      </div>
-    );
-  }
+  // 👉 3) EXERCISES (placeholders)
+ if (selectedChapter && selectedAction === "Exercises") {
+  return (
+    <div className="p-6">
+      <h2 className="text-3xl font-bold text-center mb-6">
+        🧩 {selectedChapter} — Exercises
+      </h2>
+
+      {exercises.map((ex, idx) => (
+        <div key={ex._id} className="bg-white p-4 mb-4 rounded shadow">
+          <h3 className="font-semibold mb-2">
+            Q{idx + 1}) {ex.question}
+          </h3>
+
+          {ex.options.map((opt: string, i: number) => (
+            <label
+              key={i}
+              className={`block p-2 border rounded mb-2 cursor-pointer ${
+                exerciseSubmitted
+                  ? opt === ex.correctAnswer
+                    ? "bg-green-100"
+                    : exerciseAnswers[ex._id] === opt
+                    ? "bg-red-100"
+                    : ""
+                  : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name={ex._id}
+                checked={exerciseAnswers[ex._id] === opt}
+                onChange={() =>
+                  setExerciseAnswers(prev => ({
+                    ...prev,
+                    [ex._id]: opt,
+                  }))
+                }
+                disabled={exerciseSubmitted}
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      ))}
+
+      {!exerciseSubmitted ? (
+        <button
+          onClick={() => {
+            let score = 0;
+            exercises.forEach(ex => {
+              if (exerciseAnswers[ex._id] === ex.correctAnswer) {
+                score++;
+              }
+            });
+
+            setExerciseScore(score);
+            setExerciseSubmitted(true);
+          }}
+          className="mt-4 px-6 py-2 bg-green-600 rounded"
+        >
+          ✅ Valider
+        </button>
+      ) : (
+        <div className="text-center mt-4 text-xl font-bold">
+          🎯 Score : {exerciseScore} / {exercises.length}
+        </div>
+      )}
+    </div>
+  );
+}
 
   // 👉 4) Boutons d’actions
   if (selectedChapter) {
     const actions = [
       { label: "💡 Astuces", color: "bg-yellow-400" },
       { label: "📘 Résumé", color: "bg-blue-400" },
-      { label: "🧩 Exercices", color: "bg-green-400" },
+      { label: "🧩 Exercises", color: "bg-green-400" },
     ];
 
     return (
@@ -886,7 +962,7 @@ if (selectedChapter && selectedAction === "Résumé") {
         {section === "soutien" && (
   <button
     onClick={() => {
-      // Niveau 4 → 3 (PDF, Astuces, Exercices)
+      // Niveau 4 → 3 (PDF, Astuces, Exercises)
       if (selectedAction) {
         setSelectedAction(null);
         return;
