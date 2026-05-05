@@ -188,6 +188,29 @@ useEffect(() => {
   }
 }, [selectedAction, selectedChapter]);
 
+
+function cleanLatex(content: string) {
+  return content
+    .replace(/\\below/g, "_")
+    .replace(/\\rightarrow/g, "\\to")
+    .replace(/\\,/g, " ") // espaces propres
+    .replace(/\s+/g, " "); // nettoyage espaces
+}
+
+function renderContent(content: string) {
+  const parts = content.split(/(\$\$.*?\$\$|\$.*?\$)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("$$")) {
+      return <BlockMath key={index} math={part.slice(2, -2)} />;
+    }
+    if (part.startsWith("$")) {
+      return <InlineMath key={index} math={part.slice(1, -1)} />;
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
   // 🔹 Changement de réponse
   const handleAnswerChange = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -502,7 +525,7 @@ if (section === "soutien" && selectedMatiere) {
   setSelectedTip(tip);
   setFocusMode(true);
 }}
-              className="px-5 py-2 rounded-full bg-white-100 text-indigo-700 hover:bg-white-200 shadow transition"
+              className="px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow transition"
             >
               {tip.title}
             </motion.button>
@@ -574,25 +597,10 @@ if (section === "soutien" && selectedMatiere) {
                   )}
 
                   {c.content && (
-                    
-
-function renderContent(content: string) {
-  // 🔥 Sépare texte et latex
-  const parts = content.split(/(\$\$.*?\$\$|\$.*?\$)/g);
-
-  return parts.map((part, index) => {
-    if (part.startsWith("$$")) {
-      return <BlockMath key={index} math={part.slice(2, -2)} />;
-    }
-    if (part.startsWith("$")) {
-      return <InlineMath key={index} math={part.slice(1, -1)} />;
-    }
-    return <span key={index}>{part}</span>;
-  });
   <div className="prose prose-lg max-w-none bg-white p-6 rounded-xl shadow">
-  {renderContent(c.content)}
+    
+ {renderContent(cleanLatex(c.content || ""))}
 </div>
-}
                   )}
                   
                 </div>
@@ -634,12 +642,16 @@ if (selectedChapter && selectedAction === "Résumé") {
 
       {/* 🔥 MODAL */}
       {selectedresume && (
-        
- <div
-  className={`bg-white rounded-2xl shadow-2xl w-full max-w-2xl 
-  ${isShortResume ? "max-h-[55vh]" : "max-h-[75vh]"} 
-  flex flex-col`}
->
+  <div
+    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+    onClick={() => setSelectedresume(null)}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className={`bg-white rounded-2xl shadow-2xl w-full max-w-2xl 
+      ${isShortResume ? "max-h-[55vh]" : "max-h-[75vh]"} 
+      flex flex-col`}
+    >
   
   <h2 className="text-lg font-bold p-3 text-center border-b">
   {selectedresume.chapter}
@@ -654,11 +666,10 @@ if (selectedChapter && selectedAction === "Résumé") {
 
   </div>
 </div>
-
-)}
     </div>
-  );
-}
+  )}
+   </div>
+   )}
 
   // 👉 3) EXERCICES (placeholders)
   if (selectedChapter && selectedAction === "Exercices") {
