@@ -90,16 +90,10 @@ const AdminExercises: React.FC = () => {
     console.log("TOKEN =", token);
     await axios.post(
   `${API_BASE_URL}/api/exercises`,
-  {
-    subject,
-    chapter,
-    question,
-    options,
-    correctAnswer,
-  },
+  { subject, chapter, question, options, correctAnswer },
   {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
     },
   }
 );
