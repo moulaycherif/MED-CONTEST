@@ -191,6 +191,9 @@ useEffect(() => {
 
 function cleanLatex(content: string) {
   return content
+  // 🔥 enlever les <p>
+    .replace(/<\/?p>/g, "")
+    
     // HTML → normal
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
