@@ -1,18 +1,14 @@
+// models/Exercise.ts
 import mongoose from "mongoose";
 
-const QuestionSchema = new mongoose.Schema({
-  question: { type: String, required: true },
-  options: [{ type: String, required: true }],
-  correctAnswer: { type: Number, required: true }, // index
+const exerciseSchema = new mongoose.Schema({
+  subject: String,       // Math, Physique...
+  chapter: String,       // Chapitre
+  question: String,
+  options: [String],
+  correctAnswer: String,
+  difficulty: String, // facile, moyen, difficile
+  explanation: String,   // 💡 optionnel (très utile)
 });
 
-const ExerciseSchema = new mongoose.Schema(
-  {
-    subject: { type: String, required: true },
-    chapter: { type: String, required: true },
-    questions: [QuestionSchema],
-  },
-  { timestamps: true }
-);
-
-export default mongoose.model("Exercise", ExerciseSchema);
+export default mongoose.model("Exercise", exerciseSchema);

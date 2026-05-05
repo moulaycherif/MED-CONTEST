@@ -5,11 +5,18 @@ import { authenticateStudent } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-// ➕ Créer un quiz
-router.post("/", authenticateStudent, verifyAdmin, async (req, res) => {
-  const { subject, chapter, questions } = req.body;
+// ➕ Ajouter UNE question
+router.post("/", verifyAdmin, async (req, res) => {
+  const { subject, chapter, question, options, correctAnswer } = req.body;
 
-  const exercise = await Exercise.create({ subject, chapter, questions });
+  const exercise = await Exercise.create({
+    subject,
+    chapter,
+    question,
+    options,
+    correctAnswer,
+  });
+
   res.status(201).json(exercise);
 });
 
@@ -19,10 +26,16 @@ router.get("/by-subject/:subject", async (req, res) => {
   res.json(exercises);
 });
 
-// 📖 Lister par matière + chapitre
-router.get("/:subject/:chapter", async (req, res) => {
-  const exercise = await Exercise.findOne(req.params);
-  res.json(exercise);
+// 📖 par matière + chapitre
+router.get("/", async (req, res) => {
+  const { subject, chapter } = req.query;
+
+  const exercises = await Exercise.find({
+    subject,
+    chapter,
+  });
+
+  res.json(exercises);
 });
 
 // ❌ Supprimer
