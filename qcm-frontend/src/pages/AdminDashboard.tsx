@@ -521,7 +521,7 @@ const handleCreateStudent = async () => {
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
 
   <button
-    onClick={() => navigate("/admin/exercices")}
+    onClick={() => navigate("/admin/exercises")}
     className="bg-indigo-600 text-white p-6 rounded-xl shadow hover:bg-indigo-700"
   >
     📘 Gestion des Exercices du Soutien
