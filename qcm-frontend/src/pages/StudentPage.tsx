@@ -191,29 +191,54 @@ useEffect(() => {
 
 function cleanLatex(content: string) {
   return content
-    .replace(/\\below\{([^}]*)\}/g, "_{$1}") // 🔥 vrai fix
+    // Word → KaTeX
+    .replace(/\\\(/g, "$")
+    .replace(/\\\)/g, "$")
+
+    // Fix \below
+    .replace(/\\below\{([^}]*)\}/g, "_{$1}")
+
+    // Opérateurs
     .replace(/\\rightarrow/g, "\\to")
+    .replace(/\\textless/g, "<")
+    .replace(/\\textgreater/g, ">")
+
+    // Fonctions math
     .replace(/cos/g, "\\cos")
     .replace(/sin/g, "\\sin")
+
+    // Nettoyage espaces
     .replace(/\\ /g, " ")
-    .replace(/\n/g, "\n\n"); // meilleure lisibilité
+
+    // Sauts ligne propres
+    .replace(/\n/g, "\n\n");
 }
 function renderContent(content: string) {
-  const cleaned = cleanLatex(content);
+  const cleaned = cleanLatex(content); // ✅ utiliser le texte corrigé
 
+  // 🔥 supporte $$...$$, $...$ et aussi \( ... \)
   const parts = cleaned.split(/(\$\$.*?\$\$|\$.*?\$|\\\(.*?\\\))/g);
 
   return parts.map((part, index) => {
-    if (part.startsWith("$$")) {
-      return <BlockMath key={index} math={part.slice(2, -2)} />;
+    try {
+      if (part.startsWith("$$")) {
+        return <BlockMath key={index} math={part.slice(2, -2)} />;
+      }
+
+      if (part.startsWith("$")) {
+        return <InlineMath key={index} math={part.slice(1, -1)} />;
+      }
+
+      // 🔥 support Word: \( ... \)
+      if (part.startsWith("\\(")) {
+        return <InlineMath key={index} math={part.slice(2, -2)} />;
+      }
+
+      return <span key={index}>{part}</span>;
+    } catch (e) {
+      console.error("KaTeX error:", part);
+      return <span key={index}>{part}</span>; // fallback texte
     }
-    if (part.startsWith("$")) {
-      return <InlineMath key={index} math={part.slice(1, -1)} />;
-    }
-    if (part.startsWith("\\(")) {
-      return <InlineMath key={index} math={part.slice(2, -2)} />;
-    }
-    return <span key={index}>{part}</span>;
   });
 }
 
