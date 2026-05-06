@@ -195,7 +195,8 @@ useEffect(() => {
     axios
       .get(`${API_BASE_URL}/api/exercises/${selectedMatiere}/${selectedChapter}`)
       .then(res => {
-        setExercises(res.data?.questions || []);
+         console.log("EXERCISES API =", res.data);
+        setExercises(res.data || []);
         setExerciseIndex(0);
         setExerciseAnswers({});
         setExerciseSubmitted(false);
