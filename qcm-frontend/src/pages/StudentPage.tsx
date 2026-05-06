@@ -726,9 +726,9 @@ if (selectedChapter && selectedAction === "Résumé") {
    )}
 
   // 👉 3) EXERCISES (placeholders)
- if (selectedChapter && selectedAction === "Exercices") {
+ if (selectedChapter && selectedAction === "Exercises") {
   const currentEx = exercises[exerciseIndex];
-
+console.log("EXERCISES SLECTED", currentEx)
   if (exercises.length === 0) {
     return <p className="text-center mt-10">Aucun exercice trouvé</p>;
   }
