@@ -86,14 +86,14 @@ const AdminExercises: React.FC = () => {
 
   const handleSubmit = async () => {
   try {
-    const token = localStorage.getItem("adminToken"); // 🔥 IMPORTANT
-    console.log("TOKEN =", token);
+    const adminToken = localStorage.getItem("adminToken"); // 🔥 IMPORTANT
+    console.log("TOKEN =", adminToken);
     await axios.post(
   `${API_BASE_URL}/api/exercises`,
   { subject, chapter, question, options, correctAnswer },
   {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${adminToken}`,
     },
   }
 );
