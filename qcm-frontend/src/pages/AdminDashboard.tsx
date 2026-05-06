@@ -80,6 +80,7 @@ const [exams, setExams] = useState<Exam[]>([]);
 
   // Chargement étudiants
   const fetchStudents = async () => {
+    if (!token) return;
     try {
       const res = await axios.get(`${API_BASE_URL}/api/admin/students`, {
         headers: { Authorization: `Bearer ${token}` },

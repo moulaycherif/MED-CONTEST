@@ -209,9 +209,9 @@ useEffect(() => {
 
 function cleanLatex(content: string) {
   return content
-  // 🔥 enlever les <p>
+    // ❌ enlever balises HTML
     .replace(/<\/?p>/g, "")
-    
+
     // HTML → normal
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
@@ -221,27 +221,28 @@ function cleanLatex(content: string) {
     .replace(/\\\(/g, "$")
     .replace(/\\\)/g, "$")
 
-    // Fix limites
+    // \below → _
     .replace(/\\below\{([^}]*)\}/g, "_{$1}")
 
-    // Ensembles
+    // ℵ → N
     .replace(/\\aleph/g, "\\mathbb{N}")
 
-    // Opérateurs
+    // flèches
     .replace(/\\rightarrow/g, "\\to")
 
-    // Fonctions
-    .replace(/cos/g, "\\cos")
-    .replace(/sin/g, "\\sin")
+    // limites
+    .replace(/lim\s*n\s*→\s*∞/g, "\\lim_{n\\to\\infty}")
 
-    // Nettoyage
-    .replace(/\\ /g, " ");
+    // espaces
+    .replace(/\\ /g, " ")
+
+    // supprime doublons bizarres
+    .replace(/\s+/g, " ");
 }
 function renderContent(content: string) {
-  const cleaned = cleanLatex(content); // ✅ utiliser le texte corrigé
+  const cleaned = cleanLatex(content);
 
-  // 🔥 supporte $$...$$, $...$ et aussi \( ... \)
-  const parts = cleaned.split(/(\$\$.*?\$\$|\$.*?\$|\\\(.*?\\\))/g);
+  const parts = cleaned.split(/(\$\$.*?\$\$|\$.*?\$)/g);
 
   return parts.map((part, index) => {
     try {
@@ -253,15 +254,10 @@ function renderContent(content: string) {
         return <InlineMath key={index} math={part.slice(1, -1)} />;
       }
 
-      // 🔥 support Word: \( ... \)
-      if (part.startsWith("\\(")) {
-        return <InlineMath key={index} math={part.slice(2, -2)} />;
-      }
-
       return <span key={index}>{part}</span>;
     } catch (e) {
       console.error("KaTeX error:", part);
-      return <span key={index}>{part}</span>; // fallback texte
+      return <span key={index}>{part}</span>;
     }
   });
 }
@@ -756,8 +752,15 @@ console.log("EXERCISES SLECTED", currentEx)
       {/* 🧠 QUESTION */}
       <div className="bg-white p-4 rounded-xl shadow">
         <h3 className="font-semibold mb-3">
-          {currentEx.question}
+          {renderContent(currentEx.question)}
         </h3>
+
+        {currentEx.image && (
+  <img
+    src={`${API_BASE_URL}${currentEx.image}`}
+    className="max-w-md my-3 rounded shadow"
+  />
+)}
 
         {currentEx.options.map((opt: string, i: number) => {
           const isSelected = exerciseAnswers[currentEx._id] === opt;
@@ -790,7 +793,7 @@ console.log("EXERCISES SLECTED", currentEx)
                 }
                 className="mr-2"
               />
-              {opt}
+              {renderContent(opt)}
             </label>
           );
         })}
@@ -799,7 +802,7 @@ console.log("EXERCISES SLECTED", currentEx)
         {exerciseSubmitted &&
           exerciseAnswers[currentEx._id] !== currentEx.correctAnswer && (
             <div className="text-blue-600 mt-3">
-              💡 {currentEx.explanation}
+              💡 {renderContent(currentEx.explanation)}
             </div>
           )}
       </div>

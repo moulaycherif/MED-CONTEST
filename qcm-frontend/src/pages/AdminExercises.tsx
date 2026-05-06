@@ -8,6 +8,11 @@ interface Quiz {
   subject: string;
   chapter: string;
 }
+interface Exercise {
+  subject: string;
+  chapter: string;
+  question: string;
+}
 
 const AdminExercises: React.FC = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -26,7 +31,7 @@ const AdminExercises: React.FC = () => {
  
   // 🔹 Charger tous les quiz
   useEffect(() => {
-    fetchQuizzes();
+    fetchExercises();
   }, []);
 
   <button
@@ -39,26 +44,23 @@ const AdminExercises: React.FC = () => {
       correctAnswer,
     });
 
-    fetchQuizzes();
+    fetchExercises();
   }}
 >
   Ajouter
 </button>
 
-  const fetchQuizzes = async () => {
+  const fetchExercises = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/exercises`);
+    const res = await axios.get(`${API_BASE_URL}/api/exercises/by-subject/Mathématique`);
+    const data: Exercise[] = res.data;
 
-    const data = res.data;
-    setQuizzes(data);
-
-    const uniqueSubjects: string[] = Array.from(
-      new Set(data.map(q => q.subject))
-    );
-
-    setSubjects(uniqueSubjects);
+const uniqueSubjects = Array.from(
+  new Set(data.map(q => q.subject))
+);
+setSubjects(uniqueSubjects);
   } catch (err) {
-    console.error("Erreur chargement quiz :", err);
+    console.error("Erreur chargement exercices :", err);
   }
 };
 
@@ -105,7 +107,7 @@ const AdminExercises: React.FC = () => {
     setOptions(["", "", "", ""]);
     setCorrectAnswer("");
 
-    fetchQuizzes(); // refresh liste
+    fetchExercises(); // refresh liste
   } catch (err) {
     console.error(err);
     alert("❌ Erreur ajout exercice");
