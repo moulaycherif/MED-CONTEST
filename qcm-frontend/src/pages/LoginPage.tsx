@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
+  const [adminToken, setadminToken] = useState<string | null>(localStorage.getItem("adminToken"));
   const [role, setRole] = useState<"admin" | "student" | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,7 @@ export default function LoginPage() {
       });
 
       setToken(adminRes.data.token);
-      localStorage.setItem("token", adminRes.data.token);
+      localStorage.setItem("adminToken", adminRes.data.token);
       setRole("admin");
       setLoading(false);
       return;
