@@ -184,9 +184,16 @@ const handleCreateStudent = async () => {
   };
 
   useEffect(() => {
-    if (activeTab === "students") fetchStudents();
-    else fetchExams();
-  }, [activeTab]);
+  if (activeTab === "students") {
+    const token = localStorage.getItem("adminToken");
+
+    if (token) {
+      fetchStudents();
+    }
+  } else {
+    fetchExams();
+  }
+}, [activeTab]);
 
   const totalPages = Math.ceil(details.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;

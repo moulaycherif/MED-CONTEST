@@ -195,7 +195,7 @@ useEffect(() => {
     axios
       .get(`${API_BASE_URL}/api/exercises/${selectedMatiere}/${selectedChapter}`)
       .then(res => {
-         console.log("EXERCISES API =", res.data);
+         
         setExercises(res.data || []);
         setExerciseIndex(0);
         setExerciseAnswers({});
@@ -207,39 +207,34 @@ useEffect(() => {
 }, [selectedAction, selectedChapter, selectedMatiere]);
 
 
-function cleanLatex(content: string) {
+function cleanLatex(content?: string) {
+  if (!content) return "";
+
   return content
-    // ❌ enlever balises HTML
     .replace(/<\/?p>/g, "")
 
-    // HTML → normal
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&")
 
-    // Word → KaTeX
     .replace(/\\\(/g, "$")
     .replace(/\\\)/g, "$")
 
-    // \below → _
     .replace(/\\below\{([^}]*)\}/g, "_{$1}")
 
-    // ℵ → N
     .replace(/\\aleph/g, "\\mathbb{N}")
 
-    // flèches
     .replace(/\\rightarrow/g, "\\to")
 
-    // limites
     .replace(/lim\s*n\s*→\s*∞/g, "\\lim_{n\\to\\infty}")
 
-    // espaces
     .replace(/\\ /g, " ")
 
-    // supprime doublons bizarres
     .replace(/\s+/g, " ");
 }
-function renderContent(content: string) {
+function renderContent(content?: string) {
+  if (!content) return null;
+
   const cleaned = cleanLatex(content);
 
   const parts = cleaned.split(/(\$\$.*?\$\$|\$.*?\$)/g);
@@ -725,7 +720,7 @@ if (selectedChapter && selectedAction === "Résumé") {
   // 👉 3) EXERCISES (placeholders)
  if (selectedChapter && selectedAction === "Exercises") {
   const currentEx = exercises[exerciseIndex];
-console.log("EXERCISES SLECTED", currentEx)
+
   if (exercises.length === 0) {
     return <p className="text-center mt-10">Aucun exercice trouvé</p>;
   }
