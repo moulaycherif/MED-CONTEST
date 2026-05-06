@@ -72,12 +72,23 @@ export default function StudentPage() {
   const [answers, setAnswers] = useState<{ [id: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showCorrection, setShowCorrection] = useState(false);
+  const [wrongQuestions, setWrongQuestions] = useState<Question[]>([]);
+
+  // 🔥 EXERCISES (SOUTIEN)
+const [exercises, setExercises] = useState<any[]>([]);
+const [exerciseIndex, setExerciseIndex] = useState(0);
+const [exerciseAnswers, setExerciseAnswers] = useState<{ [id: string]: string }>({});
+const [exerciseSubmitted, setExerciseSubmitted] = useState(false);
+const [exerciseScore, setExerciseScore] = useState<number | null>(null);
+const [wrongExercises, setWrongExercises] = useState<any[]>([]);
 
   // Astuces
-  const [astuces, setAstuces] = useState<Astuce[]>([]);
-  const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
+const [astuces, setAstuces] = useState<Astuce[]>([]);
+const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
 
-  const [resumes, setresumes] = useState<any[]>([]);
+const [resumes, setresumes] = useState<any[]>([]);
 const [selectedresume, setSelectedresume] = useState<any | null>(null);
 
 const navigate = useNavigate();
@@ -92,11 +103,6 @@ const [focusMode, setFocusMode] = useState(false);
 const isShortResume =
   selectedresume?.chapter?.length < 30;
 
-const [exercises, setExercises] = useState<any[]>([]);
-const [exerciseAnswers, setExerciseAnswers] = useState<{[id:string]:string}>({});
-const [exerciseSubmitted, setExerciseSubmitted] = useState(false);
-const [exerciseScore, setExerciseScore] = useState<number | null>(null);
-
  // ✅ ESC pour fermer le modal
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -104,9 +110,7 @@ const [exerciseScore, setExerciseScore] = useState<number | null>(null);
         setSelectedTip(null);
       }
     };
-
     window.addEventListener("keydown", handleEsc);
-
     return () => {
       window.removeEventListener("keydown", handleEsc);
     };
@@ -114,7 +118,6 @@ const [exerciseScore, setExerciseScore] = useState<number | null>(null);
 
   useEffect(() => {
   if (selectedAction !== "Résumé" || !selectedChapter) return;
-
   axios
     .get(`${API_BASE_URL}/api/resume/by-chapter/${encodeURIComponent(selectedChapter)}`)
     .then(res => {
@@ -124,7 +127,6 @@ const [exerciseScore, setExerciseScore] = useState<number | null>(null);
       console.error("❌ SUMMARY ERROR =", err);
       setresumes([]);
     });
-
 }, [selectedAction, selectedChapter]);
 
   const chapterMaths = [
@@ -152,8 +154,7 @@ useEffect(() => {
   axios
     .get(`${API_BASE_URL}/api/questions/exams`)
     .then(res => {
-      setExams(res.data); // [{_id,title,subject}]
-      
+      setExams(res.data); // [{_id,title,subject}] 
     })
     .catch(err => console.error("❌ Exams load error", err));
 }, []);
@@ -165,11 +166,9 @@ useEffect(() => {
     if (selectedMatiere) {
       url += `&subject=${encodeURIComponent(selectedMatiere)}`;
     }
-
     axios
       .get(url)
-      .then((res) => {
-        
+      .then((res) => {   
         setQuestions(res.data);
       })
       .catch((err) => {
@@ -183,10 +182,8 @@ useEffect(() => {
   // Charger les astuces quand on clique sur le bouton "Astuces"
 
   useEffect(() => {
-    if (!selectedChapter) return; // 🔥 IMPORTANT
-    
+  if (!selectedChapter) return; // 🔥 IMPORTANT  
   if (selectedAction === "Astuces" && selectedChapter) {
-    
     fetchAstucesByChapter(selectedChapter)
       .then((data) => setAstuces(data as Astuce[]))
       .catch(() => setAstuces([]));
@@ -196,13 +193,14 @@ useEffect(() => {
 useEffect(() => {
   if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
     axios
-      .get(`${API_BASE_URL}/api/exercises`, {
-        params: {
-          subject: selectedMatiere,
-          chapter: selectedChapter,
-        },
+      .get(`${API_BASE_URL}/api/exercises/${selectedMatiere}/${selectedChapter}`)
+      .then(res => {
+        setExercises(res.data?.questions || []);
+        setExerciseIndex(0);
+        setExerciseAnswers({});
+        setExerciseSubmitted(false);
+        setExerciseScore(null);
       })
-      .then(res => setExercises(res.data))
       .catch(() => setExercises([]));
   }
 }, [selectedAction, selectedChapter, selectedMatiere]);
@@ -728,71 +726,148 @@ if (selectedChapter && selectedAction === "Résumé") {
    )}
 
   // 👉 3) EXERCISES (placeholders)
- if (selectedChapter && selectedAction === "Exercises") {
+ if (selectedChapter && selectedAction === "Exercices") {
+  const currentEx = exercises[exerciseIndex];
+
+  if (exercises.length === 0) {
+    return <p className="text-center mt-10">Aucun exercice trouvé</p>;
+  }
+
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        🧩 {selectedChapter} — Exercises
-      </h2>
 
-      {exercises.map((ex, idx) => (
-        <div key={ex._id} className="bg-white p-4 mb-4 rounded shadow">
-          <h3 className="font-semibold mb-2">
-            Q{idx + 1}) {ex.question}
-          </h3>
+      {/* 🟦 PROGRESSION */}
+      <div className="mb-4 text-center">
+        <p className="font-semibold">
+          Question {exerciseIndex + 1} / {exercises.length}
+        </p>
 
-          {ex.options.map((opt: string, i: number) => (
+        <div className="w-full bg-gray-200 h-2 rounded mt-2">
+          <div
+            className="bg-blue-600 h-2 rounded"
+            style={{
+              width: `${((exerciseIndex + 1) / exercises.length) * 100}%`
+            }}
+          />
+        </div>
+      </div>
+
+      {/* 🧠 QUESTION */}
+      <div className="bg-white p-4 rounded-xl shadow">
+        <h3 className="font-semibold mb-3">
+          {currentEx.question}
+        </h3>
+
+        {currentEx.options.map((opt: string, i: number) => {
+          const isSelected = exerciseAnswers[currentEx._id] === opt;
+          const isCorrect = opt === currentEx.correctAnswer;
+
+          return (
             <label
               key={i}
-              className={`block p-2 border rounded mb-2 cursor-pointer ${
-                exerciseSubmitted
-                  ? opt === ex.correctAnswer
-                    ? "bg-green-100"
-                    : exerciseAnswers[ex._id] === opt
-                    ? "bg-red-100"
-                    : ""
-                  : ""
-              }`}
+              className={`block p-2 border rounded-lg mb-2 cursor-pointer
+                ${
+                  exerciseSubmitted
+                    ? isCorrect
+                      ? "bg-green-100 border-green-400"
+                      : isSelected
+                      ? "bg-red-100 border-red-400"
+                      : ""
+                    : "hover:bg-gray-100"
+                }
+              `}
             >
               <input
                 type="radio"
-                name={ex._id}
-                checked={exerciseAnswers[ex._id] === opt}
+                checked={isSelected}
+                disabled={exerciseSubmitted}
                 onChange={() =>
                   setExerciseAnswers(prev => ({
                     ...prev,
-                    [ex._id]: opt,
+                    [currentEx._id]: opt
                   }))
                 }
-                disabled={exerciseSubmitted}
+                className="mr-2"
               />
               {opt}
             </label>
-          ))}
-        </div>
-      ))}
+          );
+        })}
 
-      {!exerciseSubmitted ? (
+        {/* 💡 EXPLICATION */}
+        {exerciseSubmitted &&
+          exerciseAnswers[currentEx._id] !== currentEx.correctAnswer && (
+            <div className="text-blue-600 mt-3">
+              💡 {currentEx.explanation}
+            </div>
+          )}
+      </div>
+
+      {/* 🔁 NAVIGATION */}
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={() => setExerciseIndex(i => i - 1)}
+          disabled={exerciseIndex === 0}
+          className="px-4 py-2 bg-gray-300 rounded"
+        >
+          ⬅️ Précédent
+        </button>
+
+        <button
+          onClick={() => setExerciseIndex(i => i + 1)}
+          disabled={exerciseIndex === exercises.length - 1}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          ➡️ Suivant
+        </button>
+      </div>
+
+      {/* ✅ TERMINER */}
+      {!exerciseSubmitted && (
         <button
           onClick={() => {
             let score = 0;
-            exercises.forEach(ex => {
+            const wrong: any[] = [];
+
+            exercises.forEach((ex) => {
               if (exerciseAnswers[ex._id] === ex.correctAnswer) {
                 score++;
+              } else {
+                wrong.push(ex);
               }
             });
 
             setExerciseScore(score);
             setExerciseSubmitted(true);
+            setWrongExercises(wrong);
           }}
-          className="mt-4 px-6 py-2 bg-green-600 rounded"
+          className="mt-6 px-6 py-2 bg-green-600 text-white rounded"
         >
-          ✅ Valider
+          ✅ Terminer
         </button>
-      ) : (
-        <div className="text-center mt-4 text-xl font-bold">
-          🎯 Score : {exerciseScore} / {exercises.length}
+      )}
+
+      {/* 🎯 SCORE */}
+      {exerciseSubmitted && (
+        <div className="mt-4 text-center font-bold text-blue-700">
+          Score : {exerciseScore} / {exercises.length}
         </div>
+      )}
+
+      {/* 🔁 REFAIRE ERREURS */}
+      {exerciseSubmitted && wrongExercises.length > 0 && (
+        <button
+          onClick={() => {
+            setExercises(wrongExercises);
+            setExerciseIndex(0);
+            setExerciseAnswers({});
+            setExerciseSubmitted(false);
+            setExerciseScore(null);
+          }}
+          className="mt-4 px-6 py-2 bg-orange-500 text-white rounded"
+        >
+          🔁 Refaire mes erreurs
+        </button>
       )}
     </div>
   );
