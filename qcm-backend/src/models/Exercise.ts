@@ -9,7 +9,10 @@ const exerciseSchema = new mongoose.Schema({
   correctAnswer: String,
   difficulty: String, // facile, moyen, difficile
   explanation: String,   // 💡 optionnel (très utile)
-  image: String
+  questionImage: {
+  type: String,
+  default: "",
+},
 });
 
 export default mongoose.model("Exercise", exerciseSchema);

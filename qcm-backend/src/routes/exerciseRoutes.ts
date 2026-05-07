@@ -3,25 +3,51 @@ import Exercise from "../models/Exercise";
 import { verifyAdmin } from "../middleware/verifyAdmin";
 import { authenticateAdmin } from "../middleware/authAdmin";
 
+import multer from "multer";
+import path from "path";
+
 const router = express.Router();
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/exercises");
+  },
+
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      Date.now() + path.extname(file.originalname)
+    );
+  },
+});
+
+const upload = multer({ storage });
 
 // ======================================================
 // ➕ Ajouter un exercice
 // ======================================================
-router.post("/", authenticateAdmin, verifyAdmin, async (req, res) => {
+router.post("/", authenticateAdmin, verifyAdmin,  upload.single("questionImage"), async (req, res) => {
   try {
     const { subject, chapter, question, options, correctAnswer, explanation } =
       req.body;
 
     const exercise = await Exercise.create({
-      subject,
-      chapter,
-      question,
-      options,
-      correctAnswer,
-      explanation,
-    });
+  subject,
+  chapter,
+  question,
+
+  questionImage: req.file
+    ? `/uploads/exercises/${req.file.filename}`
+    : "",
+
+  options:
+    typeof options === "string"
+      ? JSON.parse(options)
+      : options,
+
+  correctAnswer,
+  explanation,
+});
 
     res.status(201).json(exercise);
   } catch (error) {
