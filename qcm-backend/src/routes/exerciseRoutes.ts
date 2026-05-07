@@ -30,7 +30,8 @@ router.post("/", authenticateAdmin, verifyAdmin,  upload.single("questionImage")
   try {
     const { subject, chapter, question, options, correctAnswer, explanation } =
       req.body;
-
+console.log("BODY =", req.body);
+console.log("FILE =", req.file);
     const exercise = await Exercise.create({
   subject,
   chapter,
