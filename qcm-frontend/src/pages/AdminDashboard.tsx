@@ -80,10 +80,10 @@ const [exams, setExams] = useState<Exam[]>([]);
 
   // Chargement étudiants
   const fetchStudents = async () => {
-    if (!token) return;
+    if (!adminToken) return;
     try {
       const res = await axios.get(`${API_BASE_URL}/api/admin/students`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${adminToken}` },
       });
       setStudents(res.data);
     } catch (err) {
@@ -105,7 +105,7 @@ const handleCreateStudent = async () => {
       { name, email, password },
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );
@@ -131,7 +131,7 @@ const handleCreateStudent = async () => {
     if (!confirm("Supprimer cet étudiant ?")) return;
     try {
       const res = await axios.delete(`${API_BASE_URL}/api/admin/students/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${adminToken}` },
       });
       setMessage(res.data.message);
       fetchStudents();
@@ -215,7 +215,11 @@ const handleCreateStudent = async () => {
         chapter,
         content: resumeContent,
       }, {
-        headers: { Authorization: token ? `Bearer ${token}` : undefined },
+        headers: {
+  Authorization: adminToken
+    ? `Bearer ${adminToken}`
+    : undefined,
+},
       });
 
       const finalUrl = res.data?.pdfUrl || res.data?.url;
@@ -246,7 +250,7 @@ const handleCreateStudent = async () => {
     const res = await axios.post(
       `${API_BASE_URL}/api/resume/upload`,
       formData,
-      { headers: { "Content-Type": "multipart/form-data", Authorization: token ? `Bearer ${token}` : undefined } }
+      { headers: { "Content-Type": "multipart/form-data", Authorization: adminToken ? `Bearer ${adminToken}` : undefined } }
     );
 
     const finalUrl = res.data?.pdfUrl || res.data?.url;

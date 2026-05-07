@@ -97,6 +97,8 @@ const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
 
 const [selectedTip, setSelectedTip] = useState<Astuce | null>(null);
 
+const [exerciseAttempt, setExerciseAttempt] = useState(1);
+
 const [numPages, setNumPages] = useState<number>(0);
 const [pdfHeight, setPdfHeight] = useState("60vh");
 const [focusMode, setFocusMode] = useState(false);
@@ -765,16 +767,21 @@ if (selectedChapter && selectedAction === "Résumé") {
             <label
               key={i}
               className={`block p-2 border rounded-lg mb-2 cursor-pointer
-                ${
-                  exerciseSubmitted
-                    ? isCorrect
-                      ? "bg-green-100 border-green-400"
-                      : isSelected
-                      ? "bg-red-100 border-red-400"
-                      : ""
-                    : "hover:bg-gray-100"
-                }
-              `}
+${
+  exerciseSubmitted
+    ? isSelected &&
+      exerciseAnswers[currentEx._id] === currentEx.correctAnswer
+      ? "bg-green-100 border-green-400"
+
+      : isSelected &&
+        exerciseAnswers[currentEx._id] !== currentEx.correctAnswer
+      ? "bg-red-100 border-red-400"
+
+      : ""
+
+    : "hover:bg-gray-100"
+}
+`}
             >
               <input
                 type="radio"
@@ -850,6 +857,9 @@ if (selectedChapter && selectedAction === "Résumé") {
       {exerciseSubmitted && (
         <div className="mt-4 text-center font-bold text-blue-700">
           Score : {exerciseScore} / {exercises.length}
+          ({exerciseAttempt === 1
+  ? "1er essai"
+  : `${exerciseAttempt}ème essai`})
         </div>
       )}
 
@@ -857,6 +867,7 @@ if (selectedChapter && selectedAction === "Résumé") {
       {exerciseSubmitted && wrongExercises.length > 0 && (
         <button
           onClick={() => {
+            setExerciseAttempt(prev => prev + 1);
             setExercises(wrongExercises);
             setExerciseIndex(0);
             setExerciseAnswers({});
