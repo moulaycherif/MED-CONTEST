@@ -7,11 +7,10 @@ interface Quiz {
   question: string;
   subject: string;
   chapter: string;
-}
-interface Exercise {
-  subject: string;
-  chapter: string;
-  question: string;
+  options?: string[];
+  correctAnswer?: string;
+  explanation?: string;
+  questionImage?: string;
 }
 
 const AdminExercises: React.FC = () => {
@@ -37,31 +36,22 @@ const AdminExercises: React.FC = () => {
     fetchExercises();
   }, []);
 
-  <button
-  onClick={async () => {
-    await axios.post(`${API_BASE_URL}/api/exercises`, {
-      subject: selectedSubject,
-      chapter: selectedChapter,
-      question,
-      options,
-      correctAnswer,
-    });
-
-    fetchExercises();
-  }}
->
-  Ajouter
-</button>
-
   const fetchExercises = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/exercises/by-subject/Mathématique`);
-    const data: Exercise[] = res.data;
+    const res = await axios.get(
+      `${API_BASE_URL}/api/exercises`
+    );
 
-const uniqueSubjects = Array.from(
-  new Set(data.map(q => q.subject))
-);
-setSubjects(uniqueSubjects);
+    const data: Quiz[] = res.data;
+
+    setQuizzes(data);
+
+    const uniqueSubjects = Array.from(
+      new Set(data.map((q) => q.subject))
+    );
+
+    setSubjects(uniqueSubjects);
+
   } catch (err) {
     console.error("Erreur chargement exercices :", err);
   }
@@ -122,10 +112,14 @@ await axios.post(
 
     alert("✅ Exercice ajouté");
 
-    // reset
-    setQuestion("");
-    setOptions(["", "", "", ""]);
-    setCorrectAnswer("");
+   // reset
+setQuestion("");
+setOptions(["", "", "", "", ""]);
+setCorrectAnswer("");
+setSubject("");
+setChapter("");
+setExplanation("");
+setQuestionImage(null);
 
     fetchExercises(); // refresh liste
   } catch (err) {
@@ -133,6 +127,11 @@ await axios.post(
     alert("❌ Erreur ajout exercice");
   }
 };
+
+const previewUrl = React.useMemo(() => {
+  if (!questionImage) return null;
+  return URL.createObjectURL(questionImage);
+}, [questionImage]);
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -185,24 +184,49 @@ await axios.post(
     className="border p-2 mb-2 w-full"
   />
 
- <textarea
+<label className="font-semibold block mb-2">
+  🧠 Texte de la question
+</label>
+
+<textarea
+  placeholder="Saisir la question ici..."
+  value={question}
+  onChange={(e) => setQuestion(e.target.value)}
+  className="w-full border p-2 rounded"
+  rows={4}
+/>
+
+<label className="font-semibold block mt-4 mb-2">
+  💡 Explication pédagogique (optionnelle)
+</label>
+
+<textarea
   placeholder="Explication de la réponse..."
   value={explanation}
-  onChange={(e) =>
-    setExplanation(e.target.value)
-  }
-  className="w-full border p-2 rounded mt-4"
+  onChange={(e) => setExplanation(e.target.value)}
+  className="w-full border p-2 rounded"
+  rows={3}
 />
+
+<label className="font-semibold block mt-4 mb-2">
+  🖼 Image de la question (optionnelle)
+</label>
 
   <input
   type="file"
   accept="image/*"
   onChange={(e) =>
-    setQuestionImage(
-      e.target.files?.[0] || null
-    )
+    setQuestionImage(e.target.files?.[0] || null)
   }
 />
+
+  {previewUrl && (
+  <img
+    src={previewUrl}
+    alt="Preview"
+    className="max-w-xs max-h-48 object-contain mt-4 rounded border"
+  />
+)}
 
   {options.map((opt, i) => (
     <input

@@ -756,7 +756,7 @@ if (selectedChapter && selectedAction === "Résumé") {
   <img
     src={`${API_BASE_URL}${currentEx.questionImage}`}
     alt="Question"
-    className="max-w-lg mx-auto rounded shadow mb-4"
+   className="max-w-xs md:max-w-sm max-h-64 object-contain mx-auto rounded shadow mb-4"
     />
 )}
 
