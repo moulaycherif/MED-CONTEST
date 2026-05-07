@@ -5,12 +5,19 @@ import { authenticateAdmin } from "../middleware/authAdmin";
 
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 
 const router = express.Router();
 
+const uploadDir = "uploads/exercises";
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/exercises");
+    cb(null, uploadDir);
   },
 
   filename: (req, file, cb) => {
