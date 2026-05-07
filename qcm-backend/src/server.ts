@@ -6,10 +6,16 @@ import http from "http";
 import { initRankingSocket } from "./websocket/rankingSocket";
 import statsRoutes from "./routes/statsRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
+import path from "path";
 
 dotenv.config({ path: "./.env" });
 app.use("/api/stats", statsRoutes);
-app.use("/uploads", express.static("uploads"));
+app.use(
+  "/uploads",
+  express.static(
+    path.join(process.cwd(), "uploads")
+  )
+);
 app.use("/api/upload", uploadRoutes);
 
 
