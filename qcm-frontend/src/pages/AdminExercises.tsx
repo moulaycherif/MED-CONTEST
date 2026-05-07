@@ -30,6 +30,7 @@ const AdminExercises: React.FC = () => {
   const [chapter, setChapter] = useState("");
 
   const [questionImage, setQuestionImage] = useState<File | null>(null);
+  const [explanation, setExplanation] = useState("");
  
   // 🔹 Charger tous les quiz
   useEffect(() => {
@@ -184,12 +185,14 @@ await axios.post(
     className="border p-2 mb-2 w-full"
   />
 
-  <textarea
-    placeholder="Question"
-    value={question}
-    onChange={(e) => setQuestion(e.target.value)}
-    className="border p-2 mb-2 w-full"
-  />
+ <textarea
+  placeholder="Explication de la réponse..."
+  value={explanation}
+  onChange={(e) =>
+    setExplanation(e.target.value)
+  }
+  className="w-full border p-2 rounded mt-4"
+/>
 
   <input
   type="file"
