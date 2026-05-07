@@ -752,11 +752,12 @@ if (selectedChapter && selectedAction === "Résumé") {
           {renderContent(currentEx.question)}
         </h3>
 
-        {currentEx.image && (
+        {currentEx.questionImage && (
   <img
-    src={`${API_BASE_URL}${currentEx.image}`}
-    className="max-w-md my-3 rounded shadow"
-  />
+    src={`${API_BASE_URL}${currentEx.questionImage}`}
+    alt="Question"
+    className="max-w-lg mx-auto rounded shadow mb-4"
+    />
 )}
 
         {currentEx.options.map((opt: string, i: number) => {

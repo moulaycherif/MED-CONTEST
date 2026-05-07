@@ -23,11 +23,13 @@ const AdminExercises: React.FC = () => {
   const [selectedChapter, setSelectedChapter] = useState("");
 
   const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState(["", "", "", ""]);
+  const [options, setOptions] = useState(["", "", "", "", ""]);
   const [correctAnswer, setCorrectAnswer] = useState("");
 
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
+
+  const [questionImage, setQuestionImage] = useState<File | null>(null);
  
   // 🔹 Charger tous les quiz
   useEffect(() => {
@@ -90,12 +92,29 @@ setSubjects(uniqueSubjects);
   try {
     const adminToken = localStorage.getItem("adminToken"); // 🔥 IMPORTANT
     
-    await axios.post(
+    const formData = new FormData();
+
+formData.append("subject", subject);
+formData.append("chapter", chapter);
+formData.append("question", question);
+
+formData.append("options", JSON.stringify(options));
+
+formData.append("correctAnswer", correctAnswer);
+
+formData.append("explanation", explanation);
+
+if (questionImage) {formData.append("questionImage", questionImage);
+}
+
+await axios.post(
   `${API_BASE_URL}/api/exercises`,
-  { subject, chapter, question, options, correctAnswer },
+  formData,
   {
     headers: {
       Authorization: `Bearer ${adminToken}`,
+      "Content-Type":
+        "multipart/form-data",
     },
   }
 );
@@ -171,6 +190,16 @@ setSubjects(uniqueSubjects);
     onChange={(e) => setQuestion(e.target.value)}
     className="border p-2 mb-2 w-full"
   />
+
+  <input
+  type="file"
+  accept="image/*"
+  onChange={(e) =>
+    setQuestionImage(
+      e.target.files?.[0] || null
+    )
+  }
+/>
 
   {options.map((opt, i) => (
     <input
