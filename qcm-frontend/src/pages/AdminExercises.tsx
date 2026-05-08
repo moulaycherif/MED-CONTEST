@@ -180,11 +180,7 @@ useEffect(() => {
   <h2 className="text-xl font-bold mb-4">➕ Ajouter un exercice</h2>
 
   <div className="border p-2 rounded bg-white">
-   <textarea
-  value={question}
-  onChange={(e) => setQuestion(e.target.value)}
-  className="w-full border p-2"
-/>
+   <RichMathEditor value={question} onChange={setQuestion} />
 </div>
 
   <input
@@ -209,11 +205,7 @@ useEffect(() => {
   </label>
 
   <div className="border rounded bg-white min-h-[200px]">
-    <textarea
-  value={question}
-  onChange={(e) => setQuestion(e.target.value)}
-  className="w-full border p-2"
-/>
+    <RichMathEditor value={question} onChange={setQuestion} />
   </div>
 </div>
 
