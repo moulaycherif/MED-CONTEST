@@ -177,8 +177,7 @@ useEffect(() => {
       </div>
 
 <div className="mb-8 p-4 border rounded-lg shadow">
-  <h2 className="text-xl font-bold mb-4">➕ Ajouter un exercice</h2>
-
+ 
   <div className="border p-2 rounded bg-white">
    <RichMathEditor value={question} onChange={setQuestion} />
 </div>

@@ -238,45 +238,54 @@ function cleanLatex(content?: string) {
 
     .replace(/\s+/g, " ");
 }
-function renderContent(text?: string) {
-  if (!text) return null;
+function renderContent(content?: string) {
+  if (!content) return null;
 
-  const parts = text.split(/(\$\$.*?\$\$|\$.*?\$)/g);
+  const parts = content.split(
+    /(\$\$.*?\$\$|\$.*?\$)/g
+  );
 
-  return parts.map((part, index) => {
-    try {
-      // Block math $$...$$
-      if (part.startsWith("$$") && part.endsWith("$$")) {
+  return (
+    <div className="prose max-w-none">
+      {parts.map((part, index) => {
+
+        // BLOCK
+        if (
+          part.startsWith("$$") &&
+          part.endsWith("$$")
+        ) {
+          return (
+            <BlockMath
+              key={index}
+              math={part.slice(2, -2)}
+            />
+          );
+        }
+
+        // INLINE
+        if (
+          part.startsWith("$") &&
+          part.endsWith("$")
+        ) {
+          return (
+            <InlineMath
+              key={index}
+              math={part.slice(1, -1)}
+            />
+          );
+        }
+
         return (
-          <BlockMath
+          <span
             key={index}
-            math={part.slice(2, -2)}
+            dangerouslySetInnerHTML={{
+              __html: part,
+            }}
           />
         );
-      }
-
-      // Inline math $...$
-      if (part.startsWith("$") && part.endsWith("$")) {
-        return (
-          <InlineMath
-            key={index}
-            math={part.slice(1, -1)}
-          />
-        );
-      }
-
-      // HTML normal
-      return (
-        <span
-          key={index}
-          dangerouslySetInnerHTML={{ __html: part }}
-        />
-      );
-
-    } catch (e) {
-      return <span key={index}>{part}</span>;
-    }
-  });
+      })}
+    </div>
+  );
 }
 
   // 🔹 Changement de réponse
