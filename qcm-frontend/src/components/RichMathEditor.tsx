@@ -1,18 +1,12 @@
 import ReactQuill from "react-quill";
-
-import "react-quill/dist/quill.snow.css";
-
 import katex from "katex";
-import "katex/dist/katex.min.css";
 
-import Quill from "quill";
-import ImageUploader from "quill-image-uploader";
+import { useRef } from "react";
+
 import { API_BASE_URL } from "../config";
 
-Quill.register(
-  "modules/imageUploader",
-  ImageUploader
-);
+import "react-quill/dist/quill.snow.css";
+import "katex/dist/katex.min.css";
 
 (window as any).katex = katex;
 
@@ -26,27 +20,23 @@ export default function RichMathEditor({
   onChange,
 }: Props) {
 
-  const modules = {
-  toolbar: [
-    [{ header: [1, 2, false] }],
+  const quillRef = useRef<ReactQuill | null>(null);
 
-    ["bold", "italic", "underline"],
+  const imageHandler = () => {
 
-    [{ list: "ordered" }, { list: "bullet" }],
+    const input = document.createElement("input");
 
-    ["link", "image"],
+    input.setAttribute("type", "file");
 
-    ["formula"],
+    input.setAttribute("accept", "image/*");
 
-    ["clean"],
-  ],
+    input.click();
 
-  clipboard: {
-    matchVisual: false,
-  },
+    input.onchange = async () => {
 
-  imageUploader: {
-    upload: async (file: File) => {
+      const file = input.files?.[0];
+
+      if (!file) return;
 
       const formData = new FormData();
 
@@ -62,14 +52,49 @@ export default function RichMathEditor({
 
       const data = await res.json();
 
-      return `${API_BASE_URL}${data.url}`;
+      const quill =
+        quillRef.current?.getEditor();
+
+      const range = quill?.getSelection();
+
+      quill?.insertEmbed(
+        range?.index || 0,
+        "image",
+        `${API_BASE_URL}${data.url}`
+      );
+    };
+  };
+
+  const modules = {
+    toolbar: {
+      container: [
+        [{ header: [1, 2, false] }],
+
+        ["bold", "italic", "underline"],
+
+        [{ list: "ordered" }, { list: "bullet" }],
+
+        ["link", "image"],
+
+        ["formula"],
+
+        ["clean"],
+      ],
+
+      handlers: {
+        image: imageHandler,
+      },
     },
-  },
-};
+
+    clipboard: {
+      matchVisual: false,
+    },
+  };
 
   return (
     <div className="bg-white mb-4">
       <ReactQuill
+        ref={quillRef}
         theme="snow"
         value={value}
         onChange={onChange}
