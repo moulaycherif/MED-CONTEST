@@ -10,7 +10,7 @@ import dotenv from "dotenv";
 import rankingRoutes from "./routes/rankingRoutes";
 import path from "path";
 import statsRoutes from "./routes/statsRoutes";
-
+import uploadRoutes from "./routes/uploadRoutes";
 import astuceRoutes from "./routes/astuceRoutes";
 
 dotenv.config();
@@ -58,7 +58,8 @@ app.use("/api/stats", statsRoutes);   // 🔥 OBLIGATOIRE
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/uploads/resumes", express.static(path.join(__dirname, "uploads/resumes")));
 app.use("/api/exercises", exerciseRoutes);
-
+app.use("/api/stats", statsRoutes);
+app.use("/api/upload", uploadRoutes);
 app.use("/api/astuces", astuceRoutes);
 
 

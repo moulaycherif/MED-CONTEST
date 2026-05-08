@@ -34,6 +34,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+router.get("/", async (req, res) => {
+  try {
+    const exercises = await Exercise.find();
+    res.json(exercises);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 // ======================================================
 // 🖼 Upload image depuis Quill
 // ======================================================
