@@ -19,8 +19,6 @@ import StudentAstuceDetail from "./StudentAstuceDetail";
 
 import PdfViewer from "../components/PdfViewer";
 
-import { BlockMath, InlineMath } from "react-katex";
-
 import parse from "html-react-parser";
 
 interface Astuce {
@@ -238,53 +236,17 @@ function cleanLatex(content?: string) {
 
     .replace(/\s+/g, " ");
 }
+
 function renderContent(content?: string) {
   if (!content) return null;
 
-  const parts = content.split(
-    /(\$\$.*?\$\$|\$.*?\$)/g
-  );
-
   return (
-    <div className="prose max-w-none">
-      {parts.map((part, index) => {
-
-        // BLOCK
-        if (
-          part.startsWith("$$") &&
-          part.endsWith("$$")
-        ) {
-          return (
-            <BlockMath
-              key={index}
-              math={part.slice(2, -2)}
-            />
-          );
-        }
-
-        // INLINE
-        if (
-          part.startsWith("$") &&
-          part.endsWith("$")
-        ) {
-          return (
-            <InlineMath
-              key={index}
-              math={part.slice(1, -1)}
-            />
-          );
-        }
-
-        return (
-          <span
-            key={index}
-            dangerouslySetInnerHTML={{
-              __html: part,
-            }}
-          />
-        );
-      })}
-    </div>
+    <div
+      className="prose max-w-none"
+      dangerouslySetInnerHTML={{
+        __html: content,
+      }}
+    />
   );
 }
 
