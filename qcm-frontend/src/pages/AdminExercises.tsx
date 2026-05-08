@@ -178,10 +178,6 @@ useEffect(() => {
 
 <div className="mb-8 p-4 border rounded-lg shadow">
  
-  <div className="border p-2 rounded bg-white">
-   <RichMathEditor value={question} onChange={setQuestion} />
-</div>
-
   <input
     type="text"
     placeholder="Matière"
