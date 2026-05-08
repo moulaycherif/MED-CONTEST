@@ -35,6 +35,28 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ======================================================
+// 🖼 Upload image depuis Quill
+// ======================================================
+
+router.post(
+  "/upload-editor-image",
+  upload.single("image"),
+  (req, res) => {
+
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ error: "Aucun fichier" });
+    }
+
+    res.json({
+      url:
+        `/uploads/exercises/${req.file.filename}`,
+    });
+  }
+);
+
+// ======================================================
 // ➕ Ajouter un exercice
 // ======================================================
 router.post("/", authenticateAdmin, verifyAdmin,  upload.single("questionImage"), async (req, res) => {
@@ -92,6 +114,7 @@ router.get("/by-subject/:subject", async (req, res) => {
 // ======================================================
 router.get("/:subject/:chapter", async (req, res) => {
   try {
+    console.log("FICHIER EXERCISEROUTES :",req.params);
     const { subject, chapter } = req.params;
 
     const exercises = await Exercise.find({
