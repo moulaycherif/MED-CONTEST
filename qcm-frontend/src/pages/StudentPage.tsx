@@ -21,6 +21,8 @@ import PdfViewer from "../components/PdfViewer";
 
 import { BlockMath, InlineMath } from "react-katex";
 
+import parse from "html-react-parser";
+
 interface Astuce {
   _id: string;
   title?: string;
@@ -195,7 +197,9 @@ useEffect(() => {
 useEffect(() => {
   if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
     axios
-      .get(`${API_BASE_URL}/api/exercises/${selectedMatiere}/${selectedChapter}`)
+      .get(
+  `${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}`
+)
       .then(res => {
          
         setExercises(res.data || []);
@@ -234,26 +238,27 @@ function cleanLatex(content?: string) {
 
     .replace(/\s+/g, " ");
 }
-function renderContent(content?: string) {
-  if (!content) return null;
+function renderContent(text?: string) {
+  if (!text) return null;
 
-  const cleaned = cleanLatex(content);
-
-  const parts = cleaned.split(/(\$\$.*?\$\$|\$.*?\$)/g);
+  const parts = text.split("$");
 
   return parts.map((part, index) => {
     try {
-      if (part.startsWith("$$")) {
-        return <BlockMath key={index} math={part.slice(2, -2)} />;
-      }
-
-      if (part.startsWith("$")) {
-        return <InlineMath key={index} math={part.slice(1, -1)} />;
+      if (index % 2 === 1) {
+        return (
+          <InlineMath
+            key={index}
+            math={part}
+          />
+        );
       }
 
       return <span key={index}>{part}</span>;
-    } catch (e) {
-      console.error("KaTeX error:", part);
+
+    } catch (err) {
+      console.error("KaTeX error:", err);
+
       return <span key={index}>{part}</span>;
     }
   });
@@ -749,7 +754,9 @@ if (selectedChapter && selectedAction === "Résumé") {
       {/* 🧠 QUESTION */}
       <div className="bg-white p-4 rounded-xl shadow">
         <h3 className="font-semibold mb-3">
-          {renderContent(currentEx.question)}
+          <div className="prose max-w-none">
+  {parse(currentEx.question)}
+</div>
         </h3>
 
         {currentEx.questionImage && (
@@ -805,7 +812,9 @@ ${
         {exerciseSubmitted &&
           exerciseAnswers[currentEx._id] !== currentEx.correctAnswer && (
             <div className="text-blue-600 mt-3">
-              💡 {renderContent(currentEx.explanation)}
+              <div className="prose max-w-none">
+  {parse(currentEx.explanation)}
+</div>
             </div>
           )}
       </div>

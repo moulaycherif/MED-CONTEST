@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import RichMathEditor from "../components/RichMathEditor";
 
 interface Quiz {
   _id: string;
@@ -188,24 +191,18 @@ const previewUrl = React.useMemo(() => {
   🧠 Texte de la question
 </label>
 
-<textarea
-  placeholder="Saisir la question ici..."
+<RichMathEditor
   value={question}
-  onChange={(e) => setQuestion(e.target.value)}
-  className="w-full border p-2 rounded"
-  rows={4}
+  onChange={setQuestion}
 />
 
 <label className="font-semibold block mt-4 mb-2">
   💡 Explication pédagogique (optionnelle)
 </label>
 
-<textarea
-  placeholder="Explication de la réponse..."
+<RichMathEditor
   value={explanation}
-  onChange={(e) => setExplanation(e.target.value)}
-  className="w-full border p-2 rounded"
-  rows={3}
+  onChange={setExplanation}
 />
 
 <label className="font-semibold block mt-4 mb-2">
