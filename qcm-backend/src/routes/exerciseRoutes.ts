@@ -53,15 +53,10 @@ router.post(
   upload.single("image"),
   (req, res) => {
 
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({ error: "Aucun fichier" });
-    }
-
     res.json({
       url:
-        `/uploads/exercises/${req.file.filename}`,
+        "/uploads/exercises/" +
+        req.file?.filename,
     });
   }
 );
