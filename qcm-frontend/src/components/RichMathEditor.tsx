@@ -22,47 +22,45 @@ interface Props {
   onChange: (value: string) => void;
 }
 
+
 export default function RichMathEditor({
   value,
   onChange,
 }: Props) {
 
   const modules = {
-    toolbar: [
-      [{ header: [1, 2, false] }],
+  toolbar: [
+    [{ header: [1, 2, false] }],
+    ["bold", "italic", "underline"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["link", "image"],
+    ["formula"],
+    ["clean"],
+  ],
 
-      ["bold", "italic", "underline"],
+  clipboard: {
+    matchVisual: false
+  },
 
-      [{ list: "ordered" }, { list: "bullet" }],
+  imageUploader: {
+    upload: async (file: File) => {
+      const formData = new FormData();
+      formData.append("image", file);
 
-      ["link", "image"],
+      const res = await fetch(
+        `${API_BASE_URL}/api/exercises/upload-editor-image`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-      ["formula"],
+      const data = await res.json();
 
-      ["clean"],
-    ],
-
-    imageUploader: {
-      upload: async (file: File) => {
-
-        const formData = new FormData();
-
-        formData.append("image", file);
-
-        const res = await fetch(
-          `${API_BASE_URL}/api/exercises/upload-editor-image`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const data = await res.json();
-
-        return `${API_BASE_URL}${data.url}`;
-      },
+      return `${API_BASE_URL}${data.url}`;
     },
-  };
+  },
+};
 
   return (
     <ReactQuill
@@ -74,4 +72,5 @@ export default function RichMathEditor({
       className="bg-white"
     />
   );
+  
 }

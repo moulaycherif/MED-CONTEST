@@ -28,9 +28,6 @@ const AdminExercises: React.FC = () => {
   const [options, setOptions] = useState(["", "", "", "", ""]);
   const [correctAnswer, setCorrectAnswer] = useState("");
 
-  const [subject, setSubject] = useState("");
-  const [chapter, setChapter] = useState("");
-
   const [questionImage, setQuestionImage] = useState<File | null>(null);
   const [explanation, setExplanation] = useState("");
  
@@ -88,8 +85,8 @@ const AdminExercises: React.FC = () => {
     
     const formData = new FormData();
 
-formData.append("subject", subject);
-formData.append("chapter", chapter);
+formData.append("subject", selectedSubject);
+formData.append("chapter", selectedChapter);
 formData.append("question", question);
 
 formData.append("options", JSON.stringify(options));
@@ -119,8 +116,8 @@ await axios.post(
 setQuestion("");
 setOptions(["", "", "", "", ""]);
 setCorrectAnswer("");
-setSubject("");
-setChapter("");
+setSelectedSubject("");
+setSelectedChapter("");
 setExplanation("");
 setQuestionImage(null);
 
@@ -131,9 +128,20 @@ setQuestionImage(null);
   }
 };
 
-const previewUrl = React.useMemo(() => {
-  if (!questionImage) return null;
-  return URL.createObjectURL(questionImage);
+const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+useEffect(() => {
+  if (!questionImage) {
+    setPreviewUrl(null);
+    return;
+  }
+
+  const url = URL.createObjectURL(questionImage);
+  setPreviewUrl(url);
+
+  return () => {
+    URL.revokeObjectURL(url);
+  };
 }, [questionImage]);
 
   return (
@@ -174,16 +182,16 @@ const previewUrl = React.useMemo(() => {
   <input
     type="text"
     placeholder="Matière"
-    value={subject}
-    onChange={(e) => setSubject(e.target.value)}
+    value={selectedSubject}
+    onChange={(e) => setSelectedSubject(e.target.value)}
     className="border p-2 mb-2 w-full"
   />
 
   <input
     type="text"
     placeholder="Chapitre"
-    value={chapter}
-    onChange={(e) => setChapter(e.target.value)}
+    value={selectedChapter}
+    onChange={(e) => setSelectedChapter(e.target.value)}
     className="border p-2 mb-2 w-full"
   />
 

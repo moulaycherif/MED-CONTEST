@@ -241,24 +241,39 @@ function cleanLatex(content?: string) {
 function renderContent(text?: string) {
   if (!text) return null;
 
-  const parts = text.split("$");
+  const parts = text.split(/(\$\$.*?\$\$|\$.*?\$)/g);
 
   return parts.map((part, index) => {
     try {
-      if (index % 2 === 1) {
+      // Block math $$...$$
+      if (part.startsWith("$$") && part.endsWith("$$")) {
         return (
-          <InlineMath
+          <BlockMath
             key={index}
-            math={part}
+            math={part.slice(2, -2)}
           />
         );
       }
 
-      return <span key={index}>{part}</span>;
+      // Inline math $...$
+      if (part.startsWith("$") && part.endsWith("$")) {
+        return (
+          <InlineMath
+            key={index}
+            math={part.slice(1, -1)}
+          />
+        );
+      }
 
-    } catch (err) {
-      console.error("KaTeX error:", err);
+      // HTML normal
+      return (
+        <span
+          key={index}
+          dangerouslySetInnerHTML={{ __html: part }}
+        />
+      );
 
+    } catch (e) {
       return <span key={index}>{part}</span>;
     }
   });
