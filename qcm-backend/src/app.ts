@@ -61,6 +61,10 @@ app.use("/api/exercises", exerciseRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/astuces", astuceRoutes);
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
 
 
 // ✅ Route test
