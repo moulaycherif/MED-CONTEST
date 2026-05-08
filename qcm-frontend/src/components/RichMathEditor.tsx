@@ -1,19 +1,6 @@
 import ReactQuill from "react-quill";
-import Quill from "quill";
-
-import ImageUploader from "quill-image-uploader";
-
-import katex from "katex";
 
 import "react-quill/dist/quill.snow.css";
-import "katex/dist/katex.min.css";
-
-(window as any).katex = katex;
-
-Quill.register(
-  "modules/imageUploader",
-  ImageUploader
-);
 
 interface Props {
   value: string;
@@ -28,52 +15,22 @@ export default function RichMathEditor({
   const modules = {
     toolbar: [
       [{ header: [1, 2, false] }],
-
       ["bold", "italic", "underline"],
-
       [{ list: "ordered" }, { list: "bullet" }],
-
-      ["link", "image"],
-
-      ["formula"],
-
+      ["link"],
       ["clean"],
     ],
-
-    clipboard: {
-      matchVisual: false,
-    },
-
-    imageUploader: {
-      upload: async (file: File) => {
-
-        const formData = new FormData();
-
-        formData.append("image", file);
-
-        const res = await fetch(
-          "http://localhost:5000/api/exercises/upload-editor-image",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const data = await res.json();
-
-        return data.url;
-      },
-    },
   };
 
   return (
-    <ReactQuill
-      theme="snow"
-      value={value}
-      onChange={onChange}
-      modules={modules}
-      placeholder="Écrire ici..."
-      className="bg-white"
-    />
+    <div className="bg-white mb-4">
+      <ReactQuill
+        theme="snow"
+        value={value}
+        onChange={onChange}
+        modules={modules}
+        placeholder="Écrire ici..."
+      />
+    </div>
   );
 }

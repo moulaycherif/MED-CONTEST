@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
-import ReactQuill from "react-quill";
+
 import "react-quill/dist/quill.snow.css";
 import RichMathEditor from "../components/RichMathEditor";
 
@@ -194,18 +194,17 @@ useEffect(() => {
     className="border p-2 mb-2 w-full"
   />
 
-<div className="mb-4">
-  <label className="font-semibold block mb-2">
-    🧠 Texte de la question
-  </label>
+<label className="font-semibold block mb-2">
+  🧠 Texte de la question
+</label>
 
-  <div className="border rounded bg-white min-h-[200px]">
-    <RichMathEditor value={question} onChange={setQuestion} />
-  </div>
-</div>
+<RichMathEditor
+  value={question}
+  onChange={setQuestion}
+/>
 
 <label className="font-semibold block mt-4 mb-2">
-  💡 Explication pédagogique (optionnelle)
+  💡 Explication pédagogique
 </label>
 
 <RichMathEditor
