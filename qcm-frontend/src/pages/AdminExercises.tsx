@@ -205,7 +205,11 @@ useEffect(() => {
   </label>
 
   <div className="border rounded bg-white min-h-[200px]">
-    <RichMathEditor value={question} onChange={setQuestion} />
+    <textarea
+  value={question}
+  onChange={(e) => setQuestion(e.target.value)}
+  className="w-full border p-2"
+/>
   </div>
 </div>
 
