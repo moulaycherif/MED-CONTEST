@@ -64,13 +64,13 @@ export default function RichMathEditor({
 
   return (
     <ReactQuill
-      theme="snow"
-      value={value}
-      onChange={onChange}
-      modules={modules}
-      placeholder="Écrire une question avec équations, images, texte..."
-      className="bg-white"
-    />
+  theme="snow"
+  value={value}
+  onChange={onChange}
+  modules={modules}
+  placeholder="Écrire une question..."
+  className="bg-white min-h-[150px]"
+/>
   );
   
 }
