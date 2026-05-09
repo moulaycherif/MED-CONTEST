@@ -1,13 +1,11 @@
 import ReactQuill from "react-quill";
 import katex from "katex";
-
 import { useRef } from "react";
 
 import { API_BASE_URL } from "../config";
 
 import "react-quill/dist/quill.snow.css";
 import "katex/dist/katex.min.css";
-import "./RichMathEditor.css";
 
 (window as any).katex = katex;
 
@@ -20,27 +18,22 @@ export default function RichMathEditor({
   value,
   onChange,
 }: Props) {
-
   const quillRef = useRef<ReactQuill | null>(null);
 
   const imageHandler = () => {
-
     const input = document.createElement("input");
 
     input.setAttribute("type", "file");
-
     input.setAttribute("accept", "image/*");
 
     input.click();
 
     input.onchange = async () => {
-
       const file = input.files?.[0];
 
       if (!file) return;
 
       const formData = new FormData();
-
       formData.append("image", file);
 
       const res = await fetch(
@@ -53,8 +46,7 @@ export default function RichMathEditor({
 
       const data = await res.json();
 
-      const quill =
-        quillRef.current?.getEditor();
+      const quill = quillRef.current?.getEditor();
 
       const range = quill?.getSelection();
 
@@ -70,15 +62,10 @@ export default function RichMathEditor({
     toolbar: {
       container: [
         [{ header: [1, 2, false] }],
-
         ["bold", "italic", "underline"],
-
         [{ list: "ordered" }, { list: "bullet" }],
-
         ["link", "image"],
-
         ["formula"],
-
         ["clean"],
       ],
 
@@ -86,26 +73,31 @@ export default function RichMathEditor({
         image: imageHandler,
       },
     },
-
-    clipboard: {
-      matchVisual: false,
-    },
   };
 
   return (
-  <div className="bg-white mb-4">
-    <ReactQuill
-      ref={quillRef}
-      theme="snow"
-      value={value}
-      onChange={onChange}
-      modules={modules}
-      placeholder="Écrire ici..."
-      style={{
-        height: "250px",
-        marginBottom: "50px",
-      }}
-    />
-  </div>
-);
+    <div className="bg-white mb-10">
+      <ReactQuill
+        ref={quillRef}
+        theme="snow"
+        value={value}
+        onChange={onChange}
+        modules={modules}
+        placeholder="Écrire ici..."
+      />
+
+      <style>
+        {`
+          .ql-editor {
+            min-height: 220px;
+            font-size: 16px;
+          }
+
+          .ql-container {
+            min-height: 220px;
+          }
+        `}
+      </style>
+    </div>
+  );
 }
