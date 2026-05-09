@@ -76,28 +76,44 @@ export default function RichMathEditor({
   };
 
   return (
-    <div className="bg-white mb-10">
-      <ReactQuill
-        ref={quillRef}
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        modules={modules}
-        placeholder="Écrire ici..."
-      />
+  <div className="bg-white mb-10">
+    <ReactQuill
+      ref={quillRef}
+      theme="snow"
+      value={value}
+      onChange={onChange}
+      modules={modules}
+      placeholder="Écrire ici..."
+    />
 
-      <style>
-        {`
-          .ql-editor {
-            min-height: 220px;
-            font-size: 16px;
-          }
+    <style>
+      {`
+        .ql-toolbar {
+          background: white;
+          border: 1px solid #ccc;
+        }
 
-          .ql-container {
-            min-height: 220px;
-          }
-        `}
-      </style>
-    </div>
-  );
+        .ql-container {
+          min-height: 220px;
+          background: white;
+          border: 1px solid #ccc;
+          cursor: text;
+        }
+
+        .ql-editor {
+          min-height: 220px;
+          font-size: 16px;
+          color: black;
+          cursor: text;
+          user-select: text;
+          pointer-events: auto;
+        }
+
+        .ql-editor p {
+          color: black;
+        }
+      `}
+    </style>
+  </div>
+);
 }
