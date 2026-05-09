@@ -24,6 +24,9 @@ const AdminExercises: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
 
+  const [subject, setSubject] = useState("");
+  const [chapter, setChapter] = useState("");
+
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", "", "", "", ""]);
   const [correctAnswer, setCorrectAnswer] = useState("");
@@ -85,8 +88,8 @@ const AdminExercises: React.FC = () => {
     
     const formData = new FormData();
 
-formData.append("subject", selectedSubject);
-formData.append("chapter", selectedChapter);
+formData.append("subject", subject);
+formData.append("chapter", chapter);
 formData.append("question", question);
 
 formData.append("options", JSON.stringify(options));
@@ -116,8 +119,8 @@ await axios.post(
 setQuestion("");
 setOptions(["", "", "", "", ""]);
 setCorrectAnswer("");
-setSelectedSubject("");
-setSelectedChapter("");
+setSubject("");
+setChapter("");
 setExplanation("");
 setQuestionImage(null);
 
@@ -128,21 +131,9 @@ setQuestionImage(null);
   }
 };
 
-const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-useEffect(() => {
-  if (!questionImage) {
-    setPreviewUrl(null);
-    return;
-  }
-
-  const url = URL.createObjectURL(questionImage);
-  setPreviewUrl(url);
-
-  return () => {
-    URL.revokeObjectURL(url);
-  };
-}, [questionImage]);
+const previewUrl = questionImage
+  ? URL.createObjectURL(questionImage)
+  : null;
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -181,16 +172,16 @@ useEffect(() => {
   <input
     type="text"
     placeholder="Matière"
-    value={selectedSubject}
-    onChange={(e) => setSelectedSubject(e.target.value)}
+    value={subject}
+    onChange={(e) => setSubject(e.target.value)}
     className="border p-2 mb-2 w-full"
   />
 
   <input
     type="text"
     placeholder="Chapitre"
-    value={selectedChapter}
-    onChange={(e) => setSelectedChapter(e.target.value)}
+    value={chapter}
+    onChange={(e) => setChapter(e.target.value)}
     className="border p-2 mb-2 w-full"
   />
 
