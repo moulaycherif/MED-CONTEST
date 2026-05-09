@@ -7,6 +7,7 @@ import { API_BASE_URL } from "../config";
 
 import "react-quill/dist/quill.snow.css";
 import "katex/dist/katex.min.css";
+import "./RichMathEditor.css";
 
 (window as any).katex = katex;
 
@@ -92,15 +93,19 @@ export default function RichMathEditor({
   };
 
   return (
-    <div className="bg-white mb-4">
-      <ReactQuill
-        ref={quillRef}
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        modules={modules}
-        placeholder="Écrire ici..."
-      />
-    </div>
-  );
+  <div className="bg-white mb-4">
+    <ReactQuill
+      ref={quillRef}
+      theme="snow"
+      value={value}
+      onChange={onChange}
+      modules={modules}
+      placeholder="Écrire ici..."
+      style={{
+        height: "250px",
+        marginBottom: "50px",
+      }}
+    />
+  </div>
+);
 }
