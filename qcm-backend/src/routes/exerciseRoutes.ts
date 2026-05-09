@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import Exercise from "../models/Exercise";
 import { verifyAdmin } from "../middleware/verifyAdmin";
 import { authenticateAdmin } from "../middleware/authAdmin";
@@ -9,11 +9,10 @@ import fs from "fs";
 
 const router = express.Router();
 
-const uploadDir = path.join(
-  process.cwd(),
-  "uploads",
-  "exercises"
-);
+// ======================================================
+// 📂 Configuration de Multer (Stockage des images)
+// ======================================================
+const uploadDir = path.join(process.cwd(), "uploads", "exercises");
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -23,40 +22,42 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
-
   filename: (req, file, cb) => {
-    cb(
-      null,
-      Date.now() + path.extname(file.originalname)
-    );
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
 const upload = multer({ storage });
 
-router.get("/", async (req, res) => {
+// ======================================================
+// 📋 Récupérer tous les exercices
+// ======================================================
+router.get("/", async (req: Request, res: Response) => {
   try {
     const exercises = await Exercise.find();
     res.json(exercises);
   } catch (error) {
-    console.error(error);
+    console.error("Erreur récupération de tous les exercices :", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 // ======================================================
-// 🖼 Upload image depuis Quill
+// 🖼 Upload d'image depuis l'éditeur riche (Quill)
 // ======================================================
-
 router.post(
   "/upload-editor-image",
+  authenticateAdmin, // 🔥 SÉCURITÉ : Empêche un utilisateur lambda d'upload
+  verifyAdmin,       // 🔥 SÉCURITÉ : Vérifie le rôle admin
   upload.single("image"),
-  (req, res) => {
+  (req: Request, res: Response): void => {
+    if (!req.file) {
+      res.status(400).json({ error: "Aucun fichier uploadé" });
+      return;
+    }
 
     res.json({
-      url:
-        "/uploads/exercises/" +
-        req.file?.filename,
+      url: `/uploads/exercises/${req.file.filename}`,
     });
   }
 );
@@ -64,43 +65,48 @@ router.post(
 // ======================================================
 // ➕ Ajouter un exercice
 // ======================================================
-router.post("/", authenticateAdmin, verifyAdmin,  upload.single("questionImage"), async (req, res) => {
-  try {
-    const { subject, chapter, question, options, correctAnswer, explanation } =
-      req.body;
-console.log("BODY =", req.body);
-console.log("FILE =", req.file);
-    const exercise = await Exercise.create({
-  subject,
-  chapter,
-  question,
+router.post(
+  "/",
+  authenticateAdmin,
+  verifyAdmin,
+  upload.single("questionImage"),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { subject, chapter, question, options, correctAnswer, explanation } = req.body;
 
-  questionImage: req.file
-    ? `/uploads/exercises/${req.file.filename}`
-    : "",
+      // Traitement des options (si envoyées en string JSON via FormData)
+      let parsedOptions = options;
+      if (typeof options === "string") {
+        try {
+          parsedOptions = JSON.parse(options);
+        } catch (e) {
+          res.status(400).json({ error: "Format des options invalide" });
+          return;
+        }
+      }
 
-  options:
-    typeof options === "string"
-      ? JSON.parse(options)
-      : options,
+      const exercise = await Exercise.create({
+        subject,
+        chapter,
+        question,
+        questionImage: req.file ? `/uploads/exercises/${req.file.filename}` : "",
+        options: parsedOptions,
+        correctAnswer,
+        explanation,
+      });
 
-  correctAnswer,
-  explanation,
-});
-
-    res.status(201).json(exercise);
-  } catch (error) {
-    console.error("Erreur création exercice :", error);
-    res.status(500).json({ error: "Erreur serveur" });
+      res.status(201).json(exercise);
+    } catch (error) {
+      console.error("Erreur création exercice :", error);
+      res.status(500).json({ error: "Erreur serveur lors de la création" });
+    }
   }
-});
-
+);
 
 // ======================================================
-// 📚 Lister par matière
-// /api/exercises/by-subject/Mathématique
+// 📚 Lister par matière (ex: /api/exercises/by-subject/Mathématique)
 // ======================================================
-router.get("/by-subject/:subject", async (req, res) => {
+router.get("/by-subject/:subject", async (req: Request, res: Response) => {
   try {
     const exercises = await Exercise.find({
       subject: req.params.subject,
@@ -108,18 +114,16 @@ router.get("/by-subject/:subject", async (req, res) => {
 
     res.json(exercises);
   } catch (error) {
+    console.error("Erreur récupération par matière :", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
-
 // ======================================================
-// 📘 Lister par matière + chapitre
-// /api/exercises/Mathématique/Chapitre I
+// 📘 Lister par matière + chapitre (ex: /api/exercises/Mathématique/Chapitre I)
 // ======================================================
-router.get("/:subject/:chapter", async (req, res) => {
+router.get("/:subject/:chapter", async (req: Request, res: Response) => {
   try {
-    console.log("FICHIER EXERCISEROUTES :",req.params);
     const { subject, chapter } = req.params;
 
     const exercises = await Exercise.find({
@@ -129,21 +133,49 @@ router.get("/:subject/:chapter", async (req, res) => {
 
     res.json(exercises);
   } catch (error) {
-    console.error("Erreur récupération exercices :", error);
+    console.error("Erreur récupération par matière et chapitre :", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
-
 // ======================================================
-// ❌ Supprimer
+// ❌ Supprimer un exercice
 // ======================================================
-router.delete("/:id", authenticateAdmin, verifyAdmin, async (req, res) => {
+router.delete("/:id", authenticateAdmin, verifyAdmin, async (req: Request, res: Response): Promise<void> => {
   try {
-    await Exercise.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
+    const exerciseId = req.params.id;
+
+    // 1. Trouver l'exercice pour récupérer le chemin de l'image
+    const exercise = await Exercise.findById(exerciseId);
+    
+    if (!exercise) {
+      res.status(404).json({ error: "Exercice non trouvé" });
+      return;
+    }
+
+    // 2. Si une image de question existe, la supprimer physiquement du serveur
+    if (exercise.questionImage) {
+      // Convertir l'URL relative en chemin absolu
+      const imagePath = path.join(process.cwd(), exercise.questionImage);
+      
+      // Vérifier si le fichier existe puis le supprimer
+      if (fs.existsSync(imagePath)) {
+        try {
+          fs.unlinkSync(imagePath);
+        } catch (err) {
+          console.error("Impossible de supprimer l'image associée :", err);
+          // On ne bloque pas la suppression de la BDD même si la suppression du fichier échoue
+        }
+      }
+    }
+
+    // 3. Supprimer le document de la base de données
+    await Exercise.findByIdAndDelete(exerciseId);
+
+    res.json({ success: true, message: "Exercice supprimé avec succès" });
   } catch (error) {
-    res.status(500).json({ error: "Erreur suppression" });
+    console.error("Erreur suppression exercice :", error);
+    res.status(500).json({ error: "Erreur serveur lors de la suppression" });
   }
 });
 
