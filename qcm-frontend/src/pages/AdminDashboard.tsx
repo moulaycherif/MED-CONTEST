@@ -10,11 +10,13 @@ function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("adminToken");
   localStorage.removeItem("studentToken");
+  
   document.cookie.split(";").forEach(function (c) {
     document.cookie =
       c.trim().split("=")[0] +
       "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
   });
+  
   window.location.href = "/";
 }
 
@@ -24,45 +26,39 @@ interface Student {
   email: string;
 }
 
-const AdminDashboard: React.FC = () => {
-  
-  const navigate = useNavigate();
-  
-  // Résumés
-  const [subject, setSubject] = useState("");
-  const [chapter, setChapter] = useState("");
-  const [resumeContent, setResumeContent] = useState("");
-  const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
-
-  const [uploadPdfFile, setUploadPdfFile] = useState<File | null>(null);
-  const [creationMode, setCreationMode] = useState<"text" | "upload">("text");
-
-   // Onglets
-  const [activeTab, setActiveTab] = useState<
-    "students" | "import" | "summary"
-  >("students");
-
-  // Étudiants
-  const [students, setStudents] = useState<Student[]>([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  
-  // Définition de ImportResult et Exam
-  interface ImportResult {
+interface ImportResult {
   question: string;
   status: string;
   details?: string[];
 }
+
 interface Exam {
   _id: string;
   title: string;
 }
 
-const [exams, setExams] = useState<Exam[]>([]);
+const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
 
-  // Import
+  const adminToken = localStorage.getItem("adminToken");
+  const itemsPerPage = 10;
+
+  // Onglets
+  const [activeTab, setActiveTab] = useState<"students" | "import" | "summary">("students");
+
+  // ===============================================
+  // STATE : ÉTUDIANTS
+  // ===============================================
+  const [students, setStudents] = useState<Student[]>([]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  // ===============================================
+  // STATE : IMPORT DES QUESTIONS
+  // ===============================================
+  const [exams, setExams] = useState<Exam[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<"append" | "replace" | "replace-global">("append");
   const [importMessage, setImportMessage] = useState<string>("");
@@ -70,15 +66,19 @@ const [exams, setExams] = useState<Exam[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedExam, setSelectedExam] = useState<string>("");
 
-  const token = localStorage.getItem("token");
-  const adminToken = localStorage.getItem("adminToken");
-  const itemsPerPage = 10;
+  // ===============================================
+  // STATE : RÉSUMÉS
+  // ===============================================
+  const [subject, setSubject] = useState("");
+  const [chapter, setChapter] = useState("");
+  const [resumeContent, setResumeContent] = useState("");
+  const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
+  const [uploadPdfFile, setUploadPdfFile] = useState<File | null>(null);
+  const [creationMode, setCreationMode] = useState<"text" | "upload">("text");
 
   // ===============================================
-  // 📘 SECTION : ÉTUDIANTS
+  // CHARGEMENT INITIAL (EFFECTS)
   // ===============================================
-
-  // Chargement étudiants
   const fetchStudents = async () => {
     if (!adminToken) return;
     try {
@@ -92,43 +92,60 @@ const [exams, setExams] = useState<Exam[]>([]);
     }
   };
 
-  // Création étudiant
-const handleCreateStudent = async () => {
-  if (!name || !email || !password) {
-    setMessage("⚠️ Veuillez remplir tous les champs");
-    return;
-  }
-
-  try {
-    const res = await axios.post(
-      `${API_BASE_URL}/api/admin/create-student`,
-      { name, email, password },
-      {
-        headers: {
-          Authorization: `Bearer ${adminToken}`,
-        },
-      }
-    );
-
-    setMessage("✅ Étudiant ajouté avec succès");
-    setName("");
-    setEmail("");
-    setPassword("");
-    fetchStudents();
-  } catch (err: any) {
-    console.error("❌ Création étudiant :", err);
-
-    if (err.response?.status === 401) {
-      setMessage("⛔ Session expirée. Veuillez vous reconnecter.");
-    } else {
-      setMessage(err.response?.data?.message || "Erreur création étudiant");
+  const fetchExams = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/questions/exams`);
+      setExams(res.data);
+    } catch (err) {
+      console.error("Erreur récupération examens :", err);
     }
-  }
-};
+  };
 
-  // Supprimer étudiant
+  useEffect(() => {
+    if (activeTab === "students") {
+      if (adminToken) {
+        fetchStudents();
+      }
+    } else if (activeTab === "import") {
+      fetchExams();
+    }
+  }, [activeTab]);
+
+  // ===============================================
+  // ACTIONS : ÉTUDIANTS
+  // ===============================================
+  const handleCreateStudent = async () => {
+    if (!name || !email || !password) {
+      setMessage("⚠️ Veuillez remplir tous les champs");
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${API_BASE_URL}/api/admin/create-student`,
+        { name, email, password },
+        {
+          headers: { Authorization: `Bearer ${adminToken}` },
+        }
+      );
+
+      setMessage("✅ Étudiant ajouté avec succès");
+      setName("");
+      setEmail("");
+      setPassword("");
+      fetchStudents();
+    } catch (err: any) {
+      console.error("❌ Création étudiant :", err);
+      if (err.response?.status === 401) {
+        setMessage("⛔ Session expirée. Veuillez vous reconnecter.");
+      } else {
+        setMessage(err.response?.data?.message || "Erreur création étudiant");
+      }
+    }
+  };
+
   const handleDeleteStudent = async (id: string) => {
-    if (!confirm("Supprimer cet étudiant ?")) return;
+    if (!window.confirm("Supprimer cet étudiant ?")) return;
     try {
       const res = await axios.delete(`${API_BASE_URL}/api/admin/students/${id}`, {
         headers: { Authorization: `Bearer ${adminToken}` },
@@ -142,20 +159,8 @@ const handleCreateStudent = async () => {
   };
 
   // ===============================================
-  // 📘 SECTION : IMPORT DES QUESTIONS
+  // ACTIONS : IMPORT DES QUESTIONS
   // ===============================================
-
-  // Chargement examens
-  const fetchExams = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/questions/exams`);
-      setExams(res.data);
-    } catch (err) {
-      console.error("Erreur récupération examens :", err);
-    }
-  };
-
-  // Import Excel
   const handleUpload = async () => {
     if (!file) {
       setImportMessage("⚠️ Veuillez choisir un fichier Excel");
@@ -164,6 +169,11 @@ const handleCreateStudent = async () => {
 
     const formData = new FormData();
     formData.append("file", file);
+    
+    // 🔥 Correction : Envoi de l'examen sélectionné au backend s'il est choisi
+    if (selectedExam) {
+      formData.append("exam", selectedExam);
+    }
 
     try {
       const res = await axios.post(
@@ -183,26 +193,13 @@ const handleCreateStudent = async () => {
     }
   };
 
-  useEffect(() => {
-  if (activeTab === "students") {
-    const token = localStorage.getItem("adminToken");
-
-    if (token) {
-      fetchStudents();
-    }
-  } else {
-    fetchExams();
-  }
-}, [activeTab]);
-
   const totalPages = Math.ceil(details.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = details.slice(startIndex, startIndex + itemsPerPage);
 
-  // ----------------------------------------------
-  // 🔥 Système complet pour créer un résumé
-  // ----------------------------------------------
-
+  // ===============================================
+  // ACTIONS : RÉSUMÉS
+  // ===============================================
   const createResumeFromText = async () => {
     if (!subject || !chapter || !resumeContent) {
       alert("Veuillez remplir tous les champs.");
@@ -216,10 +213,8 @@ const handleCreateStudent = async () => {
         content: resumeContent,
       }, {
         headers: {
-  Authorization: adminToken
-    ? `Bearer ${adminToken}`
-    : undefined,
-},
+          Authorization: adminToken ? `Bearer ${adminToken}` : undefined,
+        },
       });
 
       const finalUrl = res.data?.pdfUrl || res.data?.url;
@@ -227,7 +222,6 @@ const handleCreateStudent = async () => {
 
       setGeneratedPdf(finalUrl);
       alert(res.data?.alreadyExists ? "Résumé déjà existant, URL renvoyée." : "PDF généré et uploadé !");
-      // informer les listes pour rafraîchir
       window.dispatchEvent(new Event("resumesUpdated"));
     } catch (err) {
       console.error(err);
@@ -236,44 +230,51 @@ const handleCreateStudent = async () => {
   };
 
   const createResumeFromUpload = async () => {
-  if (!subject || !chapter || !uploadPdfFile) {
-    alert("Veuillez remplir tous les champs.");
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append("file", uploadPdfFile);
-    formData.append("subject", subject);
-    formData.append("chapter", chapter);
-
-    const res = await axios.post(
-      `${API_BASE_URL}/api/resume/upload`,
-      formData,
-      { headers: { "Content-Type": "multipart/form-data", Authorization: adminToken ? `Bearer ${adminToken}` : undefined } }
-    );
-
-    const finalUrl = res.data?.pdfUrl || res.data?.url;
-
-    if (!finalUrl) {
-      alert("Erreur : URL non reçue après upload.");
+    if (!subject || !chapter || !uploadPdfFile) {
+      alert("Veuillez remplir tous les champs.");
       return;
     }
 
-    setGeneratedPdf(finalUrl);
-    alert(res.data?.alreadyExists ? "Le PDF existe déjà (URL récupérée)." : "PDF uploadé avec succès !");
-    window.dispatchEvent(new Event("resumesUpdated"));
+    try {
+      const formData = new FormData();
+      formData.append("file", uploadPdfFile);
+      formData.append("subject", subject);
+      formData.append("chapter", chapter);
 
-  } catch (err) {
-    console.error(err);
-    alert("Erreur upload PDF.");
-  }
-};
+      const res = await axios.post(
+        `${API_BASE_URL}/api/resume/upload`,
+        formData,
+        { 
+          headers: { 
+            "Content-Type": "multipart/form-data", 
+            Authorization: adminToken ? `Bearer ${adminToken}` : undefined 
+          } 
+        }
+      );
 
+      const finalUrl = res.data?.pdfUrl || res.data?.url;
 
+      if (!finalUrl) {
+        alert("Erreur : URL non reçue après upload.");
+        return;
+      }
+
+      setGeneratedPdf(finalUrl);
+      alert(res.data?.alreadyExists ? "Le PDF existe déjà (URL récupérée)." : "PDF uploadé avec succès !");
+      window.dispatchEvent(new Event("resumesUpdated"));
+
+    } catch (err) {
+      console.error(err);
+      alert("Erreur upload PDF.");
+    }
+  };
+
+  // ===============================================
+  // RENDU
+  // ===============================================
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* header / onglets (inchangés) */}
+      {/* En-tête */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-center flex-1">
           👩‍🏫 Tableau de bord Enseignant
@@ -281,78 +282,102 @@ const handleCreateStudent = async () => {
 
         <button
           onClick={logout}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
         >
           🚪 Déconnexion
         </button>
       </div>
 
-      {/* onglets (simplifié pour la démonstration) */}
-      <div className="flex justify-center gap-4 mb-8">
-        <button onClick={() => setActiveTab("students")} className={`px-4 py-2 rounded ${activeTab === "students" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>🧑‍🎓 Gestion des étudiants</button>
-        <button onClick={() => setActiveTab("import")} className={`px-4 py-2 rounded ${activeTab === "import" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>📂 Import Questions</button>
-        <button onClick={() => setActiveTab("summary")} className={`px-4 py-2 rounded ${activeTab === "summary" ? "bg-blue-600 text-white" : "bg-gray-200"}`}>📝 Gestion des résumés</button>
+      {/* Navigation entre les onglets */}
+      <div className="flex flex-wrap justify-center gap-4 mb-8">
+        <button 
+          onClick={() => setActiveTab("students")} 
+          className={`px-4 py-2 rounded transition-colors ${activeTab === "students" ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+        >
+          🧑‍🎓 Gestion des étudiants
+        </button>
+        <button 
+          onClick={() => setActiveTab("import")} 
+          className={`px-4 py-2 rounded transition-colors ${activeTab === "import" ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+        >
+          📂 Import Questions
+        </button>
+        <button 
+          onClick={() => setActiveTab("summary")} 
+          className={`px-4 py-2 rounded transition-colors ${activeTab === "summary" ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+        >
+          📝 Gestion des résumés
+        </button>
       </div>
 
       {/* ----------- Onglet Étudiants ----------- */}
       {activeTab === "students" && (
         <div>
-          <div className="mb-6 p-4 border rounded shadow-sm flex flex-col md:flex-row gap-2">
+          <div className="mb-6 p-4 border rounded shadow-sm flex flex-col md:flex-row gap-2 bg-white">
             <input
               type="text"
-              placeholder="Nom"
+              placeholder="Nom complet"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="border px-2 py-1 rounded text-black flex-1"
+              className="border px-3 py-2 rounded text-black flex-1"
             />
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Adresse Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="border px-2 py-1 rounded text-black flex-1"
+              className="border px-3 py-2 rounded text-black flex-1"
             />
             <input
               type="password"
-              placeholder="Mot de passe"
+              placeholder="Mot de passe temporaire"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="border px-2 py-1 rounded text-black flex-1"
+              className="border px-3 py-2 rounded text-black flex-1"
             />
             <button
               onClick={handleCreateStudent}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition-colors font-semibold"
             >
               Ajouter
             </button>
           </div>
 
-          {message && <p className="mb-4 font-semibold">{message}</p>}
+          {message && (
+            <div className="mb-4 p-3 bg-blue-50 text-blue-800 rounded border border-blue-200">
+              {message}
+            </div>
+          )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full border border-gray-300">
-              <thead className="bg-gray-200">
+          <div className="overflow-x-auto bg-white rounded shadow">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="border px-2 py-1">Nom</th>
-                  <th className="border px-2 py-1">Email</th>
-                  <th className="border px-2 py-1">Actions</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Nom</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center w-32">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {students.map(s => (
-                  <tr key={s._id} className="text-sm">
-                    <td className="border px-2 py-1">{s.name}</td>
-                    <td className="border px-2 py-1">{s.email}</td>
-                    <td className="border px-2 py-1 flex gap-2">
+                  <tr key={s._id} className="text-sm hover:bg-gray-50">
+                    <td className="border border-gray-300 px-4 py-2">{s.name}</td>
+                    <td className="border border-gray-300 px-4 py-2">{s.email}</td>
+                    <td className="border border-gray-300 px-4 py-2 flex justify-center gap-2">
                       <button
                         onClick={() => handleDeleteStudent(s._id)}
-                        className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
                       >
                         Supprimer
                       </button>
                     </td>
                   </tr>
                 ))}
+                {students.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="text-center py-4 text-gray-500">Aucun étudiant trouvé</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -361,111 +386,105 @@ const handleCreateStudent = async () => {
 
       {/* ----------- Onglet Import ----------- */}
       {activeTab === "import" && (
-        <div>
-          <h2 className="text-2xl font-bold mb-4">📂 Importer des questions</h2>
+        <div className="bg-white p-6 rounded shadow">
+          <h2 className="text-2xl font-bold mb-6">📂 Importer des questions via Excel</h2>
 
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={e => setFile(e.target.files?.[0] || null)}
-            className="mb-4"
-          />
+          <div className="mb-6">
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={e => setFile(e.target.files?.[0] || null)}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
 
-          <div className="mb-4">
-            <label className="mr-4">
-              <input
-                type="radio"
-                value="append"
-                checked={mode === "append"}
-                onChange={() => setMode("append")}
-              />{" "}
-              Ajouter (append)
+          <div className="mb-6 flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" value="append" checked={mode === "append"} onChange={() => setMode("append")} className="w-4 h-4 text-blue-600" /> 
+              <span>Ajouter (append)</span>
             </label>
-            <label className="mr-4">
-              <input
-                type="radio"
-                value="replace"
-                checked={mode === "replace"}
-                onChange={() => setMode("replace")}
-              />{" "}
-              Remplacer (replace)
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" value="replace" checked={mode === "replace"} onChange={() => setMode("replace")} className="w-4 h-4 text-blue-600" /> 
+              <span>Remplacer (replace)</span>
             </label>
-            <label>
-              <input
-                type="radio"
-                value="replace-global"
-                checked={mode === "replace-global"}
-                onChange={() => setMode("replace-global")}
-              />{" "}
-              Remplacer global
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" value="replace-global" checked={mode === "replace-global"} onChange={() => setMode("replace-global")} className="w-4 h-4 text-blue-600" /> 
+              <span>Remplacer global</span>
             </label>
+          </div>
+
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+            <label className="font-semibold">Associer à un examen (Optionnel) :</label>
+            <select
+              value={selectedExam}
+              onChange={e => setSelectedExam(e.target.value)}
+              className="border px-3 py-2 rounded bg-white shadow-sm flex-1 max-w-sm"
+            >
+              <option value="">-- Aucun examen spécifique --</option>
+              {exams.map(exam => (
+                <option key={exam._id} value={exam.title}>
+                  {exam.title}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button
             onClick={handleUpload}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-4"
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors font-semibold"
           >
-            Importer
+            Lancer l'import
           </button>
 
-          {importMessage && <p className="mt-4 font-semibold">{importMessage}</p>}
-
-          <div className="mt-4">
-            <label className="font-semibold mr-2">Examens disponibles :</label>
-            <select
-              value={selectedExam}
-              onChange={e => setSelectedExam(e.target.value)}
-              className="border px-2 py-1"
-            >
-              <option value="">-- Choisir un examen --</option>
-              {exams.map(exam => (
-  <option key={exam._id} value={exam.title}>
-    {exam.title}
-  </option>
-))}
-
-            </select>
-          </div>
+          {importMessage && (
+            <p className={`mt-4 font-semibold p-3 rounded border ${importMessage.includes('❌') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+              {importMessage}
+            </p>
+          )}
 
           {details.length > 0 && (
-            <div className="mt-6">
-              <h2 className="text-xl font-bold mb-2">📊 Détails de l'import</h2>
-              <table className="w-full border border-gray-300">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-2 py-1">Question</th>
-                    <th className="border px-2 py-1">Statut</th>
-                    <th className="border px-2 py-1">Détails</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((d, idx) => (
-                    <tr key={idx} className="text-sm">
-                      <td className="border px-2 py-1">{d.question}</td>
-                      <td className="border px-2 py-1">{d.status}</td>
-                      <td className="border px-2 py-1">
-                        {d.details ? d.details.join(", ") : "-"}
-                      </td>
+            <div className="mt-8">
+              <h2 className="text-xl font-bold mb-4">📊 Détails de l'import</h2>
+              <div className="overflow-x-auto rounded shadow">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="border border-gray-300 px-3 py-2 text-left">Question</th>
+                      <th className="border border-gray-300 px-3 py-2 text-center">Statut</th>
+                      <th className="border border-gray-300 px-3 py-2 text-left">Détails</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((d, idx) => (
+                      <tr key={idx} className="text-sm hover:bg-gray-50">
+                        <td className="border border-gray-300 px-3 py-2 font-medium">{d.question}</td>
+                        <td className={`border border-gray-300 px-3 py-2 text-center font-semibold ${d.status.toLowerCase().includes('succès') || d.status === 'ok' ? 'text-green-600' : 'text-orange-600'}`}>
+                          {d.status}
+                        </td>
+                        <td className="border border-gray-300 px-3 py-2 text-gray-600">
+                          {d.details ? d.details.join(", ") : "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex justify-between items-center mt-6 bg-gray-50 p-3 rounded">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50 hover:bg-gray-300 transition"
                 >
                   ⬅️ Précédent
                 </button>
-                <span>
-                  Page {currentPage} / {totalPages}
+                <span className="font-semibold text-gray-600">
+                  Page {currentPage} sur {totalPages}
                 </span>
                 <button
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || totalPages === 0}
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50 hover:bg-gray-300 transition"
                 >
                   Suivant ➡️
                 </button>
@@ -475,78 +494,88 @@ const handleCreateStudent = async () => {
         </div>
       )}
 
-   {/* ----------- Onglet Summary ----------- */}
-{activeTab === "summary" && (
-        <div>
-          <h2 className="text-2xl font-bold mb-4">📝 Gestion des résumés</h2>
+      {/* ----------- Onglet Summary ----------- */}
+      {activeTab === "summary" && (
+        <div className="bg-white p-6 rounded shadow">
+          <h2 className="text-2xl font-bold mb-6">📝 Gestion des résumés</h2>
 
           <SummaryList />
 
-          <hr className="my-6" />
+          <hr className="my-8 border-gray-200" />
 
-          <h3 className="text-xl font-bold mb-4">➕ Créer un résumé PDF</h3>
+          <h3 className="text-xl font-bold mb-6 text-indigo-700">➕ Créer ou Importer un résumé PDF</h3>
 
-          <div className="mb-4">
-            <label className="mr-4">
-              <input type="radio" checked={creationMode === "text"} onChange={() => setCreationMode("text")} /> Saisir contenu (générer PDF)
+          <div className="mb-6 flex flex-wrap gap-6 bg-gray-50 p-4 rounded-lg">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" className="w-4 h-4 text-indigo-600" checked={creationMode === "text"} onChange={() => setCreationMode("text")} /> 
+              <span className="font-medium">Saisir du contenu (Générer PDF)</span>
             </label>
-            <label className="ml-4">
-              <input type="radio" checked={creationMode === "upload"} onChange={() => setCreationMode("upload")} /> Importer un PDF existant
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" className="w-4 h-4 text-indigo-600" checked={creationMode === "upload"} onChange={() => setCreationMode("upload")} /> 
+              <span className="font-medium">Importer un fichier PDF existant</span>
             </label>
           </div>
 
-          <div className="mb-4">
-            <label className="font-semibold">Matière :</label>
-            <input type="text" className="border px-2 py-1 ml-2" value={subject} onChange={(e) => setSubject(e.target.value)} />
-          </div>
-
-          <div className="mb-4">
-            <label className="font-semibold">Chapter :</label>
-            <input type="text" className="border px-2 py-1 ml-2" value={chapter} onChange={(e) => setChapter(e.target.value)} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="font-semibold block mb-1">Matière :</label>
+              <input type="text" placeholder="Ex: Mathématiques" className="border px-3 py-2 rounded w-full" value={subject} onChange={(e) => setSubject(e.target.value)} />
+            </div>
+            <div>
+              <label className="font-semibold block mb-1">Chapitre :</label>
+              <input type="text" placeholder="Ex: Les Nombres Complexes" className="border px-3 py-2 rounded w-full" value={chapter} onChange={(e) => setChapter(e.target.value)} />
+            </div>
           </div>
 
           {creationMode === "text" && (
-            <>
-              <textarea placeholder="Contenu du résumé..." className="border w-full h-60 p-3" value={resumeContent} onChange={(e) => setResumeContent(e.target.value)} />
-              <button onClick={createResumeFromText} className="bg-green-600 text-white px-4 py-2 rounded mt-4 hover:bg-green-700">📄 Générer PDF</button>
-            </>
+            <div className="mt-4">
+              <label className="font-semibold block mb-2">Contenu du résumé :</label>
+              <textarea placeholder="Rédigez le résumé ici..." className="border w-full h-64 p-4 rounded-lg focus:ring-2 focus:ring-indigo-200 outline-none resize-y" value={resumeContent} onChange={(e) => setResumeContent(e.target.value)} />
+              <button onClick={createResumeFromText} className="bg-green-600 text-white px-6 py-2 rounded mt-4 hover:bg-green-700 font-semibold shadow flex items-center gap-2">
+                📄 Générer le PDF
+              </button>
+            </div>
           )}
 
           {creationMode === "upload" && (
-            <>
-              <input type="file" accept="application/pdf" onChange={(e) => setUploadPdfFile(e.target.files?.[0] || null)} className="mt-2" />
-              <button onClick={createResumeFromUpload} className="bg-purple-600 text-white px-4 py-2 rounded mt-4 hover:bg-purple-700">📤 Importer PDF</button>
-            </>
+            <div className="mt-4 border-2 border-dashed border-gray-300 p-8 rounded-lg text-center bg-gray-50">
+              <input type="file" accept="application/pdf" onChange={(e) => setUploadPdfFile(e.target.files?.[0] || null)} className="mx-auto block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mb-4" />
+              <button onClick={createResumeFromUpload} className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 font-semibold shadow inline-flex items-center gap-2">
+                📤 Uploader le PDF
+              </button>
+            </div>
           )}
 
           {generatedPdf && (
-            <div className="mt-4">
-              <a href={generatedPdf} target="_blank" rel="noreferrer" className="text-blue-600 underline mr-4">📄 Ouvrir le PDF</a>
-              <a href={generatedPdf} download className="text-green-600 underline">📥 Télécharger</a>
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded flex gap-6 items-center">
+              <span className="text-green-800 font-medium">✅ Document prêt :</span>
+              <a href={generatedPdf} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800 underline font-medium">
+                👁️ Ouvrir le PDF
+              </a>
+              <a href={generatedPdf} download className="text-green-600 hover:text-green-800 underline font-medium">
+                📥 Télécharger
+              </a>
             </div>
           )}
         </div>
       )}
 
-{/* ----------- Gestion des Exercices et Astuces ----------- */}
+      {/* ----------- Gestion des Exercices et Astuces ----------- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+        <button
+          onClick={() => navigate("/admin/exercises")}
+          className="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-lg font-bold flex items-center justify-center gap-3"
+        >
+          <span className="text-2xl">📘</span> Gestion des Exercices du Soutien
+        </button>
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-
-  <button
-    onClick={() => navigate("/admin/exercises")}
-    className="bg-indigo-600 text-white p-6 rounded-xl shadow hover:bg-indigo-700"
-  >
-    📘 Gestion des Exercices du Soutien
-  </button>
-
-  <button
-    onClick={() => navigate("/admin/astuces")}
-    className="bg-green-600 text-white p-6 rounded-xl shadow hover:bg-green-700"
-  >
-    💡 Gestion des Astuces du Soutien
-  </button>
-
-</div>
+        <button
+          onClick={() => navigate("/admin/astuces")}
+          className="bg-gradient-to-r from-teal-600 to-emerald-700 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-lg font-bold flex items-center justify-center gap-3"
+        >
+          <span className="text-2xl">💡</span> Gestion des Astuces du Soutien
+        </button>
+      </div>
 
     </div>
   );
