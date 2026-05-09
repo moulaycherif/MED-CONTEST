@@ -189,18 +189,20 @@ const previewUrl = questionImage
   🧠 Texte de la question
 </label>
 
-<RichMathEditor
+<textarea
   value={question}
-  onChange={setQuestion}
+  onChange={(e) => setQuestion(e.target.value)}
+  className="w-full border border-black p-4 min-h-[200px]"
 />
 
 <label className="font-semibold block mt-4 mb-2">
   💡 Explication pédagogique
 </label>
 
-<RichMathEditor
+<textarea
   value={explanation}
-  onChange={setExplanation}
+  onChange={(e) => setExplanation(e.target.value)}
+  className="w-full border border-black p-4 min-h-[200px]"
 />
 
 <label className="font-semibold block mt-4 mb-2">
