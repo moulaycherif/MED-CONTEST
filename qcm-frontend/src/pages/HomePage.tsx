@@ -84,8 +84,8 @@ export default function HomePage() {
       </main>
 
       {/* 🧠 Section de présentation rapide */}
-      <section className="px-6 py-16 bg-white text-center">
-        <h2 className="text-3xl font-bold text-blue-700 mb-6">Pourquoi choisir Med-Contest ?</h2>
+      <section className="px-6 py-12 bg-white text-center">
+        <h2 className="text-3xl font-bold text-blue-700 mb-4">Pourquoi choisir Med-Contest ?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <motion.div
             whileHover={{ scale: 1.05 }}
