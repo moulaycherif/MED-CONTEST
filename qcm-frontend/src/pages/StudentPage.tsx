@@ -645,7 +645,7 @@ export default function StudentPage() {
                 <img
                   src={`${API_BASE_URL}${currentEx.questionImage}`}
                   alt="Question"
-                  className="max-w-xs md:max-w-sm max-h-64 object-contain mx-auto rounded shadow mb-4"
+                  className="max-w-sm md:max-w-lg max-h-96 object-contain mx-auto rounded shadow mb-4"
                 />
               )}
 
