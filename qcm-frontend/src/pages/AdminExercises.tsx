@@ -114,7 +114,7 @@ const AdminExercises: React.FC = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-
+console.log("EXERCICE AJOUTE :",subject, chapter)
       alert("✅ Exercice ajouté avec succès");
 
       // Reset du formulaire
