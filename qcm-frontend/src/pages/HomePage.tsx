@@ -15,7 +15,7 @@ export default function HomePage() {
       <Navbar />
 
       {/* 🏠 Section d'accueil principale */}
-      <main className="flex flex-col min-h-screen items-center justify-center text-center px-6 pt-24 pb-12 bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <main className="flex flex-col min-h-screen items-center justify-center text-center px-6 pt-18 pb-8 bg-gradient-to-br from-blue-50 via-white to-blue-100">
         <motion.h1
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ export default function HomePage() {
       </section>
 
       {/* 💬 Section contact + WhatsApp */}
-      <section className="px-6 py-12 bg-blue-700 text-white text-center">
+      <section className="px-4 py-8 bg-blue-700 text-white text-center">
         <h2 className="text-2xl font-bold mb-3">Besoin d’aide ?</h2>
         <div className="flex items-center justify-center gap-4 flex-wrap">
         <p className="m-0">Contactez-nous directement sur WhatsApp pour toute question ou assistance.</p>
