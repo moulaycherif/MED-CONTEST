@@ -1,14 +1,110 @@
 import { Request, Response } from "express";
-import StudentActivity from "../models/StudentActivity";
 import mongoose from "mongoose";
 
-// 📊 QCM par matière
-export const getQcmStats = async (req: Request, res: Response) => {
+import StudentActivity from "../models/StudentActivity";
+
+// 📊 QCM PAR MATIÈRE
+export const getQcmStats = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const student = new mongoose.Types.ObjectId(req.student!._id);
+    const student = new mongoose.Types.ObjectId(
+      req.student!._id
+    );
 
     const stats = await StudentActivity.aggregate([
-      { $match: { student, type: "QCM" } },
+      {
+        $match: {
+          student,
+          type: "QCM",
+        },
+      },
+      {
+        $group: {
+          _id: "$subject",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          count: -1,
+        },
+      },
+    ]);
+
+    res.json(stats);
+  } catch (error) {
+    console.error("❌ getQcmStats :", error);
+
+    res.status(500).json({
+      message: "Erreur récupération statistiques QCM",
+    });
+  }
+};
+
+// 📈 ACTIVITÉ DANS LE TEMPS
+export const getActivityStats = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const student = new mongoose.Types.ObjectId(
+      req.student!._id
+    );
+
+    const stats = await StudentActivity.aggregate([
+      {
+        $match: {
+          student,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt",
+            },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
+
+    res.json(stats);
+  } catch (error) {
+    console.error("❌ getActivityStats :", error);
+
+    res.status(500).json({
+      message: "Erreur récupération activité",
+    });
+  }
+};
+
+// 🧠 DASHBOARD COMPLET
+export const getStudentStats = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const student = new mongoose.Types.ObjectId(
+      req.student!._id
+    );
+
+    // 📊 QCM par matière
+    const qcmBySubject = await StudentActivity.aggregate([
+      {
+        $match: {
+          student,
+          type: "QCM",
+        },
+      },
       {
         $group: {
           _id: "$subject",
@@ -17,78 +113,80 @@ export const getQcmStats = async (req: Request, res: Response) => {
       },
     ]);
 
-    res.json(stats);
-  } catch (e) {
-    console.error("❌ getQcmStats:", e);
-    res.status(500).json({ message: "Erreur stats QCM" });
-  }
-};
-
-
-// 📈 Activité dans le temps
-export const getActivityStats = async (req: Request, res: Response) => {
-  try {
-    const student = new mongoose.Types.ObjectId(req.student!._id);
-
-    const stats = await StudentActivity.aggregate([
-      { $match: { student } },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-          },
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { _id: 1 } },
-    ]);
-
-    res.json(stats);
-  } catch (e) {
-    console.error("❌ getActivityStats:", e);
-    res.status(500).json({ message: "Erreur stats activité" });
-  }
-};
-
-
-// 🧠 STATS COMPLETES (utilisées par le dashboard)
-export const getStudentStats = async (req: Request, res: Response) => {
-  try {
-    const student = new mongoose.Types.ObjectId(req.student!._id);
-
-    const qcmBySubject = await StudentActivity.aggregate([
-      { $match: { student, type: "QCM" } },
-      { $group: { _id: "$subject", count: { $sum: 1 } } },
-    ]);
-
+    // 📈 Timeline
     const timeline = await StudentActivity.aggregate([
-      { $match: { student } },
+      {
+        $match: {
+          student,
+        },
+      },
       {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt",
+            },
           },
           count: { $sum: 1 },
         },
       },
-      { $sort: { _id: 1 } },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
     ]);
 
+    // 📚 Ressources
     const resources = await StudentActivity.aggregate([
-      { $match: { student } },
-      { $group: { _id: "$type", count: { $sum: 1 } } },
+      {
+        $match: {
+          student,
+        },
+      },
+      {
+        $group: {
+          _id: "$type",
+          count: { $sum: 1 },
+        },
+      },
     ]);
 
+    // 🏆 Classement
     const ranking = await StudentActivity.aggregate([
-      { $match: { type: "QCM" } },
-      { $group: { _id: "$student", total: { $sum: 1 } } },
-      { $sort: { total: -1 } },
-      { $limit: 10 },
+      {
+        $match: {
+          type: "QCM",
+        },
+      },
+      {
+        $group: {
+          _id: "$student",
+          total: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          total: -1,
+        },
+      },
+      {
+        $limit: 10,
+      },
     ]);
 
-    res.json({ qcmBySubject, timeline, resources, ranking });
-  } catch (e) {
-    console.error("❌ getStudentStats:", e);
-    res.status(500).json({ message: "Erreur stats étudiant" });
+    res.json({
+      qcmBySubject,
+      timeline,
+      resources,
+      ranking,
+    });
+  } catch (error) {
+    console.error("❌ getStudentStats :", error);
+
+    res.status(500).json({
+      message: "Erreur récupération statistiques étudiant",
+    });
   }
 };

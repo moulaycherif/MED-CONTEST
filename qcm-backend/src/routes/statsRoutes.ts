@@ -1,12 +1,34 @@
 import express from "express";
-import { getStudentStats, getQcmStats, getActivityStats } from "../controllers/statsController";
+
+import {
+  getStudentStats,
+  getQcmStats,
+  getActivityStats,
+} from "../controllers/statsController";
+
 import { authenticateStudent } from "../middleware/auth";
 
 const router = express.Router();
 
-router.get("/student", authenticateStudent, getStudentStats);
-router.get("/qcm", authenticateStudent, getQcmStats);
-router.get("/activity", authenticateStudent, getActivityStats);
+// 📊 Dashboard complet
+router.get(
+  "/student",
+  authenticateStudent,
+  getStudentStats
+);
 
+// 📚 QCM par matière
+router.get(
+  "/qcm",
+  authenticateStudent,
+  getQcmStats
+);
+
+// 📈 Activité dans le temps
+router.get(
+  "/activity",
+  authenticateStudent,
+  getActivityStats
+);
 
 export default router;
