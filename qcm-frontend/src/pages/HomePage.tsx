@@ -119,16 +119,18 @@ export default function HomePage() {
 
       {/* 💬 Section contact + WhatsApp */}
       <section className="px-6 py-12 bg-blue-700 text-white text-center">
-        <h2 className="text-2xl font-bold mb-4">Besoin d’aide ?</h2>
-        <p className="mb-6">Contactez-nous directement sur WhatsApp pour toute question ou assistance.</p>
+        <h2 className="text-2xl font-bold mb-3">Besoin d’aide ?</h2>
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+        <p className="m-0">Contactez-nous directement sur WhatsApp pour toute question ou assistance.</p>
         <a
           href="https://wa.me/212600000000" // Remplace par ton vrai numéro WhatsApp
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 rounded-lg shadow hover:bg-green-600 transition"
+          className="inline-flex items-center gap-2 px-5 py-2 bg-green-500 rounded-lg shadow hover:bg-green-600 transition"
         >
           💬 Discuter sur WhatsApp
         </a>
+          </div>
       </section>
 
       <Footer />
