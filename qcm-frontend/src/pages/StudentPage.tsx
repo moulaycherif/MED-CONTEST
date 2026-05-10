@@ -4,6 +4,13 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import parse from "html-react-parser";
 
+// ✅ Importation pour le rendu LaTeX et Rich Text
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.bubble.css";
+import katex from "katex";
+import "katex/dist/katex.min.css";
+import Latex from "react-latex-next";
+
 import { API_BASE_URL } from "../config";
 import { fetchAstucesByChapter } from "../api/astuces.api";
 
@@ -19,6 +26,9 @@ import bgImage from "/Image3.jfif";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
+
+// Indispensable pour que React-Quill puisse interpréter les formules
+(window as any).katex = katex;
 
 // --- Interfaces ---
 interface Astuce {
@@ -598,7 +608,7 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 3) EXERCICES
+      // 👉 3) EXERCICES (Mis à jour avec KaTeX/Latex)
       if (selectedChapter && selectedAction === "Exercises") {
         const currentEx = exercises[exerciseIndex];
 
@@ -621,10 +631,14 @@ export default function StudentPage() {
               </div>
             </div>
 
-            {/* 🧠 QUESTION */}
+            {/* 🧠 QUESTION (Affichage avec Quill en mode lecture seule) */}
             <div className="bg-white p-4 rounded-xl shadow">
               <h3 className="font-semibold mb-3">
-                <div className="prose max-w-none">{parse(cleanLatex(currentEx.question))}</div>
+                <ReactQuill 
+                  value={currentEx.question} 
+                  readOnly={true} 
+                  theme="bubble" 
+                />
               </h3>
 
               {currentEx.questionImage && (
@@ -635,6 +649,7 @@ export default function StudentPage() {
                 />
               )}
 
+              {/* 🎯 OPTIONS (Affichage avec react-latex-next) */}
               {currentEx.options.map((opt: string, i: number) => {
                 const isSelected = exerciseAnswers[currentEx._id] === opt;
                 const isCorrect = opt === currentEx.correctAnswer;
@@ -664,15 +679,20 @@ export default function StudentPage() {
                       }
                       className="mr-2"
                     />
-                    {renderContent(opt)}
+                    <Latex>{cleanLatex(opt)}</Latex>
                   </label>
                 );
               })}
 
-              {/* 💡 EXPLICATION */}
+              {/* 💡 EXPLICATION (Affichage avec Quill en mode lecture seule) */}
               {exerciseSubmitted && exerciseAnswers[currentEx._id] !== currentEx.correctAnswer && (
-                <div className="text-blue-600 mt-3">
-                  <div className="prose max-w-none">{parse(cleanLatex(currentEx.explanation))}</div>
+                <div className="text-blue-600 mt-3 border-t pt-3">
+                  <span className="font-bold">Explication :</span>
+                  <ReactQuill 
+                    value={currentEx.explanation} 
+                    readOnly={true} 
+                    theme="bubble" 
+                  />
                 </div>
               )}
             </div>
