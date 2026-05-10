@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+
 import QcmBarChart from "./QcmBarChart";
 import ActivityLineChart from "./ActivityLineChart";
+import StudentResourcesChart from "./StudentResourcesChart";
 
 interface Resource {
   _id: string;
@@ -9,7 +11,7 @@ interface Resource {
 }
 
 interface RankingItem {
-  _id: string; // studentId
+  _id: string;
   total: number;
 }
 
@@ -22,68 +24,132 @@ interface Stats {
 
 export default function StudentDashboardStats() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const fetchStats = async () => {
-    try {
-      const res = await api.get("/api/stats/student");
-      setStats(res.data);
-    } catch (err) {
-      console.error("Erreur récupération stats :", err);
-    }
-  };
+    const fetchStats = async () => {
+      try {
+        const res = await api.get("/api/stats/student");
+        setStats(res.data);
+      } catch (err) {
+        console.error("❌ Erreur récupération statistiques :", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchStats();
-}, []);
+    fetchStats();
+  }, []);
 
+  if (loading) {
+    return (
+      <p className="text-center mt-10 text-gray-500">
+        Chargement des statistiques...
+      </p>
+    );
+  }
 
-  if (!stats) return <p className="text-center mt-10">Chargement statistiques...</p>;
+  if (!stats) {
+    return (
+      <p className="text-center mt-10 text-red-500">
+        Impossible de charger les statistiques.
+      </p>
+    );
+  }
 
   // 📊 KPIs
-  const countResource = (type: string) => stats.resources.find(r => r._id === type)?.count || 0;
+  const countResource = (type: string) =>
+    stats.resources.find((r) => r._id === type)?.count || 0;
 
   return (
     <div className="space-y-8">
+      {/* 🔹 TITRE */}
+      <div>
+        <h1 className="text-3xl font-bold text-blue-900">
+          📊 Tableau de bord étudiant
+        </h1>
+
+        <p className="text-gray-600 mt-1">
+          Suivi de votre progression et de votre activité.
+        </p>
+      </div>
+
       {/* 🔹 KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-4 bg-white rounded-xl shadow text-center">
-          📄 Résumés<br />
-          <b>{countResource("RESUME")}</b>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <h3 className="text-lg font-semibold mb-2">📄 Résumés</h3>
+
+          <p className="text-4xl font-bold text-blue-600">
+            {countResource("RESUME")}
+          </p>
         </div>
 
-        <div className="p-4 bg-white rounded-xl shadow text-center">
-          💡 Astuces<br />
-          <b>{countResource("ASTUCE")}</b>
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <h3 className="text-lg font-semibold mb-2">💡 Astuces</h3>
+
+          <p className="text-4xl font-bold text-yellow-500">
+            {countResource("ASTUCE")}
+          </p>
         </div>
 
-        <div className="p-4 bg-white rounded-xl shadow text-center">
-          🧩 QCM<br />
-          <b>{countResource("QCM")}</b>
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <h3 className="text-lg font-semibold mb-2">🧩 QCM</h3>
+
+          <p className="text-4xl font-bold text-green-600">
+            {countResource("QCM")}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <h3 className="text-lg font-semibold mb-2">🏋️ Exercices</h3>
+
+          <p className="text-4xl font-bold text-purple-600">
+            {countResource("EXERCISE")}
+          </p>
         </div>
       </div>
 
-      {/* 🔹 Graphes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px]">
-        
-            <QcmBarChart data={stats.qcmBySubject} />
-               
-            <ActivityLineChart data={stats.timeline} />
-         
+      {/* 🔹 Graphiques */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <QcmBarChart data={stats.qcmBySubject} />
+
+        <ActivityLineChart data={stats.timeline} />
       </div>
 
-      {/* 🔹 Classement étudiant */}
-      <div className="bg-white p-4 rounded-xl shadow">
-        <h3 className="font-semibold text-center mb-4">🏆 Classement étudiant</h3>
+      {/* 🔹 Ressources */}
+      <StudentResourcesChart data={stats.resources} />
+
+      {/* 🔹 Classement */}
+      <div className="bg-white rounded-2xl shadow p-6">
+        <h3 className="text-xl font-bold mb-4 text-center">
+          🏆 Classement étudiant
+        </h3>
+
         {stats.ranking.length === 0 ? (
-          <p className="text-center text-gray-500">Aucune activité enregistrée.</p>
+          <p className="text-center text-gray-500">
+            Aucun classement disponible.
+          </p>
         ) : (
-          <ol className="list-decimal list-inside">
-            {stats.ranking.map((r, idx) => (
-              <li key={r._id}>
-                {r._id} — {r.total} QCM
-              </li>
+          <div className="space-y-3">
+            {stats.ranking.map((student, index) => (
+              <div
+                key={student._id}
+                className="flex justify-between items-center border-b pb-2"
+              >
+                <span className="font-semibold">
+                  #{index + 1}
+                </span>
+
+                <span className="text-gray-700">
+                  Étudiant {student._id}
+                </span>
+
+                <span className="font-bold text-blue-700">
+                  {student.total} QCM
+                </span>
+              </div>
             ))}
-          </ol>
+          </div>
         )}
       </div>
     </div>

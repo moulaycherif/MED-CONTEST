@@ -5,32 +5,50 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
 
-export default function QcmBarChart({ data }: { data: any[] }) {
+interface Props {
+  data: {
+    _id: string;
+    count: number;
+  }[];
+}
+
+export default function QcmBarChart({ data }: Props) {
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white p-4 rounded-xl shadow h-[350px] flex items-center justify-center text-gray-400">
-        Aucun QCM
+      <div className="bg-white rounded-2xl shadow h-[350px] flex items-center justify-center text-gray-400">
+        Aucun QCM disponible
       </div>
     );
   }
 
   return (
-  <div className="bg-white p-4 rounded-xl shadow h-[350px]">
-    <h3 className="font-semibold mb-2">📊 QCM par matière</h3>
+    <div className="bg-white rounded-2xl shadow p-4 h-[350px]">
+      <h3 className="text-lg font-semibold mb-4">
+        📊 QCM par matière
+      </h3>
 
-    <div className="w-full h-[280px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
-          <XAxis dataKey="_id" />
-          <YAxis allowDecimals={false} />
-          <Tooltip />
-          <Bar dataKey="count" fill="#4ade80" />
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="w-full h-[260px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+
+            <XAxis dataKey="_id" />
+
+            <YAxis allowDecimals={false} />
+
+            <Tooltip />
+
+            <Bar
+              dataKey="count"
+              fill="#4ade80"
+              radius={[8, 8, 0, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
-  </div>
-);
-
+  );
 }
