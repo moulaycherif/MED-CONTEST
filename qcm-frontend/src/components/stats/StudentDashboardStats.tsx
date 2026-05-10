@@ -3,7 +3,7 @@ import api from "../../api/axios";
 
 import QcmBarChart from "./QcmBarChart";
 import ActivityLineChart from "./ActivityLineChart";
-import StudentResourcesChart from "./StudentResourcesChart";
+import StudentResourcesChart from "../StudentResourcesChart";
 
 interface Resource {
   _id: string;
