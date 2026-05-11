@@ -31,6 +31,7 @@
     "react-dom": "^18.3.1",
     "react-is": "^19.2.5",
     "react-katex": "^3.1.0",
+    "react-latex-next": "^3.0.0",
     "react-markdown": "^10.1.0",
     "react-mathquill": "^1.0.4",
     "react-quill": "^2.0.0",
