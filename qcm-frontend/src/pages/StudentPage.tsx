@@ -540,7 +540,7 @@ export default function StudentPage() {
   setFocusMode(true);
 
   try {
-    await axios.post("/api/student-activity", {
+    await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "ASTUCE",
       subject: selectedMatiere,
       chapter: selectedChapter,
@@ -631,7 +631,7 @@ export default function StudentPage() {
   setSelectedresume(sum);
 
   try {
-    await axios.post("/api/student-activity", {
+    await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "RESUME",
       subject: selectedMatiere,
       chapter: selectedChapter,
@@ -802,7 +802,7 @@ export default function StudentPage() {
   setExerciseScore(score);
 
   try {
-    await axios.post("/api/student-activity", {
+    await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "EXERCISE",
       subject: selectedMatiere,
       chapter: selectedChapter,
