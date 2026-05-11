@@ -7,7 +7,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-
 import dayjs from "dayjs";
 
 interface Props {
@@ -37,8 +36,10 @@ export default function ActivityLineChart({ data }: Props) {
         📈 Activité dans le temps
       </h3>
 
-      <div className="w-full">
-        <ResponsiveContainer width="100%" height={280}>
+      {/* CORRECTION : Ajout de h-[280px] sur le conteneur parent */}
+      <div className="w-full h-[280px]">
+        {/* CORRECTION : Utilisation de height="100%" pour qu'il remplisse le parent */}
+        <ResponsiveContainer width="100%" height="100%">
           <LineChart data={formattedData}>
             <CartesianGrid strokeDasharray="3 3" />
 
