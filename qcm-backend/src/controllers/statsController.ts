@@ -190,3 +190,49 @@ export const getStudentStats = async (
     });
   }
 };
+export const getSuccessEvolution = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const student = new mongoose.Types.ObjectId(req.student!._id);
+
+    const stats = await StudentActivity.aggregate([
+      {
+        $match: {
+          student,
+          type: { $in: ["QCM", "EXERCISE"] },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            subject: "$subject",
+            date: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$createdAt",
+              },
+            },
+          },
+          avgSuccess: {
+            $avg: "$successRate",
+          },
+        },
+      },
+      {
+        $sort: {
+          "_id.date": 1,
+        },
+      },
+    ]);
+
+    res.json(stats);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Erreur évolution réussite",
+    });
+  }
+};
