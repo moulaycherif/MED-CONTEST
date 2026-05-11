@@ -32,7 +32,7 @@ export default function StudentActivityTimeline() {
     <div className="bg-white p-4 rounded-xl shadow">
       <h3 className="font-semibold mb-3">📈 Résumés Consultés</h3>
 
-      <ResponsiveContainer width="150%" height={200}>
+      <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>
           <XAxis dataKey="_id" />
           <YAxis />

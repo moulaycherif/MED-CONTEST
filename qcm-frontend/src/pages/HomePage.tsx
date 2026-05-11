@@ -15,7 +15,7 @@ export default function HomePage() {
       <Navbar />
 
       {/* 🏠 Section d'accueil principale */}
-      <main className="flex flex-col min-h-screen items-center justify-center text-center px-6 pt-24 pb-12 bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <main className="flex flex-col min-h-screen items-center justify-center text-center px-6 pt-18 pb-8 bg-gradient-to-br from-blue-50 via-white to-blue-100">
         <motion.h1
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -84,8 +84,8 @@ export default function HomePage() {
       </main>
 
       {/* 🧠 Section de présentation rapide */}
-      <section className="px-6 py-16 bg-white text-center">
-        <h2 className="text-3xl font-bold text-blue-700 mb-6">Pourquoi choisir Med-Contest ?</h2>
+      <section className="px-6 py-12 bg-white text-center">
+        <h2 className="text-3xl font-bold text-blue-700 mb-4">Pourquoi choisir Med-Contest ?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -118,17 +118,19 @@ export default function HomePage() {
       </section>
 
       {/* 💬 Section contact + WhatsApp */}
-      <section className="px-6 py-12 bg-blue-700 text-white text-center">
-        <h2 className="text-2xl font-bold mb-4">Besoin d’aide ?</h2>
-        <p className="mb-6">Contactez-nous directement sur WhatsApp pour toute question ou assistance.</p>
+      <section className="px-4 py-8 bg-blue-700 text-white text-center">
+        <h2 className="text-2xl font-bold mb-3">Besoin d’aide ?</h2>
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+        <p className="m-0">Contactez-nous directement sur WhatsApp pour toute question ou assistance.</p>
         <a
           href="https://wa.me/212600000000" // Remplace par ton vrai numéro WhatsApp
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 rounded-lg shadow hover:bg-green-600 transition"
+          className="inline-flex items-center gap-2 px-5 py-2 bg-green-500 rounded-lg shadow hover:bg-green-600 transition"
         >
           💬 Discuter sur WhatsApp
         </a>
+          </div>
       </section>
 
       <Footer />
