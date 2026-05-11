@@ -217,36 +217,80 @@ export default function StudentPage() {
     setAnswers((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleFinish = async () => {
-    if (!currentExamId) {
-      console.error("❌ ExamId manquant");
-      return;
+ const handleFinish = async () => {
+  if (!currentExamId) {
+    console.error("❌ ExamId manquant");
+    return;
+  }
+
+  let total = 0;
+
+  questions.forEach((q) => {
+    if (answers[q._id] === q.reponseCorrecte) {
+      total += q.note;
     }
+  });
 
-    let total = 0;
-    questions.forEach((q) => {
-      if (answers[q._id] === q.reponseCorrecte) total += q.note;
-    });
+  const totalQuestions = questions.length;
 
-    setScore(total);
-    setSubmitted(true);
+  const totalPossiblePoints = questions.reduce(
+    (sum, q) => sum + q.note,
+    0
+  );
 
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${API_BASE_URL}/api/student/exams/${currentExamId}/submit`,
-        {
-          answers,
-          subject: selectedMatiere || "CONCOURS",
+  const successRate =
+    totalPossiblePoints > 0
+      ? Math.round((total / totalPossiblePoints) * 100)
+      : 0;
+
+  setScore(total);
+  setSubmitted(true);
+
+  try {
+    const token = localStorage.getItem("token");
+
+    // ✅ Enregistrement soumission QCM
+    await axios.post(
+      `${API_BASE_URL}/api/student/exams/${currentExamId}/submit`,
+      {
+        answers,
+        subject: selectedMatiere || "CONCOURS",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-    } catch (err) {
-      console.error("❌ Erreur enregistrement QCM", err);
-    }
-  };
+      }
+    );
+
+    // ✅ Enregistrement activité statistiques
+    await axios.post(
+      `${API_BASE_URL}/api/student-activity`,
+      {
+        type: "QCM",
+        subject: selectedMatiere || "CONCOURS",
+        chapter: currentExam,
+        referenceId: currentExamId,
+
+        // 📊 statistiques
+        score: total,
+        totalQuestions,
+        successRate,
+
+        // infos supplémentaires
+        examId: currentExamId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+  } catch (err) {
+    console.error("❌ Erreur enregistrement QCM", err);
+  }
+};
 
   // --- Rendu Central ---
   const renderCenterContent = () => {
@@ -491,10 +535,21 @@ export default function StudentPage() {
                     key={tip._id}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setSelectedTip(tip);
-                      setFocusMode(true);
-                    }}
+                   onClick={async () => {
+  setSelectedTip(tip);
+  setFocusMode(true);
+
+  try {
+    await axios.post(`${API_BASE_URL}/api/student-activity`, {
+      type: "ASTUCE",
+      subject: selectedMatiere,
+      chapter: selectedChapter,
+      referenceId: tip._id,
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}}
                     className="px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow transition"
                   >
                     {tip.title}
@@ -572,7 +627,20 @@ export default function StudentPage() {
                 {resumes.map((sum) => (
                   <button
                     key={sum._id}
-                    onClick={() => setSelectedresume(sum)}
+                    onClick={async () => {
+  setSelectedresume(sum);
+
+  try {
+    await axios.post(`${API_BASE_URL}/api/student-activity`, {
+      type: "RESUME",
+      subject: selectedMatiere,
+      chapter: selectedChapter,
+      referenceId: sum._id,
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}}
                     className="px-5 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 shadow"
                   >
                     {sum.chapter}
@@ -719,20 +787,36 @@ export default function StudentPage() {
             {/* ✅ TERMINER */}
             {!exerciseSubmitted && (
               <button
-                onClick={() => {
-                  let score = 0;
-                  const wrong: any[] = [];
-                  exercises.forEach((ex) => {
-                    if (exerciseAnswers[ex._id] === ex.correctAnswer) {
-                      score++;
-                    } else {
-                      wrong.push(ex);
-                    }
-                  });
-                  setExerciseScore(score);
-                  setExerciseSubmitted(true);
-                  setWrongExercises(wrong);
-                }}
+                onClick={async () => {
+  let score = 0;
+  const wrong: any[] = [];
+
+  exercises.forEach((ex) => {
+    if (exerciseAnswers[ex._id] === ex.correctAnswer) {
+      score++;
+    } else {
+      wrong.push(ex);
+    }
+  });
+
+  setExerciseScore(score);
+
+  try {
+    await axios.post(`${API_BASE_URL}/api/student-activity`, {
+      type: "EXERCISE",
+      subject: selectedMatiere,
+      chapter: selectedChapter,
+      score,
+      totalQuestions: exercises.length,
+      successRate: Math.round((score / exercises.length) * 100),
+    });
+  } catch (err) {
+    console.error(err);
+  }
+
+  setExerciseSubmitted(true);
+  setWrongExercises(wrong);
+}}
                 className="mt-6 px-6 py-2 bg-green-600 text-white rounded"
               >
                 ✅ Terminer

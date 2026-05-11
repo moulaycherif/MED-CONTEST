@@ -37,8 +37,8 @@ export default function ActivityLineChart({ data }: Props) {
         📈 Activité dans le temps
       </h3>
 
-      <div className="w-full h-[260px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full">
+        <ResponsiveContainer width="100%" height={280}>
           <LineChart data={formattedData}>
             <CartesianGrid strokeDasharray="3 3" />
 

@@ -30,8 +30,8 @@ export default function QcmBarChart({ data }: Props) {
         📊 QCM par matière
       </h3>
 
-      <div className="w-full h-[260px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full">
+        <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
 
