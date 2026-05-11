@@ -280,7 +280,7 @@ export default function StudentPage() {
     );
 
     // ✅ Enregistrement activité statistiques
-    const token = localStorage.getItem("token");
+    
     await axios.post(
       `${API_BASE_URL}/api/student-activity`,
       {
