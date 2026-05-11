@@ -37,7 +37,7 @@ export default function StudentResourcesChart({ data }: Props) {
       </h3>
 
       <div className="w-full h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" aspect={2}>
           <PieChart>
             <Pie
               data={data}

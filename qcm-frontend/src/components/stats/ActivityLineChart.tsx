@@ -39,7 +39,7 @@ export default function ActivityLineChart({ data }: Props) {
       {/* CORRECTION : Ajout de h-[280px] sur le conteneur parent */}
       <div className="w-full h-[280px]">
         {/* CORRECTION : Utilisation de height="100%" pour qu'il remplisse le parent */}
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" aspect={2}>
           <LineChart data={formattedData}>
             <CartesianGrid strokeDasharray="3 3" />
 
