@@ -112,8 +112,11 @@ export default function StudentPage() {
 
   // ✅ Charger la liste des examens
   useEffect(() => {
+    const token = localStorage.getItem("token"); // <-- 1. Récupérer le token
     axios
-      .get(`${API_BASE_URL}/api/questions/exams`)
+      .get(`${API_BASE_URL}/api/questions/exams`, {
+        headers: { Authorization: `Bearer ${token}` } // <-- 2. L'ajouter ici
+      })
       .then((res) => setExams(res.data))
       .catch((err) => console.error("❌ Exams load error", err));
   }, []);
@@ -121,8 +124,12 @@ export default function StudentPage() {
   // ✅ Charger les résumés
   useEffect(() => {
     if (selectedAction !== "Résumé" || !selectedChapter) return;
+    const token = localStorage.getItem("token"); 
+    
     axios
-      .get(`${API_BASE_URL}/api/resume/by-chapter/${encodeURIComponent(selectedChapter)}`)
+      .get(`${API_BASE_URL}/api/resume/by-chapter/${encodeURIComponent(selectedChapter)}`, {
+        headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
+      })
       .then((res) => setResumes(res.data))
       .catch((err) => {
         console.error("❌ SUMMARY ERROR =", err);
@@ -137,8 +144,13 @@ export default function StudentPage() {
       if (selectedMatiere) {
         url += `&subject=${encodeURIComponent(selectedMatiere)}`;
       }
+      
+      const token = localStorage.getItem("token");
+      
       axios
-        .get(url)
+        .get(url, {
+          headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
+        })
         .then((res) => setQuestions(res.data))
         .catch((err) => {
           console.error("❌ Erreur fetch questions:", err);
@@ -160,8 +172,12 @@ export default function StudentPage() {
   // ✅ Charger les exercices
   useEffect(() => {
     if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
+      const token = localStorage.getItem("token");
+      
       axios
-        .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}`)
+        .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}`, {
+          headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
+        })
         .then((res) => {
           setExercises(res.data || []);
           setExerciseIndex(0);
@@ -247,9 +263,9 @@ export default function StudentPage() {
   setSubmitted(true);
 
   try {
-    const token = localStorage.getItem("token");
-
+    
     // ✅ Enregistrement soumission QCM
+    const token = localStorage.getItem("token");
     await axios.post(
       `${API_BASE_URL}/api/student/exams/${currentExamId}/submit`,
       {
@@ -264,6 +280,7 @@ export default function StudentPage() {
     );
 
     // ✅ Enregistrement activité statistiques
+    const token = localStorage.getItem("token");
     await axios.post(
       `${API_BASE_URL}/api/student-activity`,
       {
@@ -540,16 +557,19 @@ export default function StudentPage() {
   setFocusMode(true);
 
   try {
+    const token = localStorage.getItem("token");
     await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "ASTUCE",
       subject: selectedMatiere,
       chapter: selectedChapter,
       referenceId: tip._id,
-    });
-  } catch (err) {
-    console.error(err);
-  }
-}}
+    },
+        { headers: { Authorization: `Bearer ${token}` } } // ✅ Corrigé : passé dans la configuration d'Axios
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }}
                     className="px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow transition"
                   >
                     {tip.title}
@@ -631,16 +651,19 @@ export default function StudentPage() {
   setSelectedresume(sum);
 
   try {
+    const token = localStorage.getItem("token");
     await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "RESUME",
       subject: selectedMatiere,
       chapter: selectedChapter,
       referenceId: sum._id,
-    });
-  } catch (err) {
-    console.error(err);
-  }
-}}
+    },
+        { headers: { Authorization: `Bearer ${token}` } } // ✅ Corrigé
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }}
                     className="px-5 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 shadow"
                   >
                     {sum.chapter}
@@ -802,6 +825,7 @@ export default function StudentPage() {
   setExerciseScore(score);
 
   try {
+    const token = localStorage.getItem("token");
     await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "EXERCISE",
       subject: selectedMatiere,
@@ -809,10 +833,12 @@ export default function StudentPage() {
       score,
       totalQuestions: exercises.length,
       successRate: Math.round((score / exercises.length) * 100),
-    });
-  } catch (err) {
-    console.error(err);
-  }
+   },
+          { headers: { Authorization: `Bearer ${token}` } } // ✅ Corrigé
+        );
+      } catch (err) {
+        console.error(err);
+      }
 
   setExerciseSubmitted(true);
   setWrongExercises(wrong);
