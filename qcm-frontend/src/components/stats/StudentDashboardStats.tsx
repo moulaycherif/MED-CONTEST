@@ -75,43 +75,51 @@ export default function StudentDashboardStats() {
       </div>
 
       {/* 🔹 KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[280px] min-w-0">
-        <div className="bg-white rounded-2xl shadow p-6 text-center">
-          <h3 className="text-lg font-semibold mb-2">📄 Résumés</h3>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 min-w-0">
+        <div className="bg-white rounded-xl shadow p-3 text-center">
+  <h3 className="text-sm font-semibold mb-1">
+    📄 Résumés
+  </h3>
 
-          <p className="text-4xl font-bold text-blue-600">
-            {countResource("RESUME")}
-          </p>
-        </div>
+  <p className="text-2xl font-bold text-blue-600">
+    {countResource("RESUME")}
+  </p>
+</div>
 
-        <div className="bg-white rounded-2xl shadow p-3 text-center">
-          <h3 className="text-lg font-semibold mb-2">💡 Astuces</h3>
+        <div className="bg-white rounded-xl shadow p-3 text-center">
+  <h3 className="text-sm font-semibold mb-1">
+    💡 Astuces
+  </h3>
 
-          <p className="text-4xl font-bold text-yellow-500">
-            {countResource("ASTUCE")}
-          </p>
-        </div>
+  <p className="text-2xl font-bold text-yellow-500">
+    {countResource("ASTUCE")}
+  </p>
+</div>
 
-        <div className="bg-white rounded-2xl shadow p-3 text-center">
-          <h3 className="text-lg font-semibold mb-2">🧩 QCM</h3>
+        <div className="bg-white rounded-xl shadow p-3 text-center">
+  <h3 className="text-sm font-semibold mb-1">
+    🧩 QCM
+  </h3>
 
-          <p className="text-4xl font-bold text-green-600">
-            {countResource("QCM")}
-          </p>
-        </div>
+  <p className="text-2xl font-bold text-green-600">
+    {countResource("QCM")}
+  </p>
+</div>
 
-        <div className="bg-white rounded-2xl shadow p-3 text-center">
-          <h3 className="text-lg font-semibold mb-2">🏋️ Exercices</h3>
+        <div className="bg-white rounded-xl shadow p-3 text-center">
+  <h3 className="text-sm font-semibold mb-1">
+    🏋️ Exercices
+  </h3>
 
-          <p className="text-4xl font-bold text-purple-600">
-            {countResource("EXERCISE")}
-          </p>
-        </div>
+  <p className="text-2xl font-bold text-purple-600">
+    {countResource("EXERCISE")}
+  </p>
+</div>
       </div>
 
       {/* 🔹 Graphiques */}
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[280px] min-w-0">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 min-w-0">
         <QcmBarChart data={stats.qcmBySubject} />
 
         <ActivityLineChart data={stats.timeline} />
