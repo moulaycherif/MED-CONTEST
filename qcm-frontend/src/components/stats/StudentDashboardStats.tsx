@@ -75,7 +75,7 @@ export default function StudentDashboardStats() {
       </div>
 
       {/* 🔹 KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px] min-w-0">
         <div className="bg-white rounded-2xl shadow p-6 text-center">
           <h3 className="text-lg font-semibold mb-2">📄 Résumés</h3>
 
@@ -110,7 +110,8 @@ export default function StudentDashboardStats() {
       </div>
 
       {/* 🔹 Graphiques */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px] min-w-0">
         <QcmBarChart data={stats.qcmBySubject} />
 
         <ActivityLineChart data={stats.timeline} />

@@ -31,13 +31,13 @@ export default function ActivityLineChart({ data }: Props) {
   }));
 
   return (
-    <div className="bg-white rounded-2xl shadow p-4 h-[350px]">
+    <div className="bg-white rounded-2xl shadow p-4 h-[350px] min-w-0">
       <h3 className="text-lg font-semibold mb-4">
         📈 Activité dans le temps
       </h3>
 
       {/* CORRECTION : Ajout de h-[280px] sur le conteneur parent */}
-      <div className="w-full h-[280px]">
+      <div className="w-full h-[280px] min-w-0">
         {/* CORRECTION : Utilisation de height="100%" pour qu'il remplisse le parent */}
         <ResponsiveContainer width="100%" aspect={2}>
           <LineChart data={formattedData}>
