@@ -20,8 +20,8 @@ export default function StudentQCMBySubjectChart({ data }: any) {
     <div className="bg-white p-4 rounded-xl shadow h-[350px]">
       <h3 className="font-semibold mb-3">📊 QCE par matière</h3>
 
-      <div className="w-full h-[280px]">
-        <ResponsiveContainer width="100%" aspect={2}>
+      <div className="w-full h-[280px] min-w-0">
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <XAxis dataKey="_id" />
             <YAxis allowDecimals={false} />

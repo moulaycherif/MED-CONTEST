@@ -33,7 +33,7 @@ export default function QcmBarChart({ data }: Props) {
       {/* CORRECTION : Ajout de h-[280px] sur le conteneur parent */}
       <div className="w-full h-[280px] min-w-0">
         {/* CORRECTION : Utilisation de height="100%" pour qu'il remplisse le parent */}
-        <ResponsiveContainer width="100%" aspect={2}>
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
 
