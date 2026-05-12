@@ -119,14 +119,14 @@ export default function StudentDashboardStats() {
 
       {/* 🔹 Graphiques */}
       
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 min-w-0">
-        <QcmBarChart data={stats.qcmBySubject} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 min-w-0">
+  <QcmBarChart data={stats.qcmBySubject} />
 
-        <ActivityLineChart data={stats.timeline} />
-      </div>
+  <ActivityLineChart data={stats.timeline} />
 
       {/* 🔹 Ressources */}
       <StudentResourcesChart data={stats.resources} />
+</div>
 
       {/* 🔹 Classement */}
       <div className="bg-white rounded-2xl shadow p-3">

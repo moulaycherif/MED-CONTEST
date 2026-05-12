@@ -31,37 +31,37 @@ export default function StudentResourcesChart({ data }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow p-3 h-[280px] min-w-0">
-      <h3 className="text-sm font-semibold mb-1">
-        📚 Ressources consultées
-      </h3>
+    <div className="bg-white rounded-xl shadow p-3 h-[320px] min-w-0">
+  <h3 className="text-sm font-semibold mb-2">
+    📚 Ressources consultées
+  </h3>
 
-      <ResponsiveContainer width="100%" height={220}>
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="count"
-            nameKey="_id"
-            outerRadius={75}
-            label
-          >
-            {data.map((_, index) => (
-              <Cell
-                key={index}
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </Pie>
-
-          <Tooltip />
-
-          <Legend
-            wrapperStyle={{
-              fontSize: "12px",
-            }}
+  <ResponsiveContainer width="100%" height={240}>
+    <PieChart>
+      <Pie
+        data={data}
+        dataKey="count"
+        nameKey="_id"
+        outerRadius={70}
+        label
+      >
+        {data.map((_, index) => (
+          <Cell
+            key={index}
+            fill={COLORS[index % COLORS.length]}
           />
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
+        ))}
+      </Pie>
+
+      <Tooltip />
+
+      <Legend
+        wrapperStyle={{
+          fontSize: "11px",
+        }}
+      />
+    </PieChart>
+  </ResponsiveContainer>
+</div>
   );
 }
