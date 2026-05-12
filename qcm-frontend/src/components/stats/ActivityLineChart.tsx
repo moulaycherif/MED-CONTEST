@@ -31,33 +31,24 @@ export default function ActivityLineChart({ data }: Props) {
   }));
 
   return (
-    <div className="bg-white rounded-2xl shadow p-4 h-[350px] min-w-0">
-      <h3 className="text-lg font-semibold mb-4">
-        📈 Activité dans le temps
-      </h3>
+    <div className="bg-white p-4 rounded-xl shadow h-[350px] min-w-0">
+  <h3 className="font-semibold mb-2">
+    📈 Activité dans le temps
+  </h3>
 
-      {/* CORRECTION : Ajout de h-[280px] sur le conteneur parent */}
-      <div className="w-full h-[280px] min-w-0">
-        {/* CORRECTION : Utilisation de height="100%" pour qu'il remplisse le parent */}
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={formattedData}>
-            <CartesianGrid strokeDasharray="3 3" />
-
-            <XAxis dataKey="date" />
-
-            <YAxis allowDecimals={false} />
-
-            <Tooltip />
-
-            <Line
-              type="monotone"
-              dataKey="count"
-              stroke="#60a5fa"
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+  <ResponsiveContainer width="100%" height={280}>
+    <LineChart data={formattedData}>
+      <XAxis dataKey="date" />
+      <YAxis allowDecimals={false} />
+      <Tooltip />
+      <Line
+        type="monotone"
+        dataKey="count"
+        stroke="#60a5fa"
+        strokeWidth={2}
+      />
+    </LineChart>
+  </ResponsiveContainer>
+</div>
   );
 }

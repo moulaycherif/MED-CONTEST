@@ -25,32 +25,19 @@ export default function QcmBarChart({ data }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow p-4 h-[350px] min-w-0">
-      <h3 className="text-lg font-semibold mb-4">
-        📊 QCM par matière
-      </h3>
+    <div className="bg-white p-4 rounded-xl shadow h-[350px] min-w-0">
+  <h3 className="font-semibold mb-2">
+    📊 QCM par matière
+  </h3>
 
-      {/* CORRECTION : Ajout de h-[280px] sur le conteneur parent */}
-      <div className="w-full h-[280px] min-w-0">
-        {/* CORRECTION : Utilisation de height="100%" pour qu'il remplisse le parent */}
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-
-            <XAxis dataKey="_id" />
-
-            <YAxis allowDecimals={false} />
-
-            <Tooltip />
-
-            <Bar
-              dataKey="count"
-              fill="#4ade80"
-              radius={[8, 8, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+  <ResponsiveContainer width="100%" height={280}>
+    <BarChart data={data}>
+      <XAxis dataKey="_id" />
+      <YAxis allowDecimals={false} />
+      <Tooltip />
+      <Bar dataKey="count" fill="#4ade80" />
+    </BarChart>
+  </ResponsiveContainer>
+</div>
   );
 }
