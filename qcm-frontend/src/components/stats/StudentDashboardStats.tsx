@@ -69,7 +69,7 @@ export default function StudentDashboardStats() {
           📊 Tableau de bord étudiant
         </h1>
 
-        <p className="text-gray-600 mt-1 text-center">
+        <p className="text-xl font-bold-italic mt-1 text-center">
           Suivi de votre progression et de votre activité.
         </p>
       </div>

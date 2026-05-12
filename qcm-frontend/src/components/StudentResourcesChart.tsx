@@ -24,39 +24,44 @@ const COLORS = [
 export default function StudentResourcesChart({ data }: Props) {
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow p-6 text-center text-gray-400">
+      <div className="bg-white rounded-xl shadow p-3 text-center text-gray-400">
         Aucune ressource consultée
       </div>
     );
   }
 
   return (
-   <div className="bg-white p-4 rounded-xl shadow h-[350px] min-w-0">
-  <h3 className="font-semibold mb-2">
-    📚 Ressources consultées
-  </h3>
+    <div className="bg-white rounded-xl shadow p-3 h-[280px] min-w-0">
+      <h3 className="text-sm font-semibold mb-1">
+        📚 Ressources consultées
+      </h3>
 
-  <ResponsiveContainer width="100%" height={280}>
-    <PieChart>
-     
- <Pie
-              data={data}
-              dataKey="count"
-              nameKey="_id"
-              outerRadius={120}
-              label
-            >
-              {data.map((_, index) => (
-                <Cell
-                  key={index}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
+      <ResponsiveContainer width="100%" height={220}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="count"
+            nameKey="_id"
+            outerRadius={75}
+            label
+          >
+            {data.map((_, index) => (
+              <Cell
+                key={index}
+                fill={COLORS[index % COLORS.length]}
+              />
+            ))}
+          </Pie>
 
-      <Tooltip />
-    </PieChart>
-  </ResponsiveContainer>
-</div>
+          <Tooltip />
+
+          <Legend
+            wrapperStyle={{
+              fontSize: "12px",
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
