@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import QcmBarChart from "./QcmBarChart";
 import ActivityLineChart from "./ActivityLineChart";
 import StudentResourcesChart from "../StudentResourcesChart";
+import SuccessEvolutionChart from "./SuccessEvolutionChart";
 
 interface Resource {
   _id: string;
@@ -20,6 +21,13 @@ interface Stats {
   qcmBySubject: { _id: string; count: number }[];
   resources: Resource[];
   ranking: RankingItem[];
+  successEvolution: {
+  _id: {
+    subject: string;
+    date: string;
+  };
+  avgSuccess: number;
+}[];
 }
 
 export default function StudentDashboardStats() {
@@ -127,6 +135,10 @@ export default function StudentDashboardStats() {
       {/* 🔹 Ressources */}
       <StudentResourcesChart data={stats.resources} />
 </div>
+{/* 🔹 Évolution des résultats */}
+<SuccessEvolutionChart
+  data={stats.successEvolution}
+/>
 
       {/* 🔹 Classement */}
       <div className="bg-white rounded-2xl shadow p-3">
