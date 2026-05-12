@@ -69,13 +69,13 @@ export default function StudentDashboardStats() {
           📊 Tableau de bord étudiant
         </h1>
 
-        <p className="text-gray-600 mt-1">
+        <p className="text-gray-600 mt-1 text-center">
           Suivi de votre progression et de votre activité.
         </p>
       </div>
 
       {/* 🔹 KPIs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px] min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[280px] min-w-0">
         <div className="bg-white rounded-2xl shadow p-6 text-center">
           <h3 className="text-lg font-semibold mb-2">📄 Résumés</h3>
 
@@ -84,7 +84,7 @@ export default function StudentDashboardStats() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-6 text-center">
+        <div className="bg-white rounded-2xl shadow p-3 text-center">
           <h3 className="text-lg font-semibold mb-2">💡 Astuces</h3>
 
           <p className="text-4xl font-bold text-yellow-500">
@@ -92,7 +92,7 @@ export default function StudentDashboardStats() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-6 text-center">
+        <div className="bg-white rounded-2xl shadow p-3 text-center">
           <h3 className="text-lg font-semibold mb-2">🧩 QCM</h3>
 
           <p className="text-4xl font-bold text-green-600">
@@ -100,7 +100,7 @@ export default function StudentDashboardStats() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-6 text-center">
+        <div className="bg-white rounded-2xl shadow p-3 text-center">
           <h3 className="text-lg font-semibold mb-2">🏋️ Exercices</h3>
 
           <p className="text-4xl font-bold text-purple-600">
@@ -111,7 +111,7 @@ export default function StudentDashboardStats() {
 
       {/* 🔹 Graphiques */}
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px] min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[280px] min-w-0">
         <QcmBarChart data={stats.qcmBySubject} />
 
         <ActivityLineChart data={stats.timeline} />
@@ -121,7 +121,7 @@ export default function StudentDashboardStats() {
       <StudentResourcesChart data={stats.resources} />
 
       {/* 🔹 Classement */}
-      <div className="bg-white rounded-2xl shadow p-6">
+      <div className="bg-white rounded-2xl shadow p-3">
         <h3 className="text-xl font-bold mb-4 text-center">
           🏆 Classement étudiant
         </h3>
