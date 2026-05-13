@@ -200,22 +200,23 @@ export default function StudentPage() {
   };
 
   function cleanLatex(content?: string) {
-  if (!content) return "";
-  return content
-    .replace(/<\/?p>/g, "")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/\\\(/g, "$")
-    .replace(/\\\)/g, "$")
-    .replace(/\\below\{([^}]*)\}/g, "_{$1}")
-    .replace(/\\aleph/g, "\\mathbb{N}")
-    .replace(/\\rightarrow/g, "\\to")
-    // ✅ NOUVEAU : Intercepte "lim n-->infini" OU "lim n→∞" et le force avec \limits
-    .replace(/lim\s*n\s*(?:-->|→)\s*(?:infini|∞)/gi, "\\lim\\limits_{n\\to\\infty}")
-    .replace(/\\ /g, " ")
-    .replace(/\s+/g, " ");
-}
+    if (!content) return "";
+    return content
+      .replace(/<\/?p>/g, "")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
+      .replace(/\\\(/g, "$")
+      .replace(/\\\)/g, "$")
+      .replace(/\\below\{([^}]*)\}/g, "_{$1}")
+      .replace(/\\aleph/g, "\\mathbb{N}")
+      .replace(/\\rightarrow/g, "\\to")
+      // ✅ NOUVEAU : Force la limite en dessous avec \displaystyle
+      .replace(/lim\s*n\s*(?:-->|→)\s*(?:infini|∞)/gi, "$\\displaystyle \\lim_{n\\to\\infty}$")
+      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") // Sécurité pour le LaTeX existant
+      .replace(/\\ /g, " ")
+      .replace(/\s+/g, " ");
+  }
 
   function renderContent(content?: string) {
     if (!content) return null;
@@ -700,7 +701,7 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 3) EXERCICES (Mis à jour avec KaTeX/Latex)
+     // 👉 3) EXERCICES (Mis à jour avec KaTeX/Latex)
       if (selectedChapter && selectedAction === "Exercises") {
         const currentEx = exercises[exerciseIndex];
 
@@ -708,8 +709,31 @@ export default function StudentPage() {
           return <p className="text-center mt-10">Aucun exercice trouvé</p>;
         }
 
+        // ✅ Fonction pour forcer le LaTeX dans Quill (Questions & Explications)
+        const processQuillText = (text?: string) => {
+          if (!text) return "";
+          return text
+            // Gère le texte tapé à la main (Quill convertit "->" en "--&gt;")
+            .replace(/lim\s*n\s*(?:--&gt;|-->|→)\s*(?:infini|∞)/gi, '<span class="ql-formula" data-value="\\displaystyle \\lim_{n \\to \\infty}"></span>')
+            // Gère les formules insérées via l'outil mathématique de Quill
+            .replace(/data-value="\\lim_/g, 'data-value="\\displaystyle \\lim_');
+        };
+
         return (
-          <div className="p-6">
+          <div className="p-6 exercice-view-container">
+            {/* ✅ SOLUTION IMAGES : Forcer la réduction des images de Quill avec !important */}
+            <style>{`
+              .exercice-view-container img, .ql-editor img {
+                max-height: 150px !important;
+                width: auto !important;
+                max-width: 100% !important;
+                margin: 0 auto;
+                display: block;
+                object-fit: contain;
+                border-radius: 8px;
+              }
+            `}</style>
+
             {/* 🟦 PROGRESSION */}
             <div className="mb-4 text-center">
               <p className="font-semibold">
@@ -723,11 +747,11 @@ export default function StudentPage() {
               </div>
             </div>
 
-            {/* 🧠 QUESTION (Affichage avec Quill en mode lecture seule) */}
+            {/* 🧠 QUESTION */}
             <div className="bg-white p-4 rounded-xl shadow">
               <h3 className="font-semibold mb-3">
                 <ReactQuill 
-                  value={currentEx.question} 
+                  value={processQuillText(currentEx.question)} 
                   readOnly={true} 
                   theme="bubble" 
                 />
@@ -741,7 +765,7 @@ export default function StudentPage() {
                 />
               )}
 
-              {/* 🎯 OPTIONS (Affichage avec react-latex-next) */}
+              {/* 🎯 OPTIONS */}
               {currentEx.options.map((opt: string, i: number) => {
                 const isSelected = exerciseAnswers[currentEx._id] === opt;
                 const isCorrect = opt === currentEx.correctAnswer;
@@ -771,17 +795,18 @@ export default function StudentPage() {
                       }
                       className="mr-2"
                     />
+                    {/* Les options passent par le cleanLatex classique */}
                     <Latex>{cleanLatex(opt)}</Latex>
                   </label>
                 );
               })}
 
-              {/* 💡 EXPLICATION (Affichage avec Quill en mode lecture seule) */}
+              {/* 💡 EXPLICATION */}
               {exerciseSubmitted && exerciseAnswers[currentEx._id] !== currentEx.correctAnswer && (
                 <div className="text-blue-600 mt-3 border-t pt-3">
                   <span className="font-bold">Explication :</span>
                   <ReactQuill 
-                    value={currentEx.explanation} 
+                    value={processQuillText(currentEx.explanation)} 
                     readOnly={true} 
                     theme="bubble" 
                   />
