@@ -200,21 +200,22 @@ export default function StudentPage() {
   };
 
   function cleanLatex(content?: string) {
-    if (!content) return "";
-    return content
-      .replace(/<\/?p>/g, "")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&amp;/g, "&")
-      .replace(/\\\(/g, "$")
-      .replace(/\\\)/g, "$")
-      .replace(/\\below\{([^}]*)\}/g, "_{$1}")
-      .replace(/\\aleph/g, "\\mathbb{N}")
-      .replace(/\\rightarrow/g, "\\to")
-      .replace(/lim\s*n\s*→\s*∞/g, "\\lim_{n\\to\\infty}")
-      .replace(/\\ /g, " ")
-      .replace(/\s+/g, " ");
-  }
+  if (!content) return "";
+  return content
+    .replace(/<\/?p>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/\\\(/g, "$")
+    .replace(/\\\)/g, "$")
+    .replace(/\\below\{([^}]*)\}/g, "_{$1}")
+    .replace(/\\aleph/g, "\\mathbb{N}")
+    .replace(/\\rightarrow/g, "\\to")
+    // ✅ NOUVEAU : Intercepte "lim n-->infini" OU "lim n→∞" et le force avec \limits
+    .replace(/lim\s*n\s*(?:-->|→)\s*(?:infini|∞)/gi, "\\lim\\limits_{n\\to\\infty}")
+    .replace(/\\ /g, " ")
+    .replace(/\s+/g, " ");
+}
 
   function renderContent(content?: string) {
     if (!content) return null;
@@ -736,7 +737,7 @@ export default function StudentPage() {
                 <img
                   src={`${API_BASE_URL}${currentEx.questionImage}`}
                   alt="Question"
-                  className="max-w-sm md:max-w-lg max-h-96 object-contain mx-auto rounded shadow mb-4"
+                  className="h-32 md:h-48 w-auto object-contain mx-auto rounded shadow mb-4"
                 />
               )}
 
