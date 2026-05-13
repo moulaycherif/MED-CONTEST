@@ -208,12 +208,14 @@ export default function StudentPage() {
       .replace(/&amp;/g, "&")
       .replace(/\\\(/g, "$")
       .replace(/\\\)/g, "$")
-      .replace(/\\below\{([^}]*)\}/g, "_{$1}")
+      // 🚨 NOUVEAU : Nettoyage agressif de "below"
+      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
+      .replace(/\\?below/g, "_")
+      // (Le reste ne change pas)
       .replace(/\\aleph/g, "\\mathbb{N}")
       .replace(/\\rightarrow/g, "\\to")
-      // ✅ NOUVEAU : Force la limite en dessous avec \displaystyle
       .replace(/lim\s*n\s*(?:-->|→)\s*(?:infini|∞)/gi, "$\\displaystyle \\lim_{n\\to\\infty}$")
-      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") // Sécurité pour le LaTeX existant
+      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
       .replace(/\\ /g, " ")
       .replace(/\s+/g, " ");
   }
@@ -713,6 +715,9 @@ export default function StudentPage() {
         const processQuillText = (text?: string) => {
           if (!text) return "";
           return text
+          // 🚨 NOUVEAU : On intercepte et on détruit "\below" ou "below" pour le remplacer par "_"
+            .replace(/\\?below\s*\{/g, "_{")
+            .replace(/\\?below/g, "_")
             // Gère le texte tapé à la main (Quill convertit "->" en "--&gt;")
             .replace(/lim\s*n\s*(?:--&gt;|-->|→)\s*(?:infini|∞)/gi, '<span class="ql-formula" data-value="\\displaystyle \\lim_{n \\to \\infty}"></span>')
             // Gère les formules insérées via l'outil mathématique de Quill
