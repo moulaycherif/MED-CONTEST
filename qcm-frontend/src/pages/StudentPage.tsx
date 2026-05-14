@@ -112,8 +112,11 @@ export default function StudentPage() {
 
   // ✅ Charger la liste des examens
   useEffect(() => {
+    const token = localStorage.getItem("token"); // <-- 1. Récupérer le token
     axios
-      .get(`${API_BASE_URL}/api/questions/exams`)
+      .get(`${API_BASE_URL}/api/questions/exams`, {
+        headers: { Authorization: `Bearer ${token}` } // <-- 2. L'ajouter ici
+      })
       .then((res) => setExams(res.data))
       .catch((err) => console.error("❌ Exams load error", err));
   }, []);
@@ -121,8 +124,12 @@ export default function StudentPage() {
   // ✅ Charger les résumés
   useEffect(() => {
     if (selectedAction !== "Résumé" || !selectedChapter) return;
+    const token = localStorage.getItem("token"); 
+    
     axios
-      .get(`${API_BASE_URL}/api/resume/by-chapter/${encodeURIComponent(selectedChapter)}`)
+      .get(`${API_BASE_URL}/api/resume/by-chapter/${encodeURIComponent(selectedChapter)}`, {
+        headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
+      })
       .then((res) => setResumes(res.data))
       .catch((err) => {
         console.error("❌ SUMMARY ERROR =", err);
@@ -137,8 +144,13 @@ export default function StudentPage() {
       if (selectedMatiere) {
         url += `&subject=${encodeURIComponent(selectedMatiere)}`;
       }
+      
+      const token = localStorage.getItem("token");
+      
       axios
-        .get(url)
+        .get(url, {
+          headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
+        })
         .then((res) => setQuestions(res.data))
         .catch((err) => {
           console.error("❌ Erreur fetch questions:", err);
@@ -160,8 +172,12 @@ export default function StudentPage() {
   // ✅ Charger les exercices
   useEffect(() => {
     if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
+      const token = localStorage.getItem("token");
+      
       axios
-        .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}`)
+        .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}`, {
+          headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
+        })
         .then((res) => {
           setExercises(res.data || []);
           setExerciseIndex(0);
@@ -192,10 +208,14 @@ export default function StudentPage() {
       .replace(/&amp;/g, "&")
       .replace(/\\\(/g, "$")
       .replace(/\\\)/g, "$")
-      .replace(/\\below\{([^}]*)\}/g, "_{$1}")
+      // 🚨 NOUVEAU : Nettoyage agressif de "below"
+      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
+      .replace(/\\?below/g, "_")
+      // (Le reste ne change pas)
       .replace(/\\aleph/g, "\\mathbb{N}")
       .replace(/\\rightarrow/g, "\\to")
-      .replace(/lim\s*n\s*→\s*∞/g, "\\lim_{n\\to\\infty}")
+      .replace(/lim\s*n\s*(?:-->|→)\s*(?:infini|∞)/gi, "$\\displaystyle \\lim_{n\\to\\infty}$")
+      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
       .replace(/\\ /g, " ")
       .replace(/\s+/g, " ");
   }
@@ -247,9 +267,9 @@ export default function StudentPage() {
   setSubmitted(true);
 
   try {
-    const token = localStorage.getItem("token");
-
+    
     // ✅ Enregistrement soumission QCM
+    const token = localStorage.getItem("token");
     await axios.post(
       `${API_BASE_URL}/api/student/exams/${currentExamId}/submit`,
       {
@@ -264,6 +284,7 @@ export default function StudentPage() {
     );
 
     // ✅ Enregistrement activité statistiques
+    
     await axios.post(
       `${API_BASE_URL}/api/student-activity`,
       {
@@ -540,16 +561,19 @@ export default function StudentPage() {
   setFocusMode(true);
 
   try {
+    const token = localStorage.getItem("token");
     await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "ASTUCE",
       subject: selectedMatiere,
       chapter: selectedChapter,
       referenceId: tip._id,
-    });
-  } catch (err) {
-    console.error(err);
-  }
-}}
+    },
+        { headers: { Authorization: `Bearer ${token}` } } // ✅ Corrigé : passé dans la configuration d'Axios
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }}
                     className="px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow transition"
                   >
                     {tip.title}
@@ -631,16 +655,19 @@ export default function StudentPage() {
   setSelectedresume(sum);
 
   try {
+    const token = localStorage.getItem("token");
     await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "RESUME",
       subject: selectedMatiere,
       chapter: selectedChapter,
       referenceId: sum._id,
-    });
-  } catch (err) {
-    console.error(err);
-  }
-}}
+    },
+        { headers: { Authorization: `Bearer ${token}` } } // ✅ Corrigé
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }}
                     className="px-5 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 shadow"
                   >
                     {sum.chapter}
@@ -676,94 +703,140 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 3) EXERCICES (Mis à jour avec KaTeX/Latex)
-      if (selectedChapter && selectedAction === "Exercises") {
-        const currentEx = exercises[exerciseIndex];
+    // 👉 3) EXERCICES (Avec Sous-questions)
+if (selectedChapter && selectedAction === "Exercises") {
+  const currentEx = exercises[exerciseIndex];
 
-        if (exercises.length === 0) {
-          return <p className="text-center mt-10">Aucun exercice trouvé</p>;
+  if (exercises.length === 0) {
+    return <p className="text-center mt-10">Aucun exercice trouvé</p>;
+  }
+
+  const processQuillText = (text?: string) => {
+    if (!text) return "";
+    return text
+      .replace(/\\?below\s*\{/g, "_{")
+      .replace(/\\?below/g, "_")
+      .replace(/lim\s*n\s*(?:--&gt;|-->|→)\s*(?:infini|∞)/gi, '<span class="ql-formula" data-value="\\displaystyle \\lim_{n \\to \\infty}"></span>')
+      .replace(/data-value="\\lim_/g, 'data-value="\\displaystyle \\lim_');
+  };
+
+  return (
+    <div className="p-6 exercice-view-container">
+      <style>{`
+        .exercice-view-container img, .ql-editor img {
+          max-height: 150px !important;
+          width: auto !important;
+          max-width: 100% !important;
+          margin: 0 auto;
+          display: block;
+          object-fit: contain;
+          border-radius: 8px;
         }
+      `}</style>
 
-        return (
-          <div className="p-6">
-            {/* 🟦 PROGRESSION */}
-            <div className="mb-4 text-center">
-              <p className="font-semibold">
-                Question {exerciseIndex + 1} / {exercises.length}
-              </p>
-              <div className="w-full bg-gray-200 h-2 rounded mt-2">
-                <div
-                  className="bg-blue-600 h-2 rounded"
-                  style={{ width: `${((exerciseIndex + 1) / exercises.length) * 100}%` }}
-                />
-              </div>
-            </div>
+      {/* 🟦 PROGRESSION (Basée sur les Problèmes) */}
+      <div className="mb-4 text-center">
+        <p className="font-semibold text-gray-600">
+          Problème {exerciseIndex + 1} / {exercises.length}
+        </p>
+      </div>
 
-            {/* 🧠 QUESTION (Affichage avec Quill en mode lecture seule) */}
-            <div className="bg-white p-4 rounded-xl shadow">
-              <h3 className="font-semibold mb-3">
+      <div className="bg-white p-6 rounded-xl shadow border-t-4 border-blue-600">
+        
+        {/* 📚 1. LE CONTEXTE GLOBAL (Le Problème) */}
+        <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">
+            Énoncé
+          </h3>
+          <ReactQuill 
+            value={processQuillText(currentEx.contextText)} 
+            readOnly={true} 
+            theme="bubble" 
+          />
+          {currentEx.contextImage && (
+            <img
+              src={`${API_BASE_URL}${currentEx.contextImage}`}
+              alt="Contexte"
+              className="mt-4"
+            />
+          )}
+        </div>
+
+        {/* 🎯 2. LES SOUS-QUESTIONS */}
+        <div className="space-y-8">
+          {currentEx.subQuestions?.map((subQ: any, index: number) => (
+            <div key={subQ._id} className="pl-4 border-l-4 border-blue-200">
+              {/* Texte de la sous-question */}
+              <div className="font-semibold mb-3 flex items-start">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mr-3 mt-1">
+                  Q{index + 1}
+                </span>
                 <ReactQuill 
-                  value={currentEx.question} 
+                  value={processQuillText(subQ.questionText)} 
                   readOnly={true} 
                   theme="bubble" 
                 />
-              </h3>
+              </div>
 
-              {currentEx.questionImage && (
-                <img
-                  src={`${API_BASE_URL}${currentEx.questionImage}`}
-                  alt="Question"
-                  className="max-w-sm md:max-w-lg max-h-96 object-contain mx-auto rounded shadow mb-4"
-                />
-              )}
+              {/* Options de la sous-question */}
+              <div className="ml-10 grid grid-cols-1 md:grid-cols-2 gap-2">
+                {subQ.options.map((opt: string, i: number) => {
+                  const isSelected = exerciseAnswers[subQ._id] === opt;
+                  const isCorrect = opt === subQ.correctAnswer;
 
-              {/* 🎯 OPTIONS (Affichage avec react-latex-next) */}
-              {currentEx.options.map((opt: string, i: number) => {
-                const isSelected = exerciseAnswers[currentEx._id] === opt;
-                const isCorrect = opt === currentEx.correctAnswer;
+                  return (
+                    <label
+                      key={i}
+                      className={`block p-3 border rounded-lg cursor-pointer transition-colors ${
+                        exerciseSubmitted
+                          ? isSelected && isCorrect
+                            ? "bg-green-100 border-green-500 shadow-sm"
+                            : isSelected && !isCorrect
+                            ? "bg-red-100 border-red-500 shadow-sm"
+                            : isCorrect
+                            ? "bg-green-50 border-green-300 border-dashed" // Montre la bonne réponse si l'élève s'est trompé
+                            : "bg-gray-50 opacity-50"
+                          : "hover:bg-blue-50 border-gray-200"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        checked={isSelected}
+                        disabled={exerciseSubmitted}
+                        onChange={() =>
+                          setExerciseAnswers((prev) => ({
+                            ...prev,
+                            [subQ._id]: opt, // On sauvegarde avec l'ID de la sous-question
+                          }))
+                        }
+                        className="mr-3"
+                      />
+                      <Latex>{cleanLatex(opt)}</Latex>
+                    </label>
+                  );
+                })}
+              </div>
 
-                return (
-                  <label
-                    key={i}
-                    className={`block p-2 border rounded-lg mb-2 cursor-pointer ${
-                      exerciseSubmitted
-                        ? isSelected && isCorrect
-                          ? "bg-green-100 border-green-400"
-                          : isSelected && !isCorrect
-                          ? "bg-red-100 border-red-400"
-                          : ""
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      checked={isSelected}
-                      disabled={exerciseSubmitted}
-                      onChange={() =>
-                        setExerciseAnswers((prev) => ({
-                          ...prev,
-                          [currentEx._id]: opt,
-                        }))
-                      }
-                      className="mr-2"
-                    />
-                    <Latex>{cleanLatex(opt)}</Latex>
-                  </label>
-                );
-              })}
-
-              {/* 💡 EXPLICATION (Affichage avec Quill en mode lecture seule) */}
-              {exerciseSubmitted && exerciseAnswers[currentEx._id] !== currentEx.correctAnswer && (
-                <div className="text-blue-600 mt-3 border-t pt-3">
-                  <span className="font-bold">Explication :</span>
+              {/* Explication de la sous-question (Visible après soumission) */}
+              {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
+                <div className="ml-10 mt-3 p-3 bg-blue-50 text-blue-800 rounded-lg border border-blue-100">
+                  <span className="font-bold flex items-center mb-1">
+                    💡 Correction :
+                  </span>
                   <ReactQuill 
-                    value={currentEx.explanation} 
+                    value={processQuillText(subQ.explanation)} 
                     readOnly={true} 
                     theme="bubble" 
                   />
                 </div>
               )}
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 🔁 NAVIGATION (Boutons Valider / Suivant) */}
+      {/* ... Votre code de navigation existant ... */}
 
             {/* 🔁 NAVIGATION */}
             <div className="flex justify-between mt-4">
@@ -802,6 +875,7 @@ export default function StudentPage() {
   setExerciseScore(score);
 
   try {
+    const token = localStorage.getItem("token");
     await axios.post(`${API_BASE_URL}/api/student-activity`, {
       type: "EXERCISE",
       subject: selectedMatiere,
@@ -809,10 +883,12 @@ export default function StudentPage() {
       score,
       totalQuestions: exercises.length,
       successRate: Math.round((score / exercises.length) * 100),
-    });
-  } catch (err) {
-    console.error(err);
-  }
+   },
+          { headers: { Authorization: `Bearer ${token}` } } // ✅ Corrigé
+        );
+      } catch (err) {
+        console.error(err);
+      }
 
   setExerciseSubmitted(true);
   setWrongExercises(wrong);

@@ -7,7 +7,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-
 import dayjs from "dayjs";
 
 interface Props {
@@ -32,31 +31,24 @@ export default function ActivityLineChart({ data }: Props) {
   }));
 
   return (
-    <div className="bg-white rounded-2xl shadow p-4 h-[350px]">
-      <h3 className="text-lg font-semibold mb-4">
-        📈 Activité dans le temps
-      </h3>
+    <div className="bg-white rounded-xl shadow p-3 h-[320px] min-w-0">
+  <h3 className="font-semibold mb-2">
+    📈 Activité dans le temps
+  </h3>
 
-      <div className="w-full">
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={formattedData}>
-            <CartesianGrid strokeDasharray="3 3" />
-
-            <XAxis dataKey="date" />
-
-            <YAxis allowDecimals={false} />
-
-            <Tooltip />
-
-            <Line
-              type="monotone"
-              dataKey="count"
-              stroke="#60a5fa"
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+  <ResponsiveContainer width="100%" height={240}>
+    <LineChart data={formattedData}>
+      <XAxis dataKey="date" />
+      <YAxis allowDecimals={false} />
+      <Tooltip />
+      <Line
+        type="monotone"
+        dataKey="count"
+        stroke="#60a5fa"
+        strokeWidth={2}
+      />
+    </LineChart>
+  </ResponsiveContainer>
+</div>
   );
 }
