@@ -1,3 +1,4 @@
+// routes/exerciseRoutes.ts
 import express, { Request, Response } from "express";
 import Exercise from "../models/Exercise";
 import { verifyAdmin } from "../middleware/verifyAdmin";
@@ -47,8 +48,8 @@ router.get("/", async (req: Request, res: Response) => {
 // ======================================================
 router.post(
   "/upload-editor-image",
-  authenticateAdmin, // 🔥 SÉCURITÉ : Empêche un utilisateur lambda d'upload
-  verifyAdmin,       // 🔥 SÉCURITÉ : Vérifie le rôle admin
+  authenticateAdmin,
+  verifyAdmin,
   upload.single("image"),
   (req: Request, res: Response): void => {
     if (!req.file) {
@@ -63,24 +64,24 @@ router.post(
 );
 
 // ======================================================
-// ➕ Ajouter un exercice
+// ➕ Ajouter un exercice (Avec sous-questions)
 // ======================================================
 router.post(
   "/",
   authenticateAdmin,
   verifyAdmin,
-  upload.single("questionImage"),
+  upload.single("contextImage"), // 👈 Le nom a changé dans le frontend
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { subject, chapter, question, options, correctAnswer, explanation } = req.body;
+      const { subject, chapter, contextText, subQuestions } = req.body;
 
-      // Traitement des options (si envoyées en string JSON via FormData)
-      let parsedOptions = options;
-      if (typeof options === "string") {
+      // Traitement des sous-questions (envoyées en string JSON via FormData)
+      let parsedSubQuestions = subQuestions;
+      if (typeof subQuestions === "string") {
         try {
-          parsedOptions = JSON.parse(options);
+          parsedSubQuestions = JSON.parse(subQuestions);
         } catch (e) {
-          res.status(400).json({ error: "Format des options invalide" });
+          res.status(400).json({ error: "Format des sous-questions invalide" });
           return;
         }
       }
@@ -88,11 +89,9 @@ router.post(
       const exercise = await Exercise.create({
         subject,
         chapter,
-        question,
-        questionImage: req.file ? `/uploads/exercises/${req.file.filename}` : "",
-        options: parsedOptions,
-        correctAnswer,
-        explanation,
+        contextText,
+        contextImage: req.file ? `/uploads/exercises/${req.file.filename}` : "",
+        subQuestions: parsedSubQuestions,
       });
 
       res.status(201).json(exercise);
@@ -153,18 +152,15 @@ router.delete("/:id", authenticateAdmin, verifyAdmin, async (req: Request, res: 
       return;
     }
 
-    // 2. Si une image de question existe, la supprimer physiquement du serveur
-    if (exercise.questionImage) {
-      // Convertir l'URL relative en chemin absolu
-      const imagePath = path.join(process.cwd(), exercise.questionImage);
+    // 2. Si une image de contexte existe, la supprimer physiquement du serveur
+    if (exercise.contextImage) {
+      const imagePath = path.join(process.cwd(), exercise.contextImage);
       
-      // Vérifier si le fichier existe puis le supprimer
       if (fs.existsSync(imagePath)) {
         try {
           fs.unlinkSync(imagePath);
         } catch (err) {
           console.error("Impossible de supprimer l'image associée :", err);
-          // On ne bloque pas la suppression de la BDD même si la suppression du fichier échoue
         }
       }
     }

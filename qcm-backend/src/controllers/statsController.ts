@@ -111,9 +111,14 @@ export const getStudentStats = async (
           count: { $sum: 1 },
         },
       },
+      {
+        $sort: {
+          count: -1,
+        },
+      },
     ]);
 
-    // 📈 Timeline
+    // 📈 Activité dans le temps
     const timeline = await StudentActivity.aggregate([
       {
         $match: {
@@ -138,7 +143,7 @@ export const getStudentStats = async (
       },
     ]);
 
-    // 📚 Ressources
+    // 📚 Ressources consultées
     const resources = await StudentActivity.aggregate([
       {
         $match: {
@@ -153,7 +158,7 @@ export const getStudentStats = async (
       },
     ]);
 
-    // 🏆 Classement
+    // 🏆 Classement étudiant
     const ranking = await StudentActivity.aggregate([
       {
         $match: {
@@ -176,32 +181,74 @@ export const getStudentStats = async (
       },
     ]);
 
+    // 📈 Évolution des réussites
+    const successEvolution =
+      await StudentActivity.aggregate([
+        {
+          $match: {
+            student,
+            type: {
+              $in: ["QCM", "EXERCISE"],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              subject: "$subject",
+              date: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt",
+                },
+              },
+            },
+            avgSuccess: {
+              $avg: "$successRate",
+            },
+          },
+        },
+        {
+          $sort: {
+            "_id.date": 1,
+          },
+        },
+      ]);
+
     res.json({
       qcmBySubject,
       timeline,
       resources,
       ranking,
+      successEvolution,
     });
   } catch (error) {
     console.error("❌ getStudentStats :", error);
 
     res.status(500).json({
-      message: "Erreur récupération statistiques étudiant",
+      message:
+        "Erreur récupération statistiques étudiant",
     });
   }
 };
+
+// 📈 ROUTE DÉDIÉE ÉVOLUTION DES RÉSULTATS
 export const getSuccessEvolution = async (
   req: Request,
   res: Response
 ) => {
   try {
-    const student = new mongoose.Types.ObjectId(req.student!._id);
+    const student = new mongoose.Types.ObjectId(
+      req.student!._id
+    );
 
     const stats = await StudentActivity.aggregate([
       {
         $match: {
           student,
-          type: { $in: ["QCM", "EXERCISE"] },
+          type: {
+            $in: ["QCM", "EXERCISE"],
+          },
         },
       },
       {
@@ -229,10 +276,14 @@ export const getSuccessEvolution = async (
 
     res.json(stats);
   } catch (error) {
-    console.error(error);
+    console.error(
+      "❌ getSuccessEvolution :",
+      error
+    );
 
     res.status(500).json({
-      message: "Erreur évolution réussite",
+      message:
+        "Erreur récupération évolution réussite",
     });
   }
 };
