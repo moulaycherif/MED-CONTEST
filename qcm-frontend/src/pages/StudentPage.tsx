@@ -750,7 +750,7 @@ if (selectedChapter && selectedAction === "Exercises") {
           </h3>
           <div className="
   text-lg
-  [&_.ql-editor]:text-lg
+  [&_.ql-editor]:text-md
   [&_.ql-editor]:leading-relaxed
   [&_.ql-editor]:font-medium
   [&_.ql-editor_p]:mb-2
@@ -778,7 +778,7 @@ if (selectedChapter && selectedAction === "Exercises") {
   className="pl-2 border-l-2 border-blue-200 py-1"
 >
   {/* Texte de la sous-question */}
-  <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
+  <div className="font-medium mb-2 flex items-start text-md leading-relaxed">
     
     <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[11px] mr-2 mt-0.5 shrink-0">
       Q{index + 1}
@@ -790,7 +790,7 @@ if (selectedChapter && selectedAction === "Exercises") {
     text-lg
     [&_.ql-editor]:p-0
     [&_.ql-editor]:min-h-0
-    [&_.ql-editor]:text-lg
+    [&_.ql-editor]:text-md
     [&_.ql-editor]:leading-relaxed
     [&_.ql-editor]:font-medium
     [&_.ql-editor_p]:my-1
