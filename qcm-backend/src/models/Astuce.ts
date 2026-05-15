@@ -4,13 +4,13 @@ const AstuceSchema = new mongoose.Schema(
   {
     subject: { type: String, required: true },
     chapter: { type: String, required: true },
-    title: { type: String, required: true },
+    title: { type: String, required: false, default: "" },
     description: { type: String },
 
     cases: {
       type: [
         {
-          title: { type: String },
+          title: { type: String, default: "" },
           content: { type: String },
            image: { type: String }, // 🔥 AJOUT ICI
         },
