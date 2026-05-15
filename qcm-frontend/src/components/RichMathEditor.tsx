@@ -1,6 +1,7 @@
 import React, { useRef, useMemo } from "react";
 import ReactQuill from "react-quill";
 import katex from "katex";
+import axios from "axios";
 import { API_BASE_URL } from "../config";
 
 import "react-quill/dist/quill.snow.css";
@@ -12,13 +13,18 @@ import "katex/dist/katex.min.css";
 interface Props {
   value: string;
   onChange: (value: string) => void;
+  // Ajout d'une prop optionnelle pour pouvoir changer l'URL d'upload si besoin
+  uploadUrl?: string; 
 }
 
-export default function RichMathEditor({ value, onChange }: Props) {
+export default function RichMathEditor({ 
+  value, 
+  onChange, 
+  uploadUrl = `${API_BASE_URL}/api/astuces/upload-image` // URL par défaut
+}: Props) {
   const quillRef = useRef<ReactQuill | null>(null);
 
   // 🔹 L'utilisation de useMemo est OBLIGATOIRE ici avec ReactQuill.
-  // Sinon, l'éditeur perd le focus à chaque fois que l'utilisateur tape une touche.
   const modules = useMemo(() => {
     return {
       toolbar: {
@@ -42,42 +48,47 @@ export default function RichMathEditor({ value, onChange }: Props) {
               if (!file) return;
 
               const formData = new FormData();
-              formData.append("image", file);
+              // ⚠️ Changé en "file" pour correspondre au backend
+              formData.append("file", file);
 
               try {
-                // ⚠️ Attention : Si cette route API est protégée, n'oubliez pas d'ajouter 
-                // les headers d'autorisation (ex: Authorization: `Bearer ${adminToken}`)
-                const res = await fetch(
-                  `${API_BASE_URL}/api/exercises/upload-editor-image`,
-                  {
-                    method: "POST",
-                    body: formData,
-                  }
-                );
+                // Récupération du token d'administration (comme dans AdminExercises)
+                const adminToken = localStorage.getItem("adminToken");
 
-                if (!res.ok) {
-                  throw new Error("Erreur serveur lors de l'upload");
-                }
+                const res = await axios.post(uploadUrl, formData, {
+                  headers: {
+                    "Content-Type": "multipart/form-data",
+                    // Ajout du token s'il existe
+                    ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
+                  },
+                });
 
-                const data = await res.json();
+                // ⚠️ On gère à la fois imageUrl (Astuces) et url (Exercices) selon ce que renvoie le backend
+                const returnedUrl = res.data.imageUrl || res.data.url;
+                
+                // Si le backend renvoie déjà un lien complet avec "http", on ne rajoute pas API_BASE_URL
+                const finalUrl = returnedUrl.startsWith("http") 
+                  ? returnedUrl 
+                  : `${API_BASE_URL}${returnedUrl}`;
+
                 const quill = quillRef.current?.getEditor();
                 const range = quill?.getSelection();
 
                 quill?.insertEmbed(
                   range?.index || 0,
                   "image",
-                  `${API_BASE_URL}${data.url}`
+                  finalUrl
                 );
               } catch (error) {
                 console.error("Erreur lors de l'upload de l'image :", error);
-                alert("❌ Impossible d'importer l'image. Veuillez réessayer.");
+                alert("❌ Impossible d'importer l'image. Veuillez vérifier votre connexion ou la taille du fichier.");
               }
             };
           },
         },
       },
     };
-  }, []); // Le tableau de dépendances vide garantit que les modules ne sont créés qu'une seule fois au montage.
+  }, [uploadUrl]); // uploadUrl en dépendance pour que le handler soit à jour
 
   return (
     <div className="bg-white mb-10">
@@ -87,7 +98,7 @@ export default function RichMathEditor({ value, onChange }: Props) {
         value={value}
         onChange={onChange}
         modules={modules}
-        placeholder="Rédigez votre question ou explication ici..."
+        placeholder="Rédigez votre question, astuce ou explication ici..."
       />
 
       <style>
