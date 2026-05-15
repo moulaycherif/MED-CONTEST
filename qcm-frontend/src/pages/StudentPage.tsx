@@ -748,11 +748,19 @@ if (selectedChapter && selectedAction === "Exercises") {
           <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">
             Énoncé
           </h3>
-          <ReactQuill 
-            value={processQuillText(currentEx.contextText)} 
-            readOnly={true} 
-            theme="bubble" 
-          />
+          <div className="
+  text-lg
+  [&_.ql-editor]:text-lg
+  [&_.ql-editor]:leading-relaxed
+  [&_.ql-editor]:font-medium
+  [&_.ql-editor_p]:mb-2
+">
+  <ReactQuill
+    value={processQuillText(currentEx.contextText)}
+    readOnly={true}
+    theme="bubble"
+  />
+</div>
           {currentEx.contextImage && (
             <img
               src={`${API_BASE_URL}${currentEx.contextImage}`}
@@ -770,13 +778,24 @@ if (selectedChapter && selectedAction === "Exercises") {
   className="pl-2 border-l-2 border-blue-200 py-1"
 >
   {/* Texte de la sous-question */}
-  <div className="font-medium mb-1 flex items-start text-sm leading-tight">
+  <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
     
     <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[11px] mr-2 mt-0.5 shrink-0">
       Q{index + 1}
     </span>
 
-    <div className="flex-1 [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:leading-tight [&_.ql-editor_p]:my-0">
+   <div
+  className="
+    flex-1
+    text-lg
+    [&_.ql-editor]:p-0
+    [&_.ql-editor]:min-h-0
+    [&_.ql-editor]:text-lg
+    [&_.ql-editor]:leading-relaxed
+    [&_.ql-editor]:font-medium
+    [&_.ql-editor_p]:my-1
+  "
+>
       <ReactQuill
         value={processQuillText(subQ.questionText)}
         readOnly={true}
