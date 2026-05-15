@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
-import TipTapEditor from "../components/TipTapEditor";
+// 🔥 Remplacement de TipTapEditor par RichMathEditor
+import RichMathEditor from "../components/RichMathEditor";
+import "react-quill/dist/quill.snow.css";
 
 /* ===================== TYPES ===================== */
 
@@ -10,7 +12,7 @@ interface TipCase {
   content?: string;
   explanation?: string;
   example?: string;
-  image?: string; // 🔥 AJOUT
+  image?: string; 
 }
 
 interface Tip {
@@ -46,24 +48,24 @@ const AdminAstuces: React.FC = () => {
     { title: "", content: "" },
   ]);
 
-const addCase = () => {
-  setCases((prev) => [
-    ...prev,
-    { title: "", content: "", image: "" }
-  ]);
-};
+  const addCase = () => {
+    setCases((prev) => [
+      ...prev,
+      { title: "", content: "", image: "" }
+    ]);
+  };
 
-const removeCase = (index: number) => {
-  setCases((prev) => prev.filter((_, i) => i !== index));
-};
+  const removeCase = (index: number) => {
+    setCases((prev) => prev.filter((_, i) => i !== index));
+  };
 
   /* ===================== RESET MODE ===================== */
 
   useEffect(() => {
-  if (mode === "pdf") {
-    setCases([{ title: "", content: "" }]);
-  }
-}, [mode]);
+    if (mode === "pdf") {
+      setCases([{ title: "", content: "" }]);
+    }
+  }, [mode]);
 
   /* ===================== FETCH ===================== */
 
@@ -96,7 +98,6 @@ const removeCase = (index: number) => {
     formData.append("file", file);
 
     try {
-      
       const res = await axios.post(
         `${API_BASE_URL}/api/astuces/upload-pdf`,
         formData,
@@ -116,81 +117,101 @@ const removeCase = (index: number) => {
     }
   };
 
- const handleImageUpload = async (e: any, index: number) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const handleImageUpload = async (e: any, index: number) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  setUploadingImage(true);
+    setUploadingImage(true);
 
-  const formData = new FormData();
-  formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-  try {
-    const res = await axios.post(
-      `${API_BASE_URL}/api/astuces/upload-image`,
-      formData
-    );
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/api/astuces/upload-image`,
+        formData
+      );
 
-    const imageUrl = res.data.imageUrl;
+      const imageUrl = res.data.imageUrl;
 
-    setCases((prev) => {
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        image: imageUrl,
-      };
-      return updated;
-    });
+      setCases((prev) => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          image: imageUrl,
+        };
+        return updated;
+      });
 
-  } catch (err) {
-    console.error("❌ upload image:", err);
-  } finally {
-    setUploadingImage(false);
-  }
-};
+    } catch (err) {
+      console.error("❌ upload image:", err);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   /* ===================== CASES ===================== */
 
- const updateCase = (
-  index: number,
-  field: keyof TipCase,
-  value: string
-) => {
-  setCases((prev) => {
-    const updated = [...prev];
+  const updateCase = (
+    index: number,
+    field: keyof TipCase,
+    value: string
+  ) => {
+    setCases((prev) => {
+      const updated = [...prev];
 
-    updated[index] = {
-      ...updated[index],
-      [field]: value,
-    };
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
 
-    return updated;
-  });
-};
+      return updated;
+    });
+  };
+
+  /* ===================== VALIDATION HTML VIDE ===================== */
+  
+  const isEditorEmpty = (html?: string) => {
+    if (!html) return true;
+    const cleaned = html
+      .replace(/<(.|\n)*?>/g, "")
+      .replace(/&nbsp;/g, "")
+      .trim();
+    return cleaned.length === 0;
+  };
 
   /* ===================== CREATE ===================== */
 
   const createTip = async () => {
-  const casesCopy = [...cases]; // 🔥 IMPORTANT
+    const casesCopy = [...cases]; 
 
-  const cleanCases = casesCopy.filter(
-    (c) =>
-      (c.content && c.content.trim() !== "") ||
-      (c.image && c.image.trim() !== "")
-  );
+    // 🔥 Filtrage strict pour éviter de garder des éditeurs vides (contenant juste <p><br></p>)
+    const cleanCases = casesCopy.filter(
+      (c) =>
+        !isEditorEmpty(c.content) ||
+        (c.image && c.image.trim() !== "")
+    );
 
-  await axios.post(`${API_BASE_URL}/api/astuces`, {
-    subject,
-    chapter,
-    title,
-    description,
-    cases: mode === "manual" ? cleanCases : [],
-    pdfUrl,
-  });
+    await axios.post(`${API_BASE_URL}/api/astuces`, {
+      subject,
+      chapter,
+      title,
+      description,
+      cases: mode === "manual" ? cleanCases : [],
+      pdfUrl,
+    });
 
-  // 👉 RESET APRÈS (ok ici)
-   setCases([{ title: "", content: "", image: "" }]);
-};
+    // 👉 RESET APRÈS
+    setSubject("");
+    setChapter("");
+    setTitle("");
+    setDescription("");
+    setPdfUrl("");
+    setCases([{ title: "", content: "", image: "" }]);
+    
+    alert("✅ Astuce enregistrée avec succès !");
+    fetchTips(); // Rafraîchir la liste après création
+  };
 
   /* ===================== RENDER ===================== */
 
@@ -284,133 +305,131 @@ const removeCase = (index: number) => {
             </h2>
 
             {cases.map((c, index) => (
-              <div key={index} className="border p-4 mb-4 rounded-lg">
+              <div key={index} className="border p-4 mb-4 rounded-lg bg-gray-50">
+                <label className="block font-semibold mb-1">Titre du cas</label>
                 <input
                   value={c.title}
                   onChange={(e) =>
                     updateCase(index, "title", e.target.value)
                   }
-                  className="border p-2 w-full mb-2"
+                  className="border p-2 w-full mb-4 rounded bg-white"
+                  placeholder="Ex: Astuce n°1..."
                 />
 
+                <label className="block font-semibold mb-1">Image associée (Optionnelle)</label>
                 <input
-  type="file"
-  accept="image/*"
-  onChange={(e) => {
-    if (!e.target.files?.length) return;
-    handleImageUpload(e, index);
-  }}
-/>
-
-{c.image && (
-  <img src={c.image} className="mt-2 rounded max-h-40" />
-)}
-
-                <TipTapEditor
-                  value={c.content}
-                  onChange={(html) =>
-                    updateCase(index, "content", html)
-                  }
+                  type="file"
+                  accept="image/*"
+                  className="mb-4"
+                  onChange={(e) => {
+                    if (!e.target.files?.length) return;
+                    handleImageUpload(e, index);
+                  }}
                 />
+
+                {c.image && (
+                  <div className="mb-4">
+                    <img src={c.image} className="rounded max-h-40 border shadow-sm" alt="Aperçu" />
+                  </div>
+                )}
+
+                <label className="block font-semibold mb-2">Contenu textuel (Reconnaît Word et LaTeX)</label>
+                {/* 🔥 L'éditeur riche est intégré ici */}
+                <div className="bg-white rounded-lg mb-2">
+                  <RichMathEditor
+                    value={c.content || ""}
+                    onChange={(html) =>
+                      updateCase(index, "content", html)
+                    }
+                  />
+                </div>
 
                 {cases.length > 1 && (
-                  <button
-                    onClick={() => removeCase(index)}
-                    className="text-red-500 mt-2"
-                  >
-                    Supprimer
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => removeCase(index)}
+                      className="text-red-500 hover:text-red-700 font-semibold mt-2"
+                    >
+                      ❌ Supprimer ce cas
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
 
-            <button onClick={addCase} className="mr-4">
-              ➕ Ajouter un cas
+            <button 
+              onClick={addCase} 
+              className="w-full py-3 mb-6 border-2 border-dashed border-indigo-400 text-indigo-600 rounded-xl hover:bg-indigo-50 font-bold"
+            >
+              ➕ Ajouter un autre cas
             </button>
           </>
         )}
 
         {/* ================= SAVE ================= */}
         <button
-  onClick={createTip}  // 👈 direct, pas de wrapper inutile
-  disabled={uploadingImage}
->
-  💾 Enregistrer
-</button>
+          onClick={createTip}  
+          disabled={uploadingImage}
+          className="w-full bg-green-600 hover:bg-green-700 transition text-white font-bold px-4 py-4 rounded-xl text-lg shadow disabled:opacity-50"
+        >
+          💾 Enregistrer l'astuce
+        </button>
       </div>
 
       {/* ================= LIST ================= */}
-      <h2 className="text-2xl mb-4">📚 Astuces</h2>
+      <h2 className="text-2xl mb-4">📚 Astuces existantes</h2>
 
-<div className="grid md:grid-cols-2 gap-4">
-  {tips.map((tip) => {
-    const hasPDF = !!tip.pdfUrl;
-    const hasImage = tip.cases?.some((c) => c.image);
-    const hasText = tip.cases?.some((c) => c.content);
+      <div className="grid md:grid-cols-2 gap-4">
+        {tips.map((tip) => {
+          const hasPDF = !!tip.pdfUrl;
+          const hasImage = tip.cases?.some((c) => c.image);
+          const hasText = tip.cases?.some((c) => c.content && !isEditorEmpty(c.content));
 
-    return (
-      <div
-        key={tip._id}
-        className="border p-4 rounded-xl shadow hover:shadow-lg transition"
-      >
-        <div className="text-sm text-gray-500">
-          {tip.subject} — {tip.chapter}
-        </div>
+          return (
+            <div
+              key={tip._id}
+              className="border p-4 rounded-xl shadow hover:shadow-lg transition bg-white"
+            >
+              <div className="text-sm text-gray-500 font-semibold">
+                {tip.subject} — {tip.chapter}
+              </div>
 
-        <h3 className="font-bold text-lg">{tip.title}</h3>
+              <h3 className="font-bold text-lg mt-1">{tip.title}</h3>
 
-        {/* 🔥 TYPE BADGE */}
-        <div className="mt-2">
-          {hasPDF && (
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
-              📄 PDF
-            </span>
-          )}
+              {/* 🔥 TYPE BADGE */}
+              <div className="mt-3 flex gap-2">
+                {hasPDF && (
+                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
+                    📄 PDF
+                  </span>
+                )}
 
-          {!hasPDF && hasImage && (
-            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-sm">
-              🖼️ Image
-            </span>
-          )}
+                {!hasPDF && hasImage && (
+                  <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold">
+                    🖼️ Image
+                  </span>
+                )}
 
-          {!hasPDF && !hasImage && hasText && (
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm">
-              ✍️ Texte
-            </span>
-          )}
-        </div>
+                {!hasPDF && !hasImage && hasText && (
+                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">
+                    ✍️ Texte Riche
+                  </span>
+                )}
+              </div>
 
-        {/* 🔥 PREVIEW PDF */}
-        {hasPDF && (
-          <div className="mt-3 text-sm text-gray-600">
-            📄 Astuce en format PDF
-          </div>
-        )}
-
-        {/* 🔥 PREVIEW IMAGE */}
-        {!hasPDF && hasImage && (
-          <div className="mt-3 flex justify-center bg-gray-50 p-2 rounded">
-  <img
-    src={tip.cases.find((c) => c.image)?.image}
-    loading="lazy"
-    className="max-h-24 object-contain"
-  />
-</div>
-        )}
-
-        {/* 🔥 PREVIEW TEXTE */}
-        {!hasPDF && !hasImage && hasText && (
-          <div
-            className="mt-3 text-gray-700 line-clamp-3 text-sm"
-            dangerouslySetInnerHTML={{
-              __html: tip.cases[0]?.content || "",
-            }}
-          />
-        )}
+              {/* 🔥 PREVIEW TEXTE (avec prise en charge du HTML de Quill) */}
+              {!hasPDF && !hasImage && hasText && (
+                <div
+                  className="mt-4 text-gray-700 text-sm line-clamp-3 bg-gray-50 p-2 rounded border"
+                  dangerouslySetInnerHTML={{
+                    __html: tip.cases[0]?.content || "",
+                  }}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
-    );
-  })}
-</div>
     </div>
   );
 };
