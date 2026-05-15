@@ -767,8 +767,8 @@ if (selectedChapter && selectedAction === "Exercises") {
           {currentEx.subQuestions?.map((subQ: any, index: number) => (
             <div key={subQ._id} className="pl-4 border-l-4 border-blue-200">
               {/* Texte de la sous-question */}
-              <div className="font-semibold mb-3 flex items-start">
-                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mr-3 mt-1">
+              <div className="font-medium mb-1 flex items-start text-sm">
+                <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xr mr-2 mt-0.5">
                   Q{index + 1}
                 </span>
                 <ReactQuill 
@@ -779,7 +779,7 @@ if (selectedChapter && selectedAction === "Exercises") {
               </div>
 
               {/* Options de la sous-question */}
-              <div className="ml-10 grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="ml-7 grid grid-cols-1 md:grid-cols-2 gap-1">
                 {subQ.options.map((opt: string, i: number) => {
                   const isSelected = exerciseAnswers[subQ._id] === opt;
                   const isCorrect = opt === subQ.correctAnswer;
