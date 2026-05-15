@@ -763,74 +763,87 @@ if (selectedChapter && selectedAction === "Exercises") {
         </div>
 
         {/* 🎯 2. LES SOUS-QUESTIONS */}
-        <div className="space-y-8">
+        <div className="space-y-3">
           {currentEx.subQuestions?.map((subQ: any, index: number) => (
-            <div key={subQ._id} className="pl-4 border-l-4 border-blue-200">
-              {/* Texte de la sous-question */}
-              <div className="font-medium mb-1 flex items-start text-sm">
-                <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xr mr-2 mt-0.5">
-                  Q{index + 1}
-                </span>
-                <ReactQuill 
-                  value={processQuillText(subQ.questionText)} 
-                  readOnly={true} 
-                  theme="bubble" 
-                />
-              </div>
+           <div
+  key={subQ._id}
+  className="pl-2 border-l-2 border-blue-200 py-1"
+>
+  {/* Texte de la sous-question */}
+  <div className="font-medium mb-1 flex items-start text-sm leading-tight">
+    
+    <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[11px] mr-2 mt-0.5 shrink-0">
+      Q{index + 1}
+    </span>
 
-              {/* Options de la sous-question */}
-              <div className="ml-7 grid grid-cols-1 md:grid-cols-2 gap-1">
-                {subQ.options.map((opt: string, i: number) => {
-                  const isSelected = exerciseAnswers[subQ._id] === opt;
-                  const isCorrect = opt === subQ.correctAnswer;
+    <div className="flex-1 [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:leading-tight [&_.ql-editor_p]:my-0">
+      <ReactQuill
+        value={processQuillText(subQ.questionText)}
+        readOnly={true}
+        theme="bubble"
+      />
+    </div>
+  </div>
 
-                  return (
-                    <label
-                      key={i}
-                      className={`block p-3 border rounded-lg cursor-pointer transition-colors ${
-                        exerciseSubmitted
-                          ? isSelected && isCorrect
-                            ? "bg-green-100 border-green-500 shadow-sm"
-                            : isSelected && !isCorrect
-                            ? "bg-red-100 border-red-500 shadow-sm"
-                            : isCorrect
-                            ? "bg-green-50 border-green-300 border-dashed" // Montre la bonne réponse si l'élève s'est trompé
-                            : "bg-gray-50 opacity-50"
-                          : "hover:bg-blue-50 border-gray-200"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        checked={isSelected}
-                        disabled={exerciseSubmitted}
-                        onChange={() =>
-                          setExerciseAnswers((prev) => ({
-                            ...prev,
-                            [subQ._id]: opt, // On sauvegarde avec l'ID de la sous-question
-                          }))
-                        }
-                        className="mr-3"
-                      />
-                      <Latex>{cleanLatex(opt)}</Latex>
-                    </label>
-                  );
-                })}
-              </div>
+  {/* Options */}
+  <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-1">
+    {subQ.options.map((opt: string, i: number) => {
+      const isSelected = exerciseAnswers[subQ._id] === opt;
+      const isCorrect = opt === subQ.correctAnswer;
 
-              {/* Explication de la sous-question (Visible après soumission) */}
-              {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
-                <div className="ml-10 mt-3 p-3 bg-blue-50 text-blue-800 rounded-lg border border-blue-100">
-                  <span className="font-bold flex items-center mb-1">
-                    💡 Correction :
-                  </span>
-                  <ReactQuill 
-                    value={processQuillText(subQ.explanation)} 
-                    readOnly={true} 
-                    theme="bubble" 
-                  />
-                </div>
-              )}
-            </div>
+      return (
+        <label
+          key={i}
+          className={`block px-2 py-1.5 border rounded-md cursor-pointer text-sm transition-colors leading-snug ${
+            exerciseSubmitted
+              ? isSelected && isCorrect
+                ? "bg-green-100 border-green-500 shadow-sm"
+                : isSelected && !isCorrect
+                ? "bg-red-100 border-red-500 shadow-sm"
+                : isCorrect
+                ? "bg-green-50 border-green-300 border-dashed"
+                : "bg-gray-50 opacity-50"
+              : "hover:bg-blue-50 border-gray-200"
+          }`}
+        >
+          <input
+            type="radio"
+            checked={isSelected}
+            disabled={exerciseSubmitted}
+            onChange={() =>
+              setExerciseAnswers((prev) => ({
+                ...prev,
+                [subQ._id]: opt,
+              }))
+            }
+            className="mr-2"
+          />
+
+          <Latex>{cleanLatex(opt)}</Latex>
+        </label>
+      );
+    })}
+  </div>
+
+  {/* Correction */}
+  {exerciseSubmitted &&
+    exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
+      <div className="ml-6 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">
+        
+        <span className="font-bold flex items-center mb-1">
+          💡 Correction :
+        </span>
+
+        <div className="[&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor_p]:my-0">
+          <ReactQuill
+            value={processQuillText(subQ.explanation)}
+            readOnly={true}
+            theme="bubble"
+          />
+        </div>
+      </div>
+    )}
+</div>
           ))}
         </div>
       </div>
