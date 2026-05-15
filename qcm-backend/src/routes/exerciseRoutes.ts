@@ -76,15 +76,33 @@ router.post(
       const { subject, chapter, contextText, subQuestions } = req.body;
 
       // Traitement des sous-questions (envoyées en string JSON via FormData)
-      let parsedSubQuestions = subQuestions;
-      if (typeof subQuestions === "string") {
-        try {
-          parsedSubQuestions = JSON.parse(subQuestions);
-        } catch (e) {
-          res.status(400).json({ error: "Format des sous-questions invalide" });
-          return;
-        }
-      }
+     let parsedSubQuestions = subQuestions;
+
+if (typeof subQuestions === "string") {
+  try {
+    parsedSubQuestions = JSON.parse(subQuestions);
+  } catch (e) {
+    res.status(400).json({
+      error: "Format des sous-questions invalide",
+    });
+    return;
+  }
+}
+
+// ✅ Supprimer les sous-questions vides
+parsedSubQuestions = parsedSubQuestions.filter(
+  (q: any) =>
+    q.questionText &&
+    q.questionText.trim() !== ""
+);
+
+// ✅ Vérifier qu'il reste au moins une question
+if (parsedSubQuestions.length === 0) {
+  res.status(400).json({
+    error: "Au moins une sous-question est requise",
+  });
+  return;
+}
 
       const exercise = await Exercise.create({
         subject,
