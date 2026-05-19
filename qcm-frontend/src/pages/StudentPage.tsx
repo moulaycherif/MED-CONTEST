@@ -1,32 +1,23 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import parse from "html-react-parser";
-
-// ✅ Importation pour le rendu LaTeX et Rich Text
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import Latex from "react-latex-next";
-
 import { API_BASE_URL } from "../config";
 import { fetchAstucesByChapter } from "../api/astuces.api";
-
-// ✅ Importation des images
 import concoursImg from "../assets/CONCOURS.jfif";
 import mathsImg from "../assets/MATHS.jfif";
 import physiqueImg from "../assets/PHYSIQUE.jfif";
 import chimieImg from "../assets/CHIMIE.jfif";
 import svtImg from "../assets/SVT.jfif";
 import bgImage from "/Image3.jfif";
-
-// ✅ Importation des composants
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
-
 import { renderWithMath } from "../utils/mathUtils";
 
 // Indispensable pour que React-Quill puisse interpréter les formules
@@ -42,13 +33,11 @@ interface Astuce {
   cases?: TipCase[];
   pdfUrl?: string;
 }
-
 interface TipCase {
   title?: string;
   content?: string;
   image?: string;
 }
-
 interface Question {
   _id: string;
   texte?: string;
@@ -62,26 +51,19 @@ interface Question {
   reponseCorrecte: string;
   note: number;
 }
-
 export default function StudentPage() {
   const navigate = useNavigate();
-
-  // --- États de Navigation & Sélections ---
   const [section, setSection] = useState<"home" | "concours" | "matiere" | "soutien" | "qcm">("home");
   const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [currentExam, setCurrentExam] = useState<string | null>(null);
   const [currentExamId, setCurrentExamId] = useState<string | null>(null);
-
-  // --- États QCM ---
   const [exams, setExams] = useState<{ _id: string; title: string }[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<{ [id: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-
-  // --- États Exercices (Soutien) ---
   const [exercises, setExercises] = useState<any[]>([]);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [exerciseAnswers, setExerciseAnswers] = useState<{ [id: string]: string }>({});
@@ -89,17 +71,14 @@ export default function StudentPage() {
   const [exerciseScore, setExerciseScore] = useState<number | null>(null);
   const [wrongExercises, setWrongExercises] = useState<any[]>([]);
   const [exerciseAttempt, setExerciseAttempt] = useState(1);
-
-  // --- États Astuces & Résumés ---
   const [astuces, setAstuces] = useState<Astuce[]>([]);
   const [resumes, setResumes] = useState<any[]>([]);
-  const [selectedresume, setSelectedresume] = useState<any | null>(null);
+  const [selectedResume, setSelectedResume] = useState<any | null>(null);
   const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
   const [selectedTip, setSelectedTip] = useState<Astuce | null>(null);
   const [focusMode, setFocusMode] = useState(false);
-
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
-  const isShortResume = (selectedresume?.chapter?.length ?? 0) < 30;
+  const isShortResume = (selectedResume?.chapter?.length ?? 0) < 30;
 
   // ✅ Touche ESC pour fermer le modal des astuces
   useEffect(() => {
@@ -127,7 +106,6 @@ export default function StudentPage() {
   useEffect(() => {
     if (selectedAction !== "Résumé" || !selectedChapter) return;
     const token = localStorage.getItem("token"); 
-    
     axios
       .get(`${API_BASE_URL}/api/resume/by-chapter/${encodeURIComponent(selectedChapter)}`, {
         headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
@@ -146,9 +124,7 @@ export default function StudentPage() {
       if (selectedMatiere) {
         url += `&subject=${encodeURIComponent(selectedMatiere)}`;
       }
-      
       const token = localStorage.getItem("token");
-      
       axios
         .get(url, {
           headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
@@ -175,7 +151,6 @@ export default function StudentPage() {
   useEffect(() => {
     if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
       const token = localStorage.getItem("token");
-      
       axios
         .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}`, {
           headers: { Authorization: `Bearer ${token}` } // <-- Ajout ici
@@ -216,10 +191,14 @@ export default function StudentPage() {
       // (Le reste ne change pas)
       .replace(/\\aleph/g, "\\mathbb{N}")
       .replace(/\\rightarrow/g, "\\to")
-      .replace(/lim\s*n\s*(?:-->|→)\s*(?:infini|∞)/gi, "$\\displaystyle \\lim_{n\\to\\infty}$")
+      .replace(
+  /lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi,
+  "\\(\\displaystyle \\lim_{n \\to \\infty}\\)"
+)
       .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
       .replace(/\\ /g, " ")
-      .replace(/\s+/g, " ");
+      .replace(/\\\s+/g, " ")
+      .replace(/\s+/g, " ");   
   }
 
   function renderContent(content?: string) {
@@ -253,23 +232,18 @@ export default function StudentPage() {
     }
   });
 
-  const totalQuestions = questions.length;
-
   const totalPossiblePoints = questions.reduce(
     (sum, q) => sum + q.note,
     0
   );
-
+  const totalQuestions = questions.length;
   const successRate =
     totalPossiblePoints > 0
       ? Math.round((total / totalPossiblePoints) * 100)
       : 0;
-
   setScore(total);
   setSubmitted(true);
-
   try {
-    
     // ✅ Enregistrement soumission QCM
     const token = localStorage.getItem("token");
     await axios.post(
@@ -299,8 +273,6 @@ export default function StudentPage() {
         score: total,
         totalQuestions,
         successRate,
-
-        // infos supplémentaires
         examId: currentExamId,
       },
       {
@@ -325,16 +297,13 @@ export default function StudentPage() {
         />
       );
     }
-
     // 🏠 PAGE D’ACCUEIL → STATISTIQUES UNIQUEMENT
     if (section === "home") {
       return <StudentDashboardStats />;
     }
-
     // 🧩 Cas 1 : affichage des questions (QCE)
     if (section === "qcm" && currentExam) {
       let lastGroupId: string | null = null;
-
       if (questions.length === 0)
         return (
           <div className="text-center mt-10">
@@ -343,79 +312,86 @@ export default function StudentPage() {
             </p>
           </div>
         );
-
       return (
         <div className="p-4">
           <h2 className="text-xl font-bold text-center mb-4 text-blue-800">
             📘 QCE — {currentExam}
           </h2>
+         {questions.map((q, idx) => {
+  const showGroupImage =
+    q.groupId?.image &&
+    q.groupId._id !== lastGroupId;
 
-          {questions.map((q, idx) => {
-            const showGroupImage = q.groupId?.image && q.groupId._id !== lastGroupId;
-            if (q.groupId?._id) {
-              lastGroupId = q.groupId._id;
+  if (q.groupId?._id) {
+    lastGroupId = q.groupId._id;
+  }
+
+  return (
+    <motion.div
+      key={q._id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-4 mb-4 bg-white rounded-xl shadow"
+    >
+      {/* 🖼 IMAGE DE GROUPE */}
+      {showGroupImage && (
+        <img
+          src={`${API_BASE_URL}${q.groupId!.image}`}
+          className="max-w-lg mx-auto my-4 rounded shadow"
+          alt="Image du groupe"
+        />
+      )}
+
+      {/* 🧠 QUESTION */}
+      <h3 className="font-semibold mb-2 text-lg">
+        Q{idx + 1}){" "}
+        <Latex>{cleanLatex(q.texte)}</Latex>
+        <span className="text-purple-600">
+          {" "}
+          ({q.note} pt)
+        </span>
+      </h3>
+
+      {/* 🖼 IMAGE SIMPLE */}
+      {!q.groupId && q.image && (
+        <img
+          src={`${API_BASE_URL}${q.image}`}
+          className="max-w-lg my-3 rounded shadow"
+          alt="Illustration"
+        />
+      )}
+
+      {/* OPTIONS */}
+      {q.options.map((opt, i) => (
+        <label
+          key={i}
+          className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
+            submitted
+              ? opt === q.reponseCorrecte
+                ? "bg-green-100 border-green-400"
+                : answers[q._id] === opt
+                ? "bg-red-100 border-red-400"
+                : ""
+              : "hover:bg-gray-100"
+          }`}
+        >
+          <input
+            type="radio"
+            name={q._id}
+            checked={answers[q._id] === opt}
+            onChange={() =>
+              handleAnswerChange(q._id, opt)
             }
+            disabled={submitted}
+            className="mr-2"
+          />
 
-            return (
-              <motion.div
-                key={q._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 mb-4 bg-white rounded-xl shadow"
-              >
-                {/* 🖼 IMAGE DE GROUPE */}
-                {showGroupImage && (
-                  <img
-                    src={`${API_BASE_URL}${q.groupId!.image}`}
-                    className="max-w-lg mx-auto my-4 rounded shadow"
-                    alt="Image du groupe"
-                  />
-                )}
-
-                {/* 🧠 QUESTION */}
-                <h3 className="font-semibold mb-2">
-                  Q{idx + 1}) {q.texte}
-                  <span className="text-purple-600"> ({q.note} pt)</span>
-                </h3>
-
-                {/* 🖼 IMAGE SIMPLE */}
-                {!q.groupId && q.image && (
-                  <img
-                    src={`${API_BASE_URL}${q.image}`}
-                    className="max-w-lg my-3 rounded shadow"
-                    alt="Illustration"
-                  />
-                )}
-
-                {/* OPTIONS */}
-                {q.options.map((opt, i) => (
-                  <label
-                    key={i}
-                    className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
-                      submitted
-                        ? opt === q.reponseCorrecte
-                          ? "bg-green-100 border-green-400"
-                          : answers[q._id] === opt
-                          ? "bg-red-100 border-red-400"
-                          : ""
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={q._id}
-                      checked={answers[q._id] === opt}
-                      onChange={() => handleAnswerChange(q._id, opt)}
-                      disabled={submitted}
-                      className="mr-2"
-                    />
-                    {opt}
-                  </label>
-                ))}
-              </motion.div>
-            );
-          })}
-
+          <Latex>{cleanLatex(opt)}</Latex>
+        </label>
+      ))}
+    </motion.div>
+  );
+})}
           {!submitted ? (
             <button
               onClick={handleFinish}
@@ -654,7 +630,7 @@ export default function StudentPage() {
                   <button
                     key={sum._id}
                     onClick={async () => {
-  setSelectedresume(sum);
+  setSelectedResume(sum);
 
   try {
     const token = localStorage.getItem("token");
@@ -679,10 +655,10 @@ export default function StudentPage() {
             )}
 
             {/* 🔥 MODAL RÉSUMÉS */}
-            {selectedresume && (
+            {selectedResume && (
               <div
                 className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-                onClick={() => setSelectedresume(null)}
+                onClick={() => setSelectedResume(null)}
               >
                 <div
                   onClick={(e) => e.stopPropagation()}
@@ -690,10 +666,10 @@ export default function StudentPage() {
                     isShortResume ? "max-h-[55vh]" : "max-h-[75vh]"
                   } flex flex-col`}
                 >
-                  <h2 className="text-lg font-bold p-3 text-center border-b">{selectedresume.chapter}</h2>
+                  <h2 className="text-lg font-bold p-3 text-center border-b">{selectedResume.chapter}</h2>
                   <div className="flex-1 overflow-y-auto p-2">
                     <iframe
-                      src={selectedresume.pdfUrl + "#toolbar=0"}
+                      src={selectedResume.pdfUrl + "#toolbar=0"}
                       className="w-full h-full min-h-[300px] rounded-b-2xl"
                       title="Résumé PDF"
                     />
@@ -726,7 +702,7 @@ if (selectedChapter && selectedAction === "Exercises") {
     <div className="p-6 exercice-view-container">
       <style>{`
         .exercice-view-container img, .ql-editor img {
-          max-height: 150px !important;
+          max-height: 260px !important;
           width: auto !important;
           max-width: 100% !important;
           margin: 0 auto;
@@ -892,15 +868,29 @@ if (selectedChapter && selectedAction === "Exercises") {
               <button
                 onClick={async () => {
   let score = 0;
-  const wrong: any[] = [];
+ 
+ let totalQuestions = 0;
 
-  exercises.forEach((ex) => {
-    if (exerciseAnswers[ex._id] === ex.correctAnswer) {
+exercises.forEach((ex) => {
+  ex.subQuestions?.forEach((subQ: any) => {
+    totalQuestions++;
+
+    if (
+      exerciseAnswers[subQ._id] ===
+      subQ.correctAnswer
+    ) {
       score++;
-    } else {
-      wrong.push(ex);
     }
   });
+});
+
+const wrong = exercises.filter((ex) =>
+  ex.subQuestions?.some(
+    (subQ: any) =>
+      exerciseAnswers[subQ._id] !==
+      subQ.correctAnswer
+  )
+);
 
   setExerciseScore(score);
 
@@ -912,7 +902,10 @@ if (selectedChapter && selectedAction === "Exercises") {
       chapter: selectedChapter,
       score,
       totalQuestions: exercises.length,
-      successRate: Math.round((score / exercises.length) * 100),
+      successRate:
+  totalQuestions > 0
+    ? Math.round((score / totalQuestions) * 100)
+    : 0,
    },
           { headers: { Authorization: `Bearer ${token}` } } // ✅ Corrigé
         );
@@ -984,7 +977,7 @@ if (selectedChapter && selectedAction === "Exercises") {
         );
       }
 
-      // 👉 5) Liste des chapitres
+     // 👉 5) Liste des chapitres
       return (
         <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
           {chapters.map((chapter, index) => (
@@ -1096,13 +1089,14 @@ if (selectedChapter && selectedAction === "Exercises") {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        {/* 🔙 Bouton Retour */}
-        {section === "soutien" && (
+        {/* 🔙 Bouton Retour Intelligent */}
+        {(section !== "home" || selectedMatiere || selectedChapter || selectedAction) && (
           <button
             onClick={() => {
               if (selectedAction) return setSelectedAction(null);
               if (selectedChapter) return setSelectedChapter(null);
               if (selectedMatiere) return setSelectedMatiere(null);
+              resetQcm();
               setSection("home");
             }}
             className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition z-10"
