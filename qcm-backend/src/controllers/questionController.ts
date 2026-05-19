@@ -142,13 +142,14 @@ export const importExcel = async (req: Request, res: Response) => {
   continue;
 }
 
-      /* ======================================================
-         🟩 CAS 2 — QUESTION SIMPLE (sans groupe)
-      ====================================================== */
-      if (type === "SIMPLE") {
+  /* ======================================================
+    🟩 CAS 2 — QUESTION SIMPLE (sans groupe)
+====================================================== */
+if (type === "SIMPLE") {
   await Question.create({
     texte,
-    image: null,
+    // ✅ Modifié : On vérifie si une image est présente dans la cellule Excel
+    image: imageCell ? `/uploads/questions/${imageCell}.png` : null, 
     options,
     reponseCorrecte,
     subject: lastSubject,
@@ -157,21 +158,21 @@ export const importExcel = async (req: Request, res: Response) => {
     groupId: null,
     order: ++questionOrder,
   });
-
   continue;
 }
 
-      /* ======================================================
-         🟨 CAS 3 — QUESTION DE GROUPE (texte + image)
-      ====================================================== */
-      if (type === "QUESTION") {
+/* ======================================================
+    🟨 CAS 3 — QUESTION DE GROUPE (texte + image)
+====================================================== */
+if (type === "QUESTION") {
   if (!currentGroup) {
     throw new Error(`QUESTION sans GROUP ligne ${i + 2}`);
   }
 
   await Question.create({
     texte,
-    image: null,
+    // ✅ Modifié : Permet aussi d'ajouter une image spécifique à cette sous-question si besoin
+    image: imageCell ? `/uploads/questions/${imageCell}.png` : null, 
     options,
     reponseCorrecte,
     subject: lastSubject,
@@ -180,6 +181,8 @@ export const importExcel = async (req: Request, res: Response) => {
     groupId: currentGroup._id,
     order: ++questionOrder,
   });
+  continue;
+}
 
   continue;
 }
