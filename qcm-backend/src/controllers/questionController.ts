@@ -184,13 +184,11 @@ if (type === "QUESTION") {
   continue;
 }
 
-  continue;
-}
-    }
+} // ✅ fermeture du for
 
-    res.json({
-      message: "✅ Import Excel terminé avec succès",
-    });
+res.json({
+  message: "✅ Import Excel terminé avec succès",
+});
 
   } catch (error: any) {
     console.error("❌ Import Excel error:", error);
