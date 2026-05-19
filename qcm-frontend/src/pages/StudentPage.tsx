@@ -27,6 +27,8 @@ import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
 
+import { renderWithMath } from "../utils/mathUtils";
+
 // Indispensable pour que React-Quill puisse interpréter les formules
 (window as any).katex = katex;
 
@@ -853,13 +855,9 @@ if (selectedChapter && selectedAction === "Exercises") {
           💡 Correction :
         </span>
 
-        <div className="[&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor_p]:my-0">
-          <ReactQuill
-            value={processQuillText(subQ.explanation)}
-            readOnly={true}
-            theme="bubble"
-          />
-        </div>
+       <div className="prose max-w-none text-gray-800">
+  {renderWithMath(subQ.explanation)}
+</div>
       </div>
     )}
 </div>
