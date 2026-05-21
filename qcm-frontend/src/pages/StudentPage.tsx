@@ -320,15 +320,17 @@ export default function StudentPage() {
                 </h3>
 
                 {/* 🖼 IMAGE SIMPLE SÉCURISÉE */}
-                {!q.groupId && q.image && (
-                  <img
-                    src={getImageUrl(q.image)}
-                    className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
-                    alt="Illustration"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                )}
-
+                {(!q.groupId || !q.groupId._id) && q.image && (
+  <img
+    src={getImageUrl(q.image)}
+    className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
+    alt="Illustration"
+    onError={(e) => { 
+      console.error("Erreur de chargement de l'image :", e.currentTarget.src);
+      e.currentTarget.style.display = 'none'; 
+    }}
+  />
+)}
                 {/* OPTIONS */}
                 {q.options.map((opt, i) => (
                   <label
