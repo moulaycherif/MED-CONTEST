@@ -47,7 +47,7 @@ export const getQuestions = async (req: Request, res: Response) => {
   .populate({
     path: "groupId",
     model: "QuestionGroup",
-    select: "image subject exam order",
+    select: "image intro subject exam order",
   })
   .sort({ "groupId.order": 1, _id: 1 })
   .lean();
