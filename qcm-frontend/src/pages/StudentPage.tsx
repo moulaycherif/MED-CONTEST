@@ -179,24 +179,30 @@ export default function StudentPage() {
   };
 
   function cleanLatex(content?: string) {
-    if (!content) return "";
-    return content
-      .replace(/<\/?p>/g, "")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&amp;/g, "&")
-      .replace(/\\\(/g, "$")
-      .replace(/\\\)/g, "$")
-      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
-      .replace(/\\?below/g, "_")
-      .replace(/\\aleph/g, "\\mathbb{N}")
-      .replace(/\\rightarrow/g, "\\to")
-      .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
-      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
-      .replace(/\\ /g, " ")
-      .replace(/\\\s+/g, " ")
-      .replace(/\s+/g, " ");   
-  }
+  if (!content) return "";
+  return content
+    // 🛡️ SÉCURITÉ CRITIQUE : Nettoie les structures complexes Mathpix qui brisent le parseur
+    .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
+    .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
+    .replace(/\\captionsetup\{[^}]*\}/g, "")
+    
+    // Vos filtres existants restants inchangés
+    .replace(/<\/?p>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/\\\(/g, "$")
+    .replace(/\\\)/g, "$")
+    .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
+    .replace(/\\?below/g, "_")
+    .replace(/\\aleph/g, "\\mathbb{N}")
+    .replace(/\\rightarrow/g, "\\to")
+    .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
+    .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
+    .replace(/\\ /g, " ")
+    .replace(/\\\s+/g, " ")
+    .replace(/\s+/g, " ");   
+}
 
   function renderContent(content?: string) {
     if (!content) return null;
