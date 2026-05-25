@@ -45,6 +45,7 @@ interface Question {
   groupId?: {
     _id: string;
     image?: string | null;
+    intro?: string | null;
     order?: number;
   } | null;
   options: string[];
@@ -178,24 +179,30 @@ export default function StudentPage() {
   };
 
   function cleanLatex(content?: string) {
-    if (!content) return "";
-    return content
-      .replace(/<\/?p>/g, "")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&amp;/g, "&")
-      .replace(/\\\(/g, "$")
-      .replace(/\\\)/g, "$")
-      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
-      .replace(/\\?below/g, "_")
-      .replace(/\\aleph/g, "\\mathbb{N}")
-      .replace(/\\rightarrow/g, "\\to")
-      .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
-      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
-      .replace(/\\ /g, " ")
-      .replace(/\\\s+/g, " ")
-      .replace(/\s+/g, " ");   
-  }
+  if (!content) return "";
+  return content
+    // 🛡️ SÉCURITÉ CRITIQUE : Nettoie les structures complexes Mathpix qui brisent le parseur
+    .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
+    .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
+    .replace(/\\captionsetup\{[^}]*\}/g, "")
+    
+    // Vos filtres existants restants inchangés
+    .replace(/<\/?p>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/\\\(/g, "$")
+    .replace(/\\\)/g, "$")
+    .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
+    .replace(/\\?below/g, "_")
+    .replace(/\\aleph/g, "\\mathbb{N}")
+    .replace(/\\rightarrow/g, "\\to")
+    .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
+    .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
+    .replace(/\\ /g, " ")
+    .replace(/\\\s+/g, " ")
+    .replace(/\s+/g, " ");   
+}
 
   function renderContent(content?: string) {
     if (!content) return null;
@@ -303,19 +310,32 @@ export default function StudentPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="p-4 mb-4 bg-white rounded-xl shadow"
               >
-                {/* 🖼 IMAGE DE GROUPE */}
-                {showGroupImage && q.groupId?.image && (
-                  <img
-                    src={getImageUrl(q.groupId.image)}
-                    className="max-w-lg mx-auto my-4 rounded shadow block object-contain max-h-[300px]"
-                    alt="Image du groupe"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                )}
+                {/* 🖼 EN-TÊTE DE GROUPE (Image + Texte d'introduction) */}
+    {showGroupImage && (
+      <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
+        
+        {/* 📝 Affichage du Texte d'introduction/Commentaire du groupe */}
+        {q.groupId?.intro && (
+          <div className="text-gray-700 font-medium text-lg mb-4 italic prose max-w-none">
+            <Latex>{cleanLatex(q.groupId.intro)}</Latex>
+          </div>
+        )}
+
+        {/* 🖼 Image du groupe */}
+        {q.groupId?.image && (
+          <img
+            src={getImageUrl(q.groupId.image)}
+            className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
+            alt="Illustration du groupe"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        )}
+      </div>
+    )}
 
                 {/* 🧠 QUESTION */}
-                <h3 className="font-semibold mb-2 text-lg">
-                  Q{idx + 1}) <Latex>{cleanLatex(q.texte)}</Latex>
+                <h3 className="font-semibold mb-2 text-lg mt-4">
+                  Q{idx + 1}) {" "} <Latex>{cleanLatex(q.texte)}</Latex>
                   <span className="text-purple-600"> ({q.note} pt)</span>
                 </h3>
 

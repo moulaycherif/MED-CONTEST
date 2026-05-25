@@ -47,7 +47,7 @@ export const getQuestions = async (req: Request, res: Response) => {
   .populate({
     path: "groupId",
     model: "QuestionGroup",
-    select: "image subject exam order",
+    select: "image intro subject exam order",
   })
   .sort({ "groupId.order": 1, _id: 1 })
   .lean();
@@ -125,15 +125,25 @@ export const importExcel = async (req: Request, res: Response) => {
       /* ======================================================
          🟦 CAS 1 — IMAGE SEULE → GROUPE
       ====================================================== */
-      if (type === "GROUP") {
+      /* ======================================================
+    🟦 CAS 1 — IMAGE SEULE → GROUPE (CORRIGÉ)
+====================================================== */
+if (type === "GROUP") {
   if (!imageCell) {
     throw new Error(`GROUP sans image ligne ${i + 2}`);
   }
 
   groupOrder++;
 
+  // Sécurité anti-crash : Si l'utilisateur met du code figure brut Mathpix, on extrait le texte avant
+  let cleanIntro = texte;
+  if (cleanIntro.includes("\\begin{figure}")) {
+    cleanIntro = cleanIntro.split("\\begin{figure}")[0].trim();
+  }
+
   currentGroup = await QuestionGroup.create({
     image: `/uploads/questions/${imageCell}.png`,
+    intro: cleanIntro, // ✨ AJOUT REQUIS : Enregistre le texte introductif dans le groupe
     subject: lastSubject,
     exam: lastExam,
     order: groupOrder,
