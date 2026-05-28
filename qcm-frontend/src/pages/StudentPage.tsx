@@ -202,16 +202,44 @@ export default function StudentPage() {
       .replace(/\s+/g, " ");   
   }
 
-  // Fonction dédiée au nettoyage ultra-strict de la chaîne SMILES extraite
-  function extractAndCleanSmiles(fullText: string): string {
-    const match = fullText.match(/<smiles>([\s\S]*?)<\/smiles>/);
-    if (!match || !match[1]) return "";
-    
-    return match[1]
-      .replace(/<[^>]*>/g, "") // Supprime TOUTES les balises HTML imbriquées (ex: <span>, <p>)
-      .replace(/&nbsp;/g, "")  // Nettoie les espaces insécables HTML
-      .replace(/\s+/g, "")     // Supprime tous les sauts de lignes, tabulations et espaces blancs
+  // ✨ COMPOSANT DE PARSING ET RENDU SÉCURISÉ POUR COMPOSER LE TEXTE ET LE SMILES
+  function MixedContentRenderer({ text }: { text: string }) {
+    if (!text) return null;
+    if (!text.includes("<smiles>")) {
+      return <Latex>{cleanLatex(text)}</Latex>;
+    }
+
+    const startIdx = text.indexOf("<smiles>");
+    const endIdx = text.indexOf("</smiles>");
+
+    if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
+      return <Latex>{cleanLatex(text)}</Latex>;
+    }
+
+    const beforeText = text.substring(0, startIdx);
+    const rawSmiles = text.substring(startIdx + 8, endIdx);
+    const afterText = text.substring(endIdx + 9);
+
+    // Nettoyage absolu du SMILES
+    const cleanSmiles = rawSmiles
+      .replace(/<[^>]*>/g, "") // Enlève d'éventuels tags HTML résiduels injectés par l'éditeur
+      .replace(/&nbsp;/g, "")
+      .replace(/\s+/g, "")     // Supprime les sauts de lignes d'Excel
       .trim();
+
+    return (
+      <div className="flex flex-col items-start w-full">
+        {beforeText.trim().length > 0 && (
+          <span className="mb-1"><Latex>{cleanLatex(beforeText)}</Latex></span>
+        )}
+        <div className="my-2 bg-white rounded-lg p-1 border border-gray-100 shadow-sm">
+          <ChemStructure smiles={cleanSmiles} />
+        </div>
+        {afterText.trim().length > 0 && (
+          <span className="mt-1"><Latex>{cleanLatex(afterText)}</Latex></span>
+        )}
+      </div>
+    );
   }
 
   function renderContent(content?: string) {
@@ -308,9 +336,6 @@ export default function StudentPage() {
               lastGroupId = q.groupId._id;
             }
 
-            // Découpage sécurisé du texte de la question pour éviter les coupures brutes
-            const partsQuestion = q.texte?.split(/<smiles>[\s\S]*?<\/smiles>/) || [""];
-
             return (
               <motion.div
                 key={q._id}
@@ -338,18 +363,12 @@ export default function StudentPage() {
                 )}
 
                 {/* 🧠 RENDU DE LA QUESTION */}
-                <h3 className="font-semibold mb-2 text-lg mt-4">
-                  Q{idx + 1}) {" "}
-                  {q.texte?.includes("<smiles>") ? (
-                    <div className="flex flex-col gap-2">
-                      {partsQuestion[0] && <span><Latex>{cleanLatex(partsQuestion[0])}</Latex></span>}
-                      <ChemStructure smiles={extractAndCleanSmiles(q.texte)} />
-                      {partsQuestion[1] && <span><Latex>{cleanLatex(partsQuestion[1])}</Latex></span>}
-                    </div>
-                  ) : (
-                    <Latex>{cleanLatex(q.texte)}</Latex>
-                  )}
-                  <span className="text-purple-600"> ({q.note} pt)</span>
+                <h3 className="font-semibold mb-2 text-lg mt-4 flex items-start gap-1">
+                  <span>Q{idx + 1}) </span>
+                  <div className="flex-1">
+                    <MixedContentRenderer text={q.texte || ""} />
+                  </div>
+                  <span className="text-purple-600 shrink-0"> ({q.note} pt)</span>
                 </h3>
 
                 {(!q.groupId || !q.groupId._id) && q.image && (
@@ -363,11 +382,10 @@ export default function StudentPage() {
                 
                 {/* OPTIONS DE LA QUESTION */}
                 {q.options.map((opt, i) => {
-                  const partsOption = opt.split(/<smiles>[\s\S]*?<\/smiles>/);
                   return (
                     <label
                       key={i}
-                      className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
+                      className={`flex items-start p-3 border rounded-lg cursor-pointer mb-2 transition-all ${
                         submitted
                           ? opt === q.reponseCorrecte
                             ? "bg-green-100 border-green-400"
@@ -383,18 +401,12 @@ export default function StudentPage() {
                         checked={answers[q._id] === opt}
                         onChange={() => handleAnswerChange(q._id, opt)}
                         disabled={submitted}
-                        className="mr-2"
+                        className="mt-1 mr-3 shrink-0"
                       />
                       
-                      {opt.includes("<smiles>") ? (
-                        <div className="inline-flex flex-col items-start ml-1 w-full">
-                          {partsOption[0] && <span><Latex>{cleanLatex(partsOption[0])}</Latex></span>}
-                          <ChemStructure smiles={extractAndCleanSmiles(opt)} />
-                          {partsOption[1] && <span><Latex>{cleanLatex(partsOption[1])}</Latex></span>}
-                        </div>
-                      ) : (
-                        <Latex>{cleanLatex(opt)}</Latex>
-                      )}
+                      <div className="flex-1 w-full">
+                        <MixedContentRenderer text={opt} />
+                      </div>
                     </label>
                   );
                 })}
@@ -713,20 +725,13 @@ export default function StudentPage() {
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
                         const isCorrect = opt === subQ.correctAnswer;
-                        const partsExOption = opt.split(/<smiles>[\s\S]*?<\/smiles>/);
                         return (
-                          <label key={i} className={`block px-2 py-1.5 border rounded-md cursor-pointer text-sm transition-colors leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
-                            <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mr-2" />
+                          <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-sm transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
+                            <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
                             
-                            {opt.includes("<smiles>") ? (
-                              <div className="inline-flex flex-col items-start ml-1 w-full">
-                                {partsExOption[0] && <span><Latex>{cleanLatex(partsExOption[0])}</Latex></span>}
-                                <ChemStructure smiles={extractAndCleanSmiles(opt)} />
-                                {partsExOption[1] && <span><Latex>{cleanLatex(partsExOption[1])}</Latex></span>}
-                              </div>
-                            ) : (
-                              <Latex>{cleanLatex(opt)}</Latex>
-                            )}
+                            <div className="flex-1 w-full">
+                              <MixedContentRenderer text={opt} />
+                            </div>
                           </label>
                         );
                       })}
