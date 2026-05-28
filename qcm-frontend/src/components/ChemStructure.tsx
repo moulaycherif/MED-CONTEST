@@ -10,42 +10,39 @@ export default function ChemStructure({ smiles, width = 160, height = 120 }: Che
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLibraryLoaded, setIsLibraryLoaded] = useState(false);
 
-  // 1. CHARGEMENT DYNAMIQUE DEPUIS LE SERVEUR OFFICIEL DE CHEMDOODLE
   useEffect(() => {
     if ((window as any).ChemDoodle) {
       setIsLibraryLoaded(true);
       return;
     }
 
-    // Injection du CSS officiel
-    if (!document.getElementById("chemdoodle-core-css")) {
+    // 🌟 URLs de secours sur le CDN mondial Cloudflare (cdnjs)
+    if (!document.getElementById("chemdoodle-cdnjs-css")) {
       const link = document.createElement("link");
-      link.id = "chemdoodle-core-css";
+      link.id = "chemdoodle-cdnjs-css";
       link.rel = "stylesheet";
-      link.href = "https://hub.chemdoodle.com/cwc/latest/ChemDoodleWeb.css";
+      link.href = "https://cdnjs.cloudflare.com/ajax/libs/ChemDoodle/9.5.0/ChemDoodleWeb.css";
       link.type = "text/css";
       document.head.appendChild(link);
     }
 
-    // Injection du JavaScript officiel
-    if (!document.getElementById("chemdoodle-core-js")) {
+    if (!document.getElementById("chemdoodle-cdnjs-js")) {
       const script = document.createElement("script");
-      script.id = "chemdoodle-core-js";
+      script.id = "chemdoodle-cdnjs-js";
       script.type = "text/javascript";
-      script.src = "https://hub.chemdoodle.com/cwc/latest/ChemDoodleWeb.js";
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/ChemDoodle/9.5.0/ChemDoodleWeb.js";
       script.async = true;
       script.onload = () => {
-        console.log("✅ ChemDoodle Web Components chargé dynamiquement !");
+        console.log("✅ ChemDoodle chargé depuis cdnjs !");
         setIsLibraryLoaded(true);
       };
       script.onerror = () => {
-        console.error("❌ Impossible de charger ChemDoodle depuis le hub officiel");
+        console.error("❌ Impossible de charger ChemDoodle depuis cdnjs");
       };
       document.body.appendChild(script);
     }
   }, []);
 
-  // 2. RENDU DE LA FORMULE CHIMIQUE EXCEL
   useEffect(() => {
     if (!isLibraryLoaded || !containerRef.current || !smiles) return;
 
@@ -64,7 +61,6 @@ export default function ChemStructure({ smiles, width = 160, height = 120 }: Che
 
       const viewer = new cd.ViewerCanvas(uniqueCanvasId, width, height);
 
-      // Personnalisation des atomes pour vos exercices d'orga
       viewer.specs.atoms_displayLabels_O = true;
       viewer.specs.atoms_displayLabels_N = true;
       viewer.specs.bonds_width_2d = 2;
@@ -74,13 +70,12 @@ export default function ChemStructure({ smiles, width = 160, height = 120 }: Che
       const molecule = cd.readSMILES(smiles);
 
       if (molecule && molecule.atoms.length > 0) {
-        // Recalcul des coordonnées des liaisons (indispensable pour le SMILES)
         if (cd.CoordGen && typeof cd.CoordGen.generate2DCoordinates === "function") {
           cd.CoordGen.generate2DCoordinates(molecule);
         }
         viewer.loadMolecule(molecule);
       } else {
-        console.warn(`⚠️ Chaîne SMILES vide ou non reconnue : ${smiles}`);
+        console.warn(`⚠️ SMILES vide ou non reconnu : ${smiles}`);
       }
     } catch (error) {
       console.error("❌ Erreur de rendu de la structure :", error);
