@@ -1,5 +1,4 @@
-
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 interface Props {
   smiles: string;
@@ -13,81 +12,93 @@ declare global {
 }
 
 export default function ChemStructure({ smiles }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Chargement UNIQUE de RDKit
   useEffect(() => {
-    async function loadRDKit() {
-      try {
-        // Déjà chargé
-        if (window.RDKit) {
-          setReady(true);
-          return;
-        }
+    let mounted = true;
 
-        // Attendre que le script CDN soit disponible
-        if (!window.initRDKitModule) {
-          console.error("RDKit script absent");
-          return;
-        }
-
-        const RDKit = await window.initRDKitModule({
-          locateFile: () => "/RDKit_minimal.wasm",
-        });
-
-        window.RDKit = RDKit;
-
-        setReady(true);
-      } catch (e) {
-        console.error("RDKit init error:", e);
-      }
-    }
-
-    loadRDKit();
-  }, []);
-
-  // Génération molécule
-  useEffect(() => {
-    if (!ready) return;
-    if (!smiles) return;
-
-    try {
-      const mol = window.RDKit.get_mol(smiles);
-
-      if (!mol) {
-        console.error("Molécule invalide");
+    async function loadRDKitScript() {
+      // Déjà chargé
+      if (window.RDKit) {
+        renderMolecule();
         return;
       }
 
-      const svg = mol.get_svg(450, 220);
+      // Charger dynamiquement le script
+      const script = document.createElement("script");
 
-      if (ref.current) {
-        ref.current.innerHTML = svg;
+      script.src =
+        "https://unpkg.com/@rdkit/rdkit/dist/RDKit_minimal.js";
 
-        // Style SVG
-        const svgEl = ref.current.querySelector("svg");
+      script.async = true;
 
-        if (svgEl) {
-          svgEl.style.width = "100%";
-          svgEl.style.height = "auto";
-          svgEl.style.display = "block";
-          svgEl.style.background = "white";
+      script.onload = async () => {
+        try {
+          const RDKit = await window.initRDKitModule({
+            locateFile: () => "/RDKit_minimal.wasm",
+          });
+
+          window.RDKit = RDKit;
+
+          renderMolecule();
+        } catch (err) {
+          console.error("RDKit init error:", err);
         }
-      }
+      };
 
-      mol.delete();
-    } catch (e) {
-      console.error("SVG render error:", e);
+      script.onerror = () => {
+        console.error("Impossible de charger RDKit");
+      };
+
+      document.body.appendChild(script);
     }
-  }, [ready, smiles]);
+
+    function renderMolecule() {
+      try {
+        if (!window.RDKit) return;
+
+        const mol = window.RDKit.get_mol(smiles);
+
+        if (!mol) {
+          console.error("Molécule invalide");
+          return;
+        }
+
+        const svg = mol.get_svg(420, 220);
+
+        if (mounted && containerRef.current) {
+          containerRef.current.innerHTML = svg;
+
+          const svgEl =
+            containerRef.current.querySelector("svg");
+
+          if (svgEl) {
+            svgEl.style.width = "100%";
+            svgEl.style.height = "auto";
+            svgEl.style.background = "white";
+            svgEl.style.borderRadius = "12px";
+          }
+        }
+
+        mol.delete();
+      } catch (err) {
+        console.error("RDKit render error:", err);
+      }
+    }
+
+    loadRDKitScript();
+
+    return () => {
+      mounted = false;
+    };
+  }, [smiles]);
 
   return (
     <div
-      ref={ref}
-      className="w-full flex justify-center items-center bg-white rounded-xl p-2"
+      ref={containerRef}
+      className="bg-white rounded-xl p-2 flex justify-center items-center"
       style={{
-        minHeight: "180px",
+        minHeight: "220px",
       }}
     />
   );
