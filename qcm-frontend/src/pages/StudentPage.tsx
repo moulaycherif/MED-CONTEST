@@ -317,117 +317,119 @@ export default function StudentPage() {
       return <StudentDashboardStats />;
     }
     
-    // 🧩 Cas 1 : affichage des questions (QCE)
-    if (section === "qcm" && currentExam) {
-      let lastGroupId: string | null = null;
-      if (questions.length === 0)
+    {/* 🧩 Cas 1 : affichage des questions (QCE) */}
+if (section === "qcm" && currentExam) {
+  let lastGroupId: string | null = null;
+  if (questions.length === 0)
+    return (
+      <div className="text-center mt-10">
+        <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
+      </div>
+    );
+
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-bold text-center mb-4 text-blue-800">📘 QCE — {currentExam}</h2>
+      {questions.map((q, idx) => {
+        const showGroupImage = q.groupId?.intro || (q.groupId?.image && q.groupId._id !== lastGroupId);
+        const isNewGroup = q.groupId?._id && q.groupId._id !== lastGroupId;
+        if (q.groupId?._id) {
+          lastGroupId = q.groupId._id;
+        }
+
         return (
-          <div className="text-center mt-10">
-            <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
-          </div>
-        );
-
-      return (
-        <div className="p-4">
-          <h2 className="text-xl font-bold text-center mb-4 text-blue-800">📘 QCE — {currentExam}</h2>
-          {questions.map((q, idx) => {
-            const showGroupImage = q.groupId?.image && q.groupId._id !== lastGroupId;
-            if (q.groupId?._id) {
-              lastGroupId = q.groupId._id;
-            }
-
-            return (
-              <motion.div
-                key={q._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 mb-4 bg-white rounded-xl shadow"
-              >
-                {/* 🖼 EN-TÊTE DE GROUPE */}
-                {showGroupImage && (
-                  <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
-                    {q.groupId?.intro && (
-                      <div className="text-gray-700 font-medium text-lg mb-4 italic prose max-w-none">
-                        <Latex>{cleanLatex(q.groupId.intro)}</Latex>
-                      </div>
-                    )}
-                    {q.groupId?.image && (
-                      <img
-                        src={getImageUrl(q.groupId.image)}
-                        className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
-                        alt="Illustration du groupe"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                    )}
+          <motion.div
+            key={q._id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 mb-4 bg-white rounded-xl shadow"
+          >
+            {/* 🖼 EN-TÊTE DE GROUPE MODIFIÉ ET SÉCURISÉ */}
+            {q.groupId?._id && isNewGroup && (
+              <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
+                {q.groupId?.intro && (
+                  <div className="text-gray-700 font-medium text-lg mb-4 italic w-full">
+                    {/* ✅ Remplacement de <Latex> par MixedContentRenderer pour décoder le SMILES du groupe */}
+                    <MixedContentRenderer text={q.groupId.intro} />
                   </div>
                 )}
-
-                {/* 🧠 RENDU DE LA QUESTION */}
-                <h3 className="font-semibold mb-2 text-lg mt-4 flex items-start gap-1">
-                  <span>Q{idx + 1}) </span>
-                  <div className="flex-1">
-                    <MixedContentRenderer text={q.texte || ""} />
-                  </div>
-                  <span className="text-purple-600 shrink-0"> ({q.note} pt)</span>
-                </h3>
-
-                {(!q.groupId || !q.groupId._id) && q.image && (
+                {q.groupId?.image && (
                   <img
-                    src={getImageUrl(q.image)}
-                    className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
-                    alt="Illustration"
+                    src={getImageUrl(q.groupId.image)}
+                    className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
+                    alt="Illustration du groupe"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 )}
-                
-                {/* OPTIONS DE LA QUESTION */}
-                {q.options.map((opt, i) => {
-                  return (
-                    <label
-                      key={i}
-                      className={`flex items-start p-3 border rounded-lg cursor-pointer mb-2 transition-all ${
-                        submitted
-                          ? opt === q.reponseCorrecte
-                            ? "bg-green-100 border-green-400"
-                            : answers[q._id] === opt
-                            ? "bg-red-100 border-red-400"
-                            : ""
-                          : "hover:bg-gray-100"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name={q._id}
-                        checked={answers[q._id] === opt}
-                        onChange={() => handleAnswerChange(q._id, opt)}
-                        disabled={submitted}
-                        className="mt-1 mr-3 shrink-0"
-                      />
-                      
-                      <div className="flex-1 w-full">
-                        <MixedContentRenderer text={opt} />
-                      </div>
-                    </label>
-                  );
-                })}
-              </motion.div>
-            );
-          })}
-          {!submitted ? (
-            <button
-              onClick={handleFinish}
-              className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-            >
-              ✅ Soumettre
-            </button>
-          ) : (
-            <div className="mt-4 text-center text-lg font-semibold text-blue-700">
-              ✅ Score final : {score} / {questions.reduce((sum, q) => sum + q.note, 0)}
-            </div>
-          )}
+              </div>
+            )}
+
+            {/* 🧠 RENDU DE LA QUESTION */}
+            <h3 className="font-semibold mb-2 text-lg mt-4 flex items-start gap-1">
+              <span>Q{idx + 1}) </span>
+              <div className="flex-1">
+                <MixedContentRenderer text={q.texte || ""} />
+              </div>
+              <span className="text-purple-600 shrink-0"> ({q.note} pt)</span>
+            </h3>
+
+            {(!q.groupId || !q.groupId._id) && q.image && (
+              <img
+                src={getImageUrl(q.image)}
+                className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
+                alt="Illustration"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            )}
+            
+            {/* OPTIONS DE LA QUESTION */}
+            {q.options.map((opt, i) => {
+              return (
+                <label
+                  key={i}
+                  className={`flex items-start p-3 border rounded-lg cursor-pointer mb-2 transition-all ${
+                    submitted
+                      ? opt === q.reponseCorrecte
+                        ? "bg-green-100 border-green-400"
+                        : answers[q._id] === opt
+                        ? "bg-red-100 border-red-400"
+                        : ""
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name={q._id}
+                    checked={answers[q._id] === opt}
+                    onChange={() => handleAnswerChange(q._id, opt)}
+                    disabled={submitted}
+                    className="mt-1 mr-3 shrink-0"
+                  />
+                  
+                  <div className="flex-1 w-full">
+                    <MixedContentRenderer text={opt} />
+                  </div>
+                </label>
+              );
+            })}
+          </motion.div>
+        );
+      })}
+      {!submitted ? (
+        <button
+          onClick={handleFinish}
+          className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+        >
+          ✅ Soumettre
+        </button>
+      ) : (
+        <div className="mt-4 text-center text-lg font-semibold text-blue-700">
+          ✅ Score final : {score} / {questions.reduce((sum, q) => sum + q.note, 0)}
         </div>
-      );
-    }
+      )}
+    </div>
+  );
+}
 
     // 🧩 Cas 2 : QCE par concours
     if (section === "concours") {
