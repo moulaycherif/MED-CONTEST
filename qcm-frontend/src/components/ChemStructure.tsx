@@ -1,69 +1,58 @@
 import { useEffect, useRef } from "react";
-import * as SmilesDrawer from "smiles-drawer";
+import SmilesDrawer from "smiles-drawer";
 
 interface Props {
   smiles: string;
 }
 
 export default function ChemStructure({ smiles }: Props) {
-  const svgRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
-    if (!svgRef.current || !smiles) return;
+    if (!smiles || !svgRef.current) return;
 
-    // Nettoyage complet avant redraw
+    // Nettoyage ancien rendu
     svgRef.current.innerHTML = "";
 
     const drawer = new SmilesDrawer.Drawer({
-      width: 320,
+      width: 420,
       height: 220,
 
-      // ✅ Style semi-développé propre
+      bondThickness: 2,
+      shortBondLength: 0.85,
+
+      atomVisualization: "default",
+
       compactDrawing: false,
+
+      terminalCarbons: true,
+
       explicitHydrogens: false,
 
-      // ✅ Meilleure géométrie
-      overlapSensitivity: 0.4,
-      overlapResolutionIterations: 3,
+      overlapSensitivity: 0.42,
 
-      // ✅ Taille des liaisons
-      bondThickness: 1.4,
-      bondLength: 28,
-
-      // ✅ Taille des lettres
-      fontSizeLarge: 16,
-      fontSizeSmall: 12,
-
-      // ✅ SVG propre
-      padding: 20,
-
-      // ✅ Thème
-      isometric: false,
-      terminalCarbons: false,
+      padding: 25,
     });
 
     SmilesDrawer.parse(
       smiles,
-      (tree) => {
-        if (!svgRef.current) return;
-
-        drawer.draw(
-          tree,
-          svgRef.current,
-          "light",
-          false
-        );
+      (tree: any) => {
+        drawer.draw(tree, svgRef.current!, "light", false);
       },
-      (err) => {
-        console.error("Erreur SMILES :", err);
+      (err: any) => {
+        console.error("SMILES parse error:", err);
       }
     );
   }, [smiles]);
 
   return (
-    <div
+    <svg
       ref={svgRef}
-      className="flex justify-center items-center bg-white"
+      style={{
+        width: "100%",
+        height: "220px",
+        overflow: "visible",
+      }}
     />
   );
 }
