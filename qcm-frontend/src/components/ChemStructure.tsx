@@ -8,79 +8,102 @@ interface ChemStructureProps {
 
 export default function ChemStructure({ smiles, width = 160, height = 120 }: ChemStructureProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isLibraryReady, setIsLibraryReady] = useState(false);
+  const [isLibraryLoaded, setIsLibraryLoaded] = useState(false);
 
-  // 1. Boucle de vérification : On attend que ChemDoodle apparaisse dans l'objet global window
+  // 1. CHARGEMENT DYNAMIQUE EN LIGNE (Injecte les scripts directement dans la page active)
   useEffect(() => {
-    const checkGlobalLibrary = () => {
-      if ((window as any).ChemDoodle) {
-        setIsLibraryReady(true);
-      } else {
-        // Si pas encore là, on réessaye dans 100ms
-        setTimeout(checkGlobalLibrary, 100);
-      }
-    };
-    checkGlobalLibrary();
+    // Si la librairie est déjà présente en mémoire, pas besoin de la recharger
+    if ((window as any).ChemDoodle) {
+      setIsLibraryLoaded(true);
+      return;
+    }
+
+    // Injection automatique du fichier CSS de ChemDoodle
+    if (!document.getElementById("chemdoodle-css")) {
+      const link = document.createElement("link");
+      link.id = "chemdoodle-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/chemdoodle@9.5.0/install/ChemDoodleWeb.css";
+      link.type = "text/css";
+      document.head.appendChild(link);
+    }
+
+    // Injection automatique du fichier JS de ChemDoodle
+    if (!document.getElementById("chemdoodle-js")) {
+      const script = document.createElement("script");
+      script.id = "chemdoodle-js";
+      script.type = "text/javascript";
+      script.src = "https://unpkg.com/chemdoodle@9.5.0/install/ChemDoodleWeb.js";
+      script.async = true;
+      script.onload = () => {
+        console.log("✅ ChemDoodle chargé dynamiquement avec succès !");
+        setIsLibraryLoaded(true);
+      };
+      script.onerror = () => {
+        console.error("❌ Échec du chargement du script de secours ChemDoodle");
+      };
+      document.body.appendChild(script);
+    }
   }, []);
 
-  // 2. Rendu de la molécule dès que la librairie est validée ET que le SMILES change
+  // 2. RENDU DE LA MOLÉCULE (Une fois que le script est chargé et actif)
   useEffect(() => {
-    if (!isLibraryReady || !containerRef.current || !smiles) return;
+    if (!isLibraryLoaded || !containerRef.current || !smiles) return;
 
     const cd = (window as any).ChemDoodle;
     if (!cd) return;
 
     try {
-      // Génération d'un ID unique à chaque rendu pour éviter les collisions de Canvas
       const uniqueCanvasId = `canvas-${Math.random().toString(36).substring(2, 9)}`;
 
-      // Vidage du conteneur précédent (essentiel pour le cycle de vie de React)
+      // Nettoyage complet du conteneur pour éviter les doublons de canvas
       containerRef.current.innerHTML = "";
 
-      // Création physique du nouvel élément HTML <canvas>
+      // Création dynamique du canvas HTML
       const canvasEl = document.createElement("canvas");
       canvasEl.id = uniqueCanvasId;
       canvasEl.width = width;
       canvasEl.height = height;
-      canvasEl.style.border = "none";
       containerRef.current.appendChild(canvasEl);
 
-      // Initialisation du moteur visuel 2D de ChemDoodle sur ce canvas
+      // Initialisation du visualiseur ChemDoodle
       const viewer = new cd.ViewerCanvas(uniqueCanvasId, width, height);
 
-      // Personnalisation des paramètres graphiques (police, taille, liaisons)
+      // Paramètres esthétiques
       viewer.specs.atoms_displayLabels_O = true;
       viewer.specs.atoms_displayLabels_N = true;
       viewer.specs.bonds_width_2d = 2;
       viewer.specs.atoms_font_size_2d = 12;
       viewer.specs.backgroundColor = "transparent";
 
-      // Lecture de la chaîne textuelle SMILES
+      // Interprétation de la chaîne SMILES issue de votre fichier Excel
       const molecule = cd.readSMILES(smiles);
 
       if (molecule && molecule.atoms.length > 0) {
-        // 🌟 ÉTAPE CRUCIALE : Un SMILES brut n'a pas de coordonnées X/Y.
-        // On force le moteur à générer la structure 2D géométrique.
+        // Génération obligatoire des coordonnées 2D (les structures SMILES n'ont pas de coordonnées de base)
         if (cd.CoordGen && typeof cd.CoordGen.generate2DCoordinates === "function") {
           cd.CoordGen.generate2DCoordinates(molecule);
         }
         
-        // Rendu final de la structure
+        // Dessin final
         viewer.loadMolecule(molecule);
       } else {
-        console.warn(`⚠️ Chaîne SMILES non interprétable par ChemDoodle : ${smiles}`);
+        console.warn(`⚠️ SMILES invalide ou vide : ${smiles}`);
       }
     } catch (error) {
-      console.error("❌ Erreur lors du dessin de la molécule :", error);
+      console.error("❌ Erreur lors du rendu de la structure chimique :", error);
     }
-  }, [smiles, isLibraryReady, width, height]);
+  }, [smiles, isLibraryLoaded, width, height]);
 
   return (
-    // Ce div sert d'ancrage stable. React gère le div, ChemDoodle gère le canvas à l'intérieur.
     <div 
       ref={containerRef} 
-      className="chemdoodle-canvas-wrapper flex items-center justify-center bg-white rounded-lg" 
+      className="chemdoodle-canvas-wrapper flex items-center justify-center bg-white rounded-lg p-1" 
       style={{ width, height, minWidth: width, minHeight: height }}
-    />
+    >
+      {!isLibraryLoaded && (
+        <span className="text-xs text-gray-400 animate-pulse">Chargement molécule...</span>
+      )}
+    </div>
   );
 }
