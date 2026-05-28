@@ -18,6 +18,7 @@ import bgImage from "/Image3.jfif";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
+import MoleculeRenderer from "../components/MoleculeRenderer";
 import { renderWithMath } from "../utils/mathUtils";
 
 // Indispensable pour que React-Quill puisse interpréter les formules
@@ -334,10 +335,26 @@ export default function StudentPage() {
     )}
 
                 {/* 🧠 QUESTION */}
-                <h3 className="font-semibold mb-2 text-lg mt-4">
-                  Q{idx + 1}) {" "} <Latex>{cleanLatex(q.texte)}</Latex>
-                  <span className="text-purple-600"> ({q.note} pt)</span>
-                </h3>
+<h3 className="font-semibold mb-2 text-lg mt-4">
+  Q{idx + 1}) {" "}
+  {q.texte?.includes("<smiles>") ? (
+    <>
+      {/* On affiche le texte qui est AVANT la balise smiles */}
+      <Latex>{cleanLatex(q.texte.split("<smiles>")[0])}</Latex>
+      
+      {/* On extrait le code SMILES et on l'envoie au dessinateur */}
+      <MoleculeRenderer 
+        smiles={q.texte.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} 
+      />
+      
+      {/* On affiche le texte qui est APRÈS la balise smiles (si présent) */}
+      <Latex>{cleanLatex(q.texte.split("</smiles>")[1])}</Latex>
+    </>
+  ) : (
+    <Latex>{cleanLatex(q.texte)}</Latex>
+  )}
+  <span className="text-purple-600"> ({q.note} pt)</span>
+</h3>
 
                 {/* 🖼 IMAGE SIMPLE SÉCURISÉE */}
                 {(!q.groupId || !q.groupId._id) && q.image && (
@@ -352,30 +369,41 @@ export default function StudentPage() {
   />
 )}
                 {/* OPTIONS */}
-                {q.options.map((opt, i) => (
-                  <label
-                    key={i}
-                    className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
-                      submitted
-                        ? opt === q.reponseCorrecte
-                          ? "bg-green-100 border-green-400"
-                          : answers[q._id] === opt
-                          ? "bg-red-100 border-red-400"
-                          : ""
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={q._id}
-                      checked={answers[q._id] === opt}
-                      onChange={() => handleAnswerChange(q._id, opt)}
-                      disabled={submitted}
-                      className="mr-2"
-                    />
-                    <Latex>{cleanLatex(opt)}</Latex>
-                  </label>
-                ))}
+                {/* OPTIONS — ANCIEN CODE : <Latex>{cleanLatex(opt)}</Latex> */}
+{q.options.map((opt, i) => (
+  <label
+    key={i}
+    className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
+      submitted
+        ? opt === q.reponseCorrecte
+          ? "bg-green-100 border-green-400"
+          : answers[q._id] === opt
+          ? "bg-red-100 border-red-400"
+          : ""
+        : "hover:bg-gray-100"
+    }`}
+  >
+    <input
+      type="radio"
+      name={q._id}
+      checked={answers[q._id] === opt}
+      onChange={() => handleAnswerChange(q._id, opt)}
+      disabled={submitted}
+      className="mr-2"
+    />
+    
+    {/* ✨ NOUVEAU : Détection et rendu de la molécule dans l'option */}
+    {opt.includes("<smiles>") ? (
+      <div className="inline-flex flex-col items-center ml-1">
+        <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
+        <MoleculeRenderer smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
+        <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
+      </div>
+    ) : (
+      <Latex>{cleanLatex(opt)}</Latex>
+    )}
+  </label>
+))}
               </motion.div>
             );
           })}
@@ -694,10 +722,19 @@ export default function StudentPage() {
                         return (
                           <label key={i} className={`block px-2 py-1.5 border rounded-md cursor-pointer text-sm transition-colors leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mr-2" />
-                            <Latex>{cleanLatex(opt)}</Latex>
-                          </label>
-                        );
-                      })}
+                            {/* ✨ NOUVEAU : Détection et rendu de la molécule dans l'option d'exercice */}
+      {opt.includes("<smiles>") ? (
+        <div className="inline-flex flex-col items-center ml-1">
+          <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
+          <MoleculeRenderer smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
+          <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
+        </div>
+      ) : (
+        <Latex>{cleanLatex(opt)}</Latex>
+      )}
+    </label>
+  );
+})}
                     </div>
                     {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
                       <div className="ml-6 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
