@@ -1,62 +1,69 @@
 import { useEffect, useRef } from "react";
-import SmilesDrawer from "smiles-drawer";
+import * as SmilesDrawer from "smiles-drawer";
 
 interface Props {
   smiles: string;
 }
 
 export default function ChemStructure({ smiles }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const svgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!smiles || !canvasRef.current) return;
+    if (!svgRef.current || !smiles) return;
+
+    // Nettoyage complet avant redraw
+    svgRef.current.innerHTML = "";
 
     const drawer = new SmilesDrawer.Drawer({
       width: 320,
       height: 220,
 
-      bondThickness: 1.2,
-      bondLength: 28,
-
-      shortBondLength: 0.8,
-
-      atomVisualization: "default",
-
-      isometric: false,
-
+      // ✅ Style semi-développé propre
       compactDrawing: false,
-
       explicitHydrogens: false,
 
+      // ✅ Meilleure géométrie
+      overlapSensitivity: 0.4,
+      overlapResolutionIterations: 3,
+
+      // ✅ Taille des liaisons
+      bondThickness: 1.4,
+      bondLength: 28,
+
+      // ✅ Taille des lettres
+      fontSizeLarge: 16,
+      fontSizeSmall: 12,
+
+      // ✅ SVG propre
       padding: 20,
 
-      fontSizeLarge: 16,
-      fontSizeSmall: 10,
-
+      // ✅ Thème
+      isometric: false,
       terminalCarbons: false,
-
-      overlapSensitivity: 0.42,
-
-      debug: false,
     });
 
     SmilesDrawer.parse(
       smiles,
-      (tree: any) => {
-        drawer.draw(tree, canvasRef.current!, "light", false);
+      (tree) => {
+        if (!svgRef.current) return;
+
+        drawer.draw(
+          tree,
+          svgRef.current,
+          "light",
+          false
+        );
       },
-      (err: any) => {
-        console.error("SMILES parse error:", err);
+      (err) => {
+        console.error("Erreur SMILES :", err);
       }
     );
   }, [smiles]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={320}
-      height={220}
-      className="bg-white rounded"
+    <div
+      ref={svgRef}
+      className="flex justify-center items-center bg-white"
     />
   );
 }
