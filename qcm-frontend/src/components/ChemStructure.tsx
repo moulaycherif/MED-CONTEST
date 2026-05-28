@@ -1,8 +1,13 @@
 import { useEffect, useRef } from "react";
-import initRDKitModule from "@rdkit/rdkit";
 
 interface Props {
   smiles: string;
+}
+
+declare global {
+  interface Window {
+    initRDKitModule: any;
+  }
 }
 
 export default function ChemStructure({ smiles }: Props) {
@@ -12,21 +17,22 @@ export default function ChemStructure({ smiles }: Props) {
     let mounted = true;
 
     async function renderMol() {
-      if (!containerRef.current || !smiles) return;
-
       try {
-        const RDKit = await initRDKitModule();
+        if (!window.initRDKitModule) return;
+
+        const RDKit = await window.initRDKitModule({
+          locateFile: () => "/RDKit_minimal.wasm",
+        });
 
         const mol = RDKit.get_mol(smiles);
 
         if (!mol) return;
 
-        const svg = mol.get_svg_with_highlights(JSON.stringify({}));
+        const svg = mol.get_svg();
 
         if (mounted && containerRef.current) {
           containerRef.current.innerHTML = svg;
 
-          // amélioration visuelle
           const svgEl = containerRef.current.querySelector("svg");
 
           if (svgEl) {
@@ -50,10 +56,5 @@ export default function ChemStructure({ smiles }: Props) {
     };
   }, [smiles]);
 
-  return (
-    <div
-      ref={containerRef}
-      className="bg-white rounded-xl p-2"
-    />
-  );
+  return <div ref={containerRef} className="bg-white p-2 rounded-xl" />;
 }
