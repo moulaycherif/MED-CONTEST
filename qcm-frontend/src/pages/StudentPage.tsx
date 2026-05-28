@@ -19,6 +19,7 @@ import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
 import MoleculeRenderer from "../components/MoleculeRenderer";
+import ChemStructure from "../components/ChemStructure";
 import { renderWithMath } from "../utils/mathUtils";
 
 // Indispensable pour que React-Quill puisse interpréter les formules
@@ -394,14 +395,17 @@ export default function StudentPage() {
     
     {/* ✨ NOUVEAU : Détection et rendu de la molécule dans l'option */}
     {opt.includes("<smiles>") ? (
-      <div className="inline-flex flex-col items-center ml-1">
-        <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
-        <MoleculeRenderer smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
-        <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
-      </div>
-    ) : (
-      <Latex>{cleanLatex(opt)}</Latex>
-    )}
+  <div className="inline-flex flex-col items-center ml-1">
+    <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
+    <ChemStructure 
+      smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} 
+      id={`canvas-${q._id}-${i}`} // Crée un ID unique du style "canvas-65f3a2b1-0"
+    />
+    <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
+  </div>
+) : (
+  <Latex>{cleanLatex(opt)}</Latex>
+)}
   </label>
 ))}
               </motion.div>
@@ -724,14 +728,17 @@ export default function StudentPage() {
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mr-2" />
                             {/* ✨ NOUVEAU : Détection et rendu de la molécule dans l'option d'exercice */}
       {opt.includes("<smiles>") ? (
-        <div className="inline-flex flex-col items-center ml-1">
-          <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
-          <MoleculeRenderer smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
-          <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
-        </div>
-      ) : (
-        <Latex>{cleanLatex(opt)}</Latex>
-      )}
+  <div className="inline-flex flex-col items-center ml-1">
+    <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
+    <ChemStructure 
+      smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} 
+      id={`canvas-${q._id}-${i}`} // Crée un ID unique du style "canvas-65f3a2b1-0"
+    />
+    <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
+  </div>
+) : (
+  <Latex>{cleanLatex(opt)}</Latex>
+)}
     </label>
   );
 })}
