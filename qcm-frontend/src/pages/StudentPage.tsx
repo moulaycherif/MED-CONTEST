@@ -344,10 +344,8 @@ export default function StudentPage() {
       <span><Latex>{cleanLatex(q.texte.split("<smiles>")[0])}</Latex></span>
       
       {/* 🛠️ Rendu de la Molécule avec un ID Unique pour cette question */}
-      <ChemStructure 
-        smiles={q.texte.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} 
-        id={`canvas-question-${q._id}`} 
-      />
+      {/* 🧠 DANS VOTRE BLOC QUESTION */}
+<ChemStructure smiles={q.texte.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
       
       {/* Texte APRÈS la balise */}
       <span><Latex>{cleanLatex(q.texte.split("</smiles>")[1])}</Latex></span>
@@ -395,13 +393,10 @@ export default function StudentPage() {
     />
     
     {/* ✨ NOUVEAU : Détection et rendu de la molécule dans l'option */}
-    {opt.includes("<smiles>") ? (
+   {opt.includes("<smiles>") ? (
   <div className="inline-flex flex-col items-center ml-1">
     <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
-    <ChemStructure 
-      smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} 
-      id={`canvas-${q._id}-${i}`} // Crée un ID unique du style "canvas-65f3a2b1-0"
-    />
+    <ChemStructure smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
     <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
   </div>
 ) : (

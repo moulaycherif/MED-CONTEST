@@ -1,43 +1,46 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useId } from "react";
 
 interface ChemStructureProps {
   smiles: string;
-  id: string;
 }
 
-export default function ChemStructure({ smiles, id }: ChemStructureProps) {
+export default function ChemStructure({ smiles }: ChemStructureProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // ✨ Génère un ID unique interne auto-géré par React (ex: :r1:, :r2:)
+  const uniqueId = useId(); 
 
   useEffect(() => {
-    // On s'assure que le script CDN est bien chargé globalement et que le canvas est prêt dans le DOM
+    // Petit hack pour enlever les caractères ":" de useId qui déplaisent parfois à l'HTML5
+    const cleanId = uniqueId.replace(/:/g, "-");
+
     // @ts-ignore
     if (window.ChemDoodle && canvasRef.current) {
       try {
-        // 1. Initialiser le canvas via son ID unique
+        // 1. On initialise le canvas avec l'ID nettoyé
         // @ts-ignore
-        const viewer = new window.ChemDoodle.ViewerCanvas(id, 240, 140);
+        const viewer = new window.ChemDoodle.ViewerCanvas(cleanId, 220, 130);
         
-        // 2. Options de rendu spécifiques pour le SEMI-DÉVELOPPÉ (ex: CCCCCCOCCCC)
-        viewer.styles.atoms_displayLabels_X = true; // Afficher tous les Carbones (C)
-        viewer.styles.atoms_labels_all = true;      // Forcer l'affichage de tous les H (CH3, CH2...)
-        viewer.styles.bonds_width_2D = 1.6;         // Épaisseur des traits de liaisons
-        viewer.styles.atoms_font_size_2D = 12;      // Taille de la police du texte chimique
-        viewer.styles.bonds_saturationWidth_2D = 2; // Visibilité des doubles liaisons (=O)
+        // 2. Paramétrage structurel (Semi-développé étendu)
+        viewer.styles.atoms_displayLabels_X = true; // Afficher les Carbones
+        viewer.styles.atoms_labels_all = true;      // Afficher les H (CH3, CH2...)
+        viewer.styles.bonds_width_2D = 1.6;         // Épaisseur des liaisons
+        viewer.styles.atoms_font_size_2D = 12;      // Taille de la police
+        viewer.styles.bonds_saturationWidth_2D = 2; // Doubles liaisons nettes (=O)
         
-        // 3. Charger et dessiner la molécule SMILES
+        // 3. Rendu de la molécule
         // @ts-ignore
         const molecule = window.ChemDoodle.readSMILES(smiles.trim());
         viewer.loadMolecule(molecule);
       } catch (error) {
-        console.error("❌ Erreur d'initialisation ChemDoodle sur l'ID :", id, error);
+        console.error("❌ Échec du rendu ChemDoodle pour :", smiles, error);
       }
     }
-  }, [smiles, id]);
+  }, [smiles, uniqueId]);
 
   return (
-    // On applique l'ID unique sur la balise HTML canvas pour que ChemDoodle la trouve
-    <div className="bg-white p-2 rounded-xl inline-block border border-gray-200 shadow-sm my-2 align-middle">
-      <canvas id={id} ref={canvasRef} width={240} height={140} />
+    <div className="bg-white p-1 rounded-lg inline-block border border-gray-200 shadow-sm align-middle my-1">
+      {/* 🛠️ On applique l'ID nettoyé directement sur la balise */}
+      <canvas id={uniqueId.replace(/:/g, "-")} ref={canvasRef} width={220} height={130} />
     </div>
   );
 }
