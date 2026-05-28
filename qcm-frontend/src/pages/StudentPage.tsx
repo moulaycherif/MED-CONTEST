@@ -181,30 +181,30 @@ export default function StudentPage() {
   };
 
   function cleanLatex(content?: string) {
-  if (!content) return "";
-  return content
-    // 🛡️ SÉCURITÉ CRITIQUE : Nettoie les structures complexes Mathpix qui brisent le parseur
-    .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
-    .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
-    .replace(/\\captionsetup\{[^}]*\}/g, "")
-    
-    // Vos filtres existants restants inchangés
-    .replace(/<\/?p>/g, "")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/\\\(/g, "$")
-    .replace(/\\\)/g, "$")
-    .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
-    .replace(/\\?below/g, "_")
-    .replace(/\\aleph/g, "\\mathbb{N}")
-    .replace(/\\rightarrow/g, "\\to")
-    .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
-    .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
-    .replace(/\\ /g, " ")
-    .replace(/\\\s+/g, " ")
-    .replace(/\s+/g, " ");   
-}
+    if (!content) return "";
+    return content
+      // 🛡️ SÉCURITÉ CRITIQUE : Nettoie les structures complexes Mathpix qui brisent le parseur
+      .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
+      .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
+      .replace(/\\captionsetup\{[^}]*\}/g, "")
+      
+      // Vos filtres existants restants inchangés
+      .replace(/<\/?p>/g, "")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
+      .replace(/\\\(/g, "$")
+      .replace(/\\\)/g, "$")
+      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
+      .replace(/\\?below/g, "_")
+      .replace(/\\aleph/g, "\\mathbb{N}")
+      .replace(/\\rightarrow/g, "\\to")
+      .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
+      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
+      .replace(/\\ /g, " ")
+      .replace(/\\\s+/g, " ")
+      .replace(/\s+/g, " ");   
+  }
 
   function renderContent(content?: string) {
     if (!content) return null;
@@ -268,12 +268,12 @@ export default function StudentPage() {
           totalQuestions,
           successRate,
           examId: currentExamId,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (err) {
-      console.error("❌ Erreur enregistrement QCM", err);
-    }
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (err) {
+        console.error("❌ Erreur enregistrement QCM", err);
+      }
   };
 
   // --- Rendu Central ---
@@ -313,97 +313,95 @@ export default function StudentPage() {
                 className="p-4 mb-4 bg-white rounded-xl shadow"
               >
                 {/* 🖼 EN-TÊTE DE GROUPE (Image + Texte d'introduction) */}
-    {showGroupImage && (
-      <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
-        
-        {/* 📝 Affichage du Texte d'introduction/Commentaire du groupe */}
-        {q.groupId?.intro && (
-          <div className="text-gray-700 font-medium text-lg mb-4 italic prose max-w-none">
-            <Latex>{cleanLatex(q.groupId.intro)}</Latex>
-          </div>
-        )}
+                {showGroupImage && (
+                  <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
+                    {/* 📝 Affichage du Texte d'introduction/Commentaire du groupe */}
+                    {q.groupId?.intro && (
+                      <div className="text-gray-700 font-medium text-lg mb-4 italic prose max-w-none">
+                        <Latex>{cleanLatex(q.groupId.intro)}</Latex>
+                      </div>
+                    )}
 
-        {/* 🖼 Image du groupe */}
-        {q.groupId?.image && (
-          <img
-            src={getImageUrl(q.groupId.image)}
-            className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
-            alt="Illustration du groupe"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-        )}
-      </div>
-    )}
+                    {/* 🖼 Image du groupe */}
+                    {q.groupId?.image && (
+                      <img
+                        src={getImageUrl(q.groupId.image)}
+                        className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
+                        alt="Illustration du groupe"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    )}
+                  </div>
+                )}
 
-                {/* 🧠 QUESTION — VERSION CORRIGÉE */}
-<h3 className="font-semibold mb-2 text-lg mt-4">
-  Q{idx + 1}) {" "}
-  {q.texte?.includes("<smiles>") ? (
-    <div className="flex flex-col gap-2">
-      {/* Texte AVANT la balise */}
-      <span><Latex>{cleanLatex(q.texte.split("<smiles>")[0])}</Latex></span>
-      
-      {/* 🛠️ Rendu de la Molécule avec un ID Unique pour cette question */}
-      {/* 🧠 DANS VOTRE BLOC QUESTION */}
-<ChemStructure smiles={q.texte.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
-      
-      {/* Texte APRÈS la balise */}
-      <span><Latex>{cleanLatex(q.texte.split("</smiles>")[1])}</Latex></span>
-    </div>
-  ) : (
-    <Latex>{cleanLatex(q.texte)}</Latex>
-  )}
-  <span className="text-purple-600"> ({q.note} pt)</span>
-</h3>
+                {/* 🧠 QUESTION — EXTRACTION SÉCURISÉE SANS CONFLIT DE NETTOYAGE */}
+                <h3 className="font-semibold mb-2 text-lg mt-4">
+                  Q{idx + 1}) {" "}
+                  {q.texte?.includes("<smiles>") ? (
+                    <div className="flex flex-col gap-2">
+                      {/* Texte AVANT la balise */}
+                      <span><Latex>{cleanLatex(q.texte.split("<smiles>")[0])}</Latex></span>
+                      
+                      {/* 🛠️ Extraction directe depuis la chaîne d'origine brute isolée */}
+                      <ChemStructure smiles={(q.texte.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || "").replace(/\s+/g, "").trim()} />
+                      
+                      {/* Texte APRÈS la balise */}
+                      <span><Latex>{cleanLatex(q.texte.split("</smiles>")[1])}</Latex></span>
+                    </div>
+                  ) : (
+                    <Latex>{cleanLatex(q.texte)}</Latex>
+                  )}
+                  <span className="text-purple-600"> ({q.note} pt)</span>
+                </h3>
 
                 {/* 🖼 IMAGE SIMPLE SÉCURISÉE */}
                 {(!q.groupId || !q.groupId._id) && q.image && (
-  <img
-    src={getImageUrl(q.image)}
-    className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
-    alt="Illustration"
-    onError={(e) => { 
-      console.error("Erreur de chargement de l'image :", e.currentTarget.src);
-      e.currentTarget.style.display = 'none'; 
-    }}
-  />
-)}
+                  <img
+                    src={getImageUrl(q.image)}
+                    className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
+                    alt="Illustration"
+                    onError={(e) => { 
+                      console.error("Erreur de chargement de l'image :", e.currentTarget.src);
+                      e.currentTarget.style.display = 'none'; 
+                    }}
+                  />
+                )}
+                
                 {/* OPTIONS */}
-                {/* OPTIONS — ANCIEN CODE : <Latex>{cleanLatex(opt)}</Latex> */}
-{q.options.map((opt, i) => (
-  <label
-    key={i}
-    className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
-      submitted
-        ? opt === q.reponseCorrecte
-          ? "bg-green-100 border-green-400"
-          : answers[q._id] === opt
-          ? "bg-red-100 border-red-400"
-          : ""
-        : "hover:bg-gray-100"
-    }`}
-  >
-    <input
-      type="radio"
-      name={q._id}
-      checked={answers[q._id] === opt}
-      onChange={() => handleAnswerChange(q._id, opt)}
-      disabled={submitted}
-      className="mr-2"
-    />
-    
-    {/* ✨ NOUVEAU : Détection et rendu de la molécule dans l'option */}
-   {opt.includes("<smiles>") ? (
-  <div className="inline-flex flex-col items-center ml-1">
-    <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
-    <ChemStructure smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
-    <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
-  </div>
-) : (
-  <Latex>{cleanLatex(opt)}</Latex>
-)}
-  </label>
-))}
+                {q.options.map((opt, i) => (
+                  <label
+                    key={i}
+                    className={`block p-2 border rounded-lg cursor-pointer mb-2 ${
+                      submitted
+                        ? opt === q.reponseCorrecte
+                          ? "bg-green-100 border-green-400"
+                          : answers[q._id] === opt
+                          ? "bg-red-100 border-red-400"
+                          : ""
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={q._id}
+                      checked={answers[q._id] === opt}
+                      onChange={() => handleAnswerChange(q._id, opt)}
+                      disabled={submitted}
+                      className="mr-2"
+                    />
+                    
+                    {/* ✨ NOUVEAU : Détection et rendu sécurisé de la molécule dans l'option */}
+                    {opt.includes("<smiles>") ? (
+                      <div className="inline-flex flex-col items-start ml-1">
+                        <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
+                        <ChemStructure smiles={(opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || "").replace(/\s+/g, "").trim()} />
+                        <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
+                      </div>
+                    ) : (
+                      <Latex>{cleanLatex(opt)}</Latex>
+                    )}
+                  </label>
+                ))}
               </motion.div>
             );
           })}
@@ -722,19 +720,20 @@ export default function StudentPage() {
                         return (
                           <label key={i} className={`block px-2 py-1.5 border rounded-md cursor-pointer text-sm transition-colors leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mr-2" />
-                            {/* ✨ NOUVEAU : Détection et rendu de la molécule dans l'option d'exercice */}
-      {opt.includes("<smiles>") ? (
-  <div className="inline-flex flex-col items-center ml-1">
-    <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
-    <ChemStructure smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
-    <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
-  </div>
-) : (
-  <Latex>{cleanLatex(opt)}</Latex>
-)}
-    </label>
-  );
-})}
+                            
+                            {/* ✨ NOUVEAU : Détection et rendu sécurisé de la molécule dans l'option d'exercice */}
+                            {opt.includes("<smiles>") ? (
+                              <div className="inline-flex flex-col items-start ml-1">
+                                <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
+                                <ChemStructure smiles={(opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || "").replace(/\s+/g, "").trim()} />
+                                <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
+                              </div>
+                            ) : (
+                              <Latex>{cleanLatex(opt)}</Latex>
+                            )}
+                          </label>
+                        );
+                      })}
                     </div>
                     {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
                       <div className="ml-6 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
@@ -781,6 +780,7 @@ export default function StudentPage() {
                 ✅ Terminer
               </button>
             )}
+
             {exerciseSubmitted && (
               <div className="mt-4 text-center font-bold text-blue-700">
                 Score : {exerciseScore} / {exercises.length} ({exerciseAttempt === 1 ? "1er essai" : `${exerciseAttempt}ème essai`})
