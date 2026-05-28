@@ -205,6 +205,8 @@ export default function StudentPage() {
   // ✨ COMPOSANT DE PARSING ET RENDU SÉCURISÉ POUR COMPOSER LE TEXTE ET LE SMILES
   function MixedContentRenderer({ text }: { text: string }) {
   if (!text) return null;
+
+  // 1. Détection stricte avant tout nettoyage de texte
   if (!text.includes("<smiles>")) {
     return <Latex>{cleanLatex(text)}</Latex>;
   }
@@ -216,30 +218,47 @@ export default function StudentPage() {
     return <Latex>{cleanLatex(text)}</Latex>;
   }
 
+  // 2. Extraction des portions brutes
   const beforeText = text.substring(0, startIdx);
   const rawSmiles = text.substring(startIdx + 8, endIdx);
   const afterText = text.substring(endIdx + 9);
 
-  // NETTOYAGE ABSOLU DES COUPURES D'EXCEL (Espaces, sauts de lignes \r, \n et balises)
+  // 3. Nettoyage chirurgical du SMILES (Suppression des sauts de ligne Excel \r et \n)
   const cleanSmiles = rawSmiles
-    .replace(/<[^>]*>/g, "")     // Enlève le HTML
-    .replace(/&nbsp;/g, "")      // Enlève les espaces HTML
-    .replace(/[\r\n\t]/g, "")    // Enlève les retours à la ligne masqués d'Excel !
-    .replace(/\s+/g, "")         // Enlève tous les espaces restants
+    .replace(/<\/?[^>]+(>|$)/g, "") // Supprime tout tag HTML résiduel
+    .replace(/&nbsp;/g, "")
+    .replace(/[\r\n\t]/g, "")       // Supprime les coupures invisibles d'Excel
+    .replace(/\s+/g, "")            // Supprime tous les espaces
     .trim();
 
   return (
-    <div className="flex flex-col items-start w-full">
+    <div className="flex flex-col items-start w-full my-1">
+      {/* Rendu du texte d'avant (ex: "(A) : ") totalement isolé dans son propre bloc */}
       {beforeText.trim().length > 0 && (
-        <span className="mb-1"><Latex>{cleanLatex(beforeText)}</Latex></span>
-      )}
-      {cleanSmiles.length > 0 && (
-        <div className="my-2 bg-white rounded-lg p-2 border border-gray-200 shadow-sm inline-block min-w-[150px] min-h-[100px]">
-          <ChemStructure smiles={cleanSmiles} />
+        <div className="mb-1 block text-gray-800">
+          <Latex>{cleanLatex(beforeText)}</Latex>
         </div>
       )}
+
+      {/* Rendu du Canvas de la molécule totalement étanche */}
+      {cleanSmiles.length > 0 && (
+        <div 
+          className="my-3 bg-white rounded-xl p-3 border border-gray-200 shadow-md inline-block clear-both"
+          style={{ minWidth: "160px", minHeight: "120px" }}
+        >
+          {/* L'ajout de key={cleanSmiles} est MAGIQUE : elle force React 
+            à détruire l'ancien Canvas et à instancier un tout nouveau 
+            moteur de rendu ChemDoodle dès que la formule change !
+          */}
+          <ChemStructure key={cleanSmiles} smiles={cleanSmiles} />
+        </div>
+      )}
+
+      {/* Rendu du texte d'après (s'il y en a un) isolé lui aussi */}
       {afterText.trim().length > 0 && (
-        <span className="mt-1"><Latex>{cleanLatex(afterText)}</Latex></span>
+        <div className="mt-1 block text-gray-800">
+          <Latex>{cleanLatex(afterText)}</Latex>
+        </div>
       )}
     </div>
   );
