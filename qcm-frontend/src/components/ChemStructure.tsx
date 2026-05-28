@@ -1,56 +1,74 @@
-interface Props {
+import { useEffect, useRef } from "react";
+
+interface ChemStructureProps {
   smiles: string;
+  width?: number;
+  height?: number;
 }
 
-export default function ChemStructure({ smiles }: Props) {
-  // Exemple spécifique :
-  if (smiles === "CCCC(=O)OC(=O)CCC") {
-    return (
-      <svg width="520" height="180">
-        {/* Chaîne principale */}
-        <text x="20" y="90" fontSize="24">CH3</text>
-        <line x1="65" y1="82" x2="100" y2="82" stroke="black" />
+export default function ChemStructure({ smiles, width = 150, height = 100 }: ChemStructureProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasId = useRef(`chemdoodle-${Math.random().toString(36).substr(2, 9)}`);
 
-        <text x="105" y="90" fontSize="24">CH2</text>
-        <line x1="155" y1="82" x2="190" y2="82" stroke="black" />
+  useEffect(() => {
+    // 1. Sécurité : Vérifier si la librairie globale ChemDoodle existe
+    const ChemDoodleGlobal = (window as any).ChemDoodle;
+    
+    if (!ChemDoodleGlobal) {
+      console.error("❌ ChemDoodle n'est pas chargé globalement dans window.");
+      return;
+    }
 
-        <text x="195" y="90" fontSize="24">CH2</text>
-        <line x1="245" y1="82" x2="280" y2="82" stroke="black" />
+    if (!canvasRef.current) return;
 
-        <text x="285" y="90" fontSize="24">C</text>
+    try {
+      // 2. Nettoyer le canvas existant s'il a déjà été initialisé
+      const container = canvasRef.current.parentElement;
+      if (!container) return;
+      
+      // On recrée l'élément canvas à neuf pour éviter les conflits d'initialisation de la lib
+      container.innerHTML = "";
+      const newCanvas = document.createElement("canvas");
+      newCanvas.id = canvasId.current;
+      newCanvas.width = width;
+      newCanvas.height = height;
+      newCanvas.className = "chemdoodle-canvas";
+      container.appendChild(newCanvas);
 
-        {/* Double liaison O */}
-        <line x1="300" y1="70" x2="300" y2="35" stroke="black" />
-        <line x1="306" y1="70" x2="306" y2="35" stroke="black" />
+      // 3. Initialiser le composant visuel ChemDoodle Viewer 2D
+      const viewer = new ChemDoodleGlobal.ViewerCanvas(canvasId.current, width, height);
+      
+      // Configuration visuelle minimale
+      viewer.specs.atoms_displayLabels_O = true;
+      viewer.specs.atoms_displayLabels_N = true;
+      viewer.specs.bonds_width_2d = 2;
+      viewer.specs.atoms_font_size_2d = 11;
 
-        <text x="290" y="28" fontSize="24">O</text>
+      // 4. Décoder la chaîne SMILES via le parser natif de ChemDoodle
+      const molecule = ChemDoodleGlobal.readSMILES(smiles);
 
-        {/* Oxygène ester */}
-        <line x1="315" y1="82" x2="350" y2="82" stroke="black" />
-
-        <text x="355" y="90" fontSize="24">O</text>
-
-        <line x1="375" y1="82" x2="410" y2="82" stroke="black" />
-
-        <text x="415" y="90" fontSize="24">C</text>
-
-        {/* Deuxième O */}
-        <line x1="430" y1="70" x2="430" y2="35" stroke="black" />
-        <line x1="436" y1="70" x2="436" y2="35" stroke="black" />
-
-        <text x="420" y="28" fontSize="24">O</text>
-
-        {/* Suite */}
-        <line x1="445" y1="82" x2="480" y2="82" stroke="black" />
-
-        <text x="485" y="90" fontSize="24">CH2</text>
-      </svg>
-    );
-  }
+      if (molecule && molecule.atoms.length > 0) {
+        // Optionnel mais capital : Demander à ChemDoodle de générer les coordonnées 2D 
+        // si le SMILES brut n'en contient pas (indispensable pour l'affichage !)
+        if (typeof viewer.loadMolecule === "function") {
+          ChemDoodleGlobal.CoordGen.generate2DCoordinates(molecule);
+          viewer.loadMolecule(molecule);
+        } else {
+          // Alternative selon la version de votre package
+          viewer.loadContent([molecule], []);
+        }
+      } else {
+        console.warn(`⚠️ Molécule vide ou invalide pour le SMILES : ${smiles}`);
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors du rendu de ChemDoodle :", error);
+    }
+  }, [smiles, width, height]);
 
   return (
-    <div className="p-4 border rounded bg-white">
-      Structure non disponible
+    // Ce conteneur sert de point d'ancrage stable pour que React ne perde pas la main
+    <div className="chemdoodle-container inline-block bg-white rounded" style={{ width, height }}>
+      <canvas ref={canvasRef} id={canvasId.current} width={width} height={height} />
     </div>
   );
 }
