@@ -204,43 +204,46 @@ export default function StudentPage() {
 
   // ✨ COMPOSANT DE PARSING ET RENDU SÉCURISÉ POUR COMPOSER LE TEXTE ET LE SMILES
   function MixedContentRenderer({ text }: { text: string }) {
-    if (!text) return null;
-    if (!text.includes("<smiles>")) {
-      return <Latex>{cleanLatex(text)}</Latex>;
-    }
+  if (!text) return null;
+  if (!text.includes("<smiles>")) {
+    return <Latex>{cleanLatex(text)}</Latex>;
+  }
 
-    const startIdx = text.indexOf("<smiles>");
-    const endIdx = text.indexOf("</smiles>");
+  const startIdx = text.indexOf("<smiles>");
+  const endIdx = text.indexOf("</smiles>");
 
-    if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
-      return <Latex>{cleanLatex(text)}</Latex>;
-    }
+  if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
+    return <Latex>{cleanLatex(text)}</Latex>;
+  }
 
-    const beforeText = text.substring(0, startIdx);
-    const rawSmiles = text.substring(startIdx + 8, endIdx);
-    const afterText = text.substring(endIdx + 9);
+  const beforeText = text.substring(0, startIdx);
+  const rawSmiles = text.substring(startIdx + 8, endIdx);
+  const afterText = text.substring(endIdx + 9);
 
-    // Nettoyage absolu du SMILES
-    const cleanSmiles = rawSmiles
-      .replace(/<[^>]*>/g, "") // Enlève d'éventuels tags HTML résiduels injectés par l'éditeur
-      .replace(/&nbsp;/g, "")
-      .replace(/\s+/g, "")     // Supprime les sauts de lignes d'Excel
-      .trim();
+  // NETTOYAGE ABSOLU DES COUPURES D'EXCEL (Espaces, sauts de lignes \r, \n et balises)
+  const cleanSmiles = rawSmiles
+    .replace(/<[^>]*>/g, "")     // Enlève le HTML
+    .replace(/&nbsp;/g, "")      // Enlève les espaces HTML
+    .replace(/[\r\n\t]/g, "")    // Enlève les retours à la ligne masqués d'Excel !
+    .replace(/\s+/g, "")         // Enlève tous les espaces restants
+    .trim();
 
-    return (
-      <div className="flex flex-col items-start w-full">
-        {beforeText.trim().length > 0 && (
-          <span className="mb-1"><Latex>{cleanLatex(beforeText)}</Latex></span>
-        )}
-        <div className="my-2 bg-white rounded-lg p-1 border border-gray-100 shadow-sm">
+  return (
+    <div className="flex flex-col items-start w-full">
+      {beforeText.trim().length > 0 && (
+        <span className="mb-1"><Latex>{cleanLatex(beforeText)}</Latex></span>
+      )}
+      {cleanSmiles.length > 0 && (
+        <div className="my-2 bg-white rounded-lg p-2 border border-gray-200 shadow-sm inline-block min-w-[150px] min-h-[100px]">
           <ChemStructure smiles={cleanSmiles} />
         </div>
-        {afterText.trim().length > 0 && (
-          <span className="mt-1"><Latex>{cleanLatex(afterText)}</Latex></span>
-        )}
-      </div>
-    );
-  }
+      )}
+      {afterText.trim().length > 0 && (
+        <span className="mt-1"><Latex>{cleanLatex(afterText)}</Latex></span>
+      )}
+    </div>
+  );
+}
 
   function renderContent(content?: string) {
     if (!content) return null;
