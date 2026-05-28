@@ -10,18 +10,17 @@ export default function MoleculeRenderer({ smiles }: MoleculeRendererProps) {
 
   useEffect(() => {
     if (canvasRef.current && smiles) {
-      // Configuration optionnelle du design du schéma
+      // 🛠️ CONFIGURATION MINIATURE
       const options = {
-        width: 300,
-        height: 300,
-        bondThickness: 1.5,
-        bondLength: 15,
-        theme: "light", // ou 'dark'
+        width: 150,          // Réduit de 300 à 150
+        height: 150,         // Réduit de 300 à 150
+        bondThickness: 1.2,  // Liaisons légèrement plus fines pour rester lisibles
+        bondLength: 12,      // Raccourcit la longueur des liaisons chimiques
+        theme: "light",
       };
 
       const smilesDrawer = new SmilesDrawer.Drawer(options);
       
-      // Parse et dessine la molécule sur le canvas
       SmilesDrawer.parse(smiles, (tree) => {
         smilesDrawer.draw(tree, canvasRef.current!, "light", false);
       }, (err) => {
@@ -31,7 +30,8 @@ export default function MoleculeRenderer({ smiles }: MoleculeRendererProps) {
   }, [smiles]);
 
   return (
-    <div className="flex justify-center my-3 bg-white p-2 rounded-xl border border-gray-100 shadow-sm max-w-xs mx-auto">
+    // 🎨 CONTENEUR OPTIMISÉ POUR LES OPTIONS DE QCM
+    <div className="inline-block my-1 bg-white p-1 rounded-lg border border-gray-100 shadow-sm max-w-[160px] mx-auto align-middle">
       <canvas ref={canvasRef} />
     </div>
   );
