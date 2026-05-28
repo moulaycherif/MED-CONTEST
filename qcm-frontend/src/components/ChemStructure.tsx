@@ -1,68 +1,59 @@
 import { useEffect, useRef } from "react";
-import SmilesDrawer from "smiles-drawer";
+import initRDKitModule from "@rdkit/rdkit";
 
 interface Props {
   smiles: string;
 }
 
 export default function ChemStructure({ smiles }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!smiles || !canvasRef.current) return;
+    let mounted = true;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    async function renderMol() {
+      if (!containerRef.current || !smiles) return;
 
-    if (!ctx) return;
+      try {
+        const RDKit = await initRDKitModule();
 
-    // Nettoyage
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const mol = RDKit.get_mol(smiles);
 
-    const drawer = new SmilesDrawer.Drawer({
-      width: 420,
-      height: 220,
+        if (!mol) return;
 
-      bondThickness: 2,
-      shortBondLength: 0.9,
+        const svg = mol.get_svg_with_highlights(JSON.stringify({}));
 
-      compactDrawing: false,
+        if (mounted && containerRef.current) {
+          containerRef.current.innerHTML = svg;
 
-      terminalCarbons: true,
+          // amélioration visuelle
+          const svgEl = containerRef.current.querySelector("svg");
 
-      explicitHydrogens: false,
-
-      overlapSensitivity: 0.42,
-
-      padding: 25,
-    });
-
-    SmilesDrawer.parse(
-      smiles,
-      (tree: any) => {
-        try {
-          drawer.draw(tree, canvas, "light", false);
-        } catch (err) {
-          console.error("DRAW ERROR:", err);
+          if (svgEl) {
+            svgEl.setAttribute("width", "420");
+            svgEl.setAttribute("height", "220");
+            svgEl.style.maxWidth = "100%";
+            svgEl.style.height = "auto";
+          }
         }
-      },
-      (err: any) => {
-        console.error("SMILES parse error:", err);
+
+        mol.delete();
+      } catch (err) {
+        console.error("RDKit render error:", err);
       }
-    );
+    }
+
+    renderMol();
+
+    return () => {
+      mounted = false;
+    };
   }, [smiles]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={420}
-      height={220}
-      style={{
-        width: "100%",
-        maxWidth: "420px",
-        height: "220px",
-        background: "white",
-      }}
+    <div
+      ref={containerRef}
+      className="bg-white rounded-xl p-2"
     />
   );
 }
