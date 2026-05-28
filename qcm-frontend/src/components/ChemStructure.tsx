@@ -6,22 +6,25 @@ interface Props {
 }
 
 export default function ChemStructure({ smiles }: Props) {
-  const svgRef = useRef<SVGSVGElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    if (!smiles || !svgRef.current) return;
+    if (!smiles || !canvasRef.current) return;
 
-    // Nettoyage ancien rendu
-    svgRef.current.innerHTML = "";
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    // Nettoyage
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const drawer = new SmilesDrawer.Drawer({
       width: 420,
       height: 220,
 
       bondThickness: 2,
-      shortBondLength: 0.85,
-
-      atomVisualization: "default",
+      shortBondLength: 0.9,
 
       compactDrawing: false,
 
@@ -37,7 +40,11 @@ export default function ChemStructure({ smiles }: Props) {
     SmilesDrawer.parse(
       smiles,
       (tree: any) => {
-        drawer.draw(tree, svgRef.current!, "light", false);
+        try {
+          drawer.draw(tree, canvas, "light", false);
+        } catch (err) {
+          console.error("DRAW ERROR:", err);
+        }
       },
       (err: any) => {
         console.error("SMILES parse error:", err);
@@ -46,12 +53,15 @@ export default function ChemStructure({ smiles }: Props) {
   }, [smiles]);
 
   return (
-    <svg
-      ref={svgRef}
+    <canvas
+      ref={canvasRef}
+      width={420}
+      height={220}
       style={{
         width: "100%",
+        maxWidth: "420px",
         height: "220px",
-        overflow: "visible",
+        background: "white",
       }}
     />
   );
