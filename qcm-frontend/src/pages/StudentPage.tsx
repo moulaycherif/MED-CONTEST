@@ -726,10 +726,7 @@ export default function StudentPage() {
       {opt.includes("<smiles>") ? (
   <div className="inline-flex flex-col items-center ml-1">
     <span><Latex>{cleanLatex(opt.split("<smiles>")[0])}</Latex></span>
-    <ChemStructure 
-      smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} 
-      id={`canvas-${q._id}-${i}`} // Crée un ID unique du style "canvas-65f3a2b1-0"
-    />
+    <ChemStructure smiles={opt.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} />
     <span><Latex>{cleanLatex(opt.split("</smiles>")[1])}</Latex></span>
   </div>
 ) : (

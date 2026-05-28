@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useId } from "react";
+import React, { useEffect, useRef } from "react";
 
 interface ChemStructureProps {
   smiles: string;
@@ -6,41 +6,49 @@ interface ChemStructureProps {
 
 export default function ChemStructure({ smiles }: ChemStructureProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // ✨ Génère un ID unique interne auto-géré par React (ex: :r1:, :r2:)
-  const uniqueId = useId(); 
 
   useEffect(() => {
-    // Petit hack pour enlever les caractères ":" de useId qui déplaisent parfois à l'HTML5
-    const cleanId = uniqueId.replace(/:/g, "-");
+    // 1. Nettoyage de sécurité de la chaîne SMILES (enlève espaces, retours à la ligne cachés d'Excel)
+    const cleanSmiles = smiles
+      .replace(/\s+/g, "") // Supprime les espaces et sauts de ligne
+      .trim();
 
     // @ts-ignore
-    if (window.ChemDoodle && canvasRef.current) {
+    if (window.ChemDoodle && canvasRef.current && cleanSmiles) {
       try {
-        // 1. On initialise le canvas avec l'ID nettoyé
+        const canvas = canvasRef.current;
+
+        // 2. Création du Viewer en lui passant directement l'élément HTML Canvas (pas un ID string !)
         // @ts-ignore
-        const viewer = new window.ChemDoodle.ViewerCanvas(cleanId, 220, 130);
+        const viewer = new window.ChemDoodle.ViewerCanvas(canvas, 250, 120);
         
-        // 2. Paramétrage structurel (Semi-développé étendu)
-        viewer.styles.atoms_displayLabels_X = true; // Afficher les Carbones
-        viewer.styles.atoms_labels_all = true;      // Afficher les H (CH3, CH2...)
+        // 3. Configuration stricte pour le rendu semi-développé étendu
+        viewer.styles.atoms_displayLabels_X = true; // Afficher les Carbones (C)
+        viewer.styles.atoms_labels_all = true;      // Forcer l'affichage des CH3, CH2, NH...
         viewer.styles.bonds_width_2D = 1.6;         // Épaisseur des liaisons
-        viewer.styles.atoms_font_size_2D = 12;      // Taille de la police
-        viewer.styles.bonds_saturationWidth_2D = 2; // Doubles liaisons nettes (=O)
+        viewer.styles.atoms_font_size_2D = 13;      // Taille de la police
+        viewer.styles.bonds_saturationWidth_2D = 2; // Doubles liaisons (=O) bien visibles
+        viewer.styles.bonds_length_2D = 20;         // Longueur des liaisons pour étendre la formule
         
-        // 3. Rendu de la molécule
+        // 4. Lecture et application de la molécule
         // @ts-ignore
-        const molecule = window.ChemDoodle.readSMILES(smiles.trim());
-        viewer.loadMolecule(molecule);
+        const molecule = window.ChemDoodle.readSMILES(cleanSmiles);
+        
+        if (molecule) {
+          viewer.loadMolecule(molecule);
+        } else {
+          console.error("❌ ChemDoodle n'a pas pu parser le SMILES :", cleanSmiles);
+        }
       } catch (error) {
-        console.error("❌ Échec du rendu ChemDoodle pour :", smiles, error);
+        console.error("❌ Erreur d'initialisation ChemDoodle :", error);
       }
     }
-  }, [smiles, uniqueId]);
+  }, [smiles]);
 
   return (
-    <div className="bg-white p-1 rounded-lg inline-block border border-gray-200 shadow-sm align-middle my-1">
-      {/* 🛠️ On applique l'ID nettoyé directement sur la balise */}
-      <canvas id={uniqueId.replace(/:/g, "-")} ref={canvasRef} width={220} height={130} />
+    <div className="bg-white p-2 rounded-xl inline-block border border-gray-300 shadow-sm align-middle my-1">
+      {/* Plus besoin d'attribut ID ici, la ref suffit à ChemDoodle */}
+      <canvas ref={canvasRef} width={250} height={120} />
     </div>
   );
 }
