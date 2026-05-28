@@ -335,22 +335,23 @@ export default function StudentPage() {
       </div>
     )}
 
-                {/* 🧠 QUESTION */}
+                {/* 🧠 QUESTION — VERSION CORRIGÉE */}
 <h3 className="font-semibold mb-2 text-lg mt-4">
   Q{idx + 1}) {" "}
   {q.texte?.includes("<smiles>") ? (
-    <>
-      {/* On affiche le texte qui est AVANT la balise smiles */}
-      <Latex>{cleanLatex(q.texte.split("<smiles>")[0])}</Latex>
+    <div className="flex flex-col gap-2">
+      {/* Texte AVANT la balise */}
+      <span><Latex>{cleanLatex(q.texte.split("<smiles>")[0])}</Latex></span>
       
-      {/* On extrait le code SMILES et on l'envoie au dessinateur */}
-      <MoleculeRenderer 
+      {/* 🛠️ Rendu de la Molécule avec un ID Unique pour cette question */}
+      <ChemStructure 
         smiles={q.texte.match(/<smiles>([\s\S]*?)<\/smiles>/)?.[1] || ""} 
+        id={`canvas-question-${q._id}`} 
       />
       
-      {/* On affiche le texte qui est APRÈS la balise smiles (si présent) */}
-      <Latex>{cleanLatex(q.texte.split("</smiles>")[1])}</Latex>
-    </>
+      {/* Texte APRÈS la balise */}
+      <span><Latex>{cleanLatex(q.texte.split("</smiles>")[1])}</Latex></span>
+    </div>
   ) : (
     <Latex>{cleanLatex(q.texte)}</Latex>
   )}
