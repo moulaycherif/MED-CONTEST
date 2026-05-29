@@ -1,11 +1,11 @@
 import React from "react";
 
 interface ChemStructureProps {
-  excelLine: string; // Prend la ligne d'Excel complète, ex: "(E) :<smiles>CCCCOCCCC</smiles>"
+  excelLine: string; // Exemple : "(C) :<smiles>CC(C)CC(=O)OC(=O)CC(C)C</smiles>"
 }
 
-// Nettoie et extrait le SMILES de la cellule Excel
-function getCleanSmiles(text: string): string {
+// Fonction chirurgicale d'extraction du SMILES
+function extractSmiles(text: string): string {
   if (!text) return "";
   const start = text.indexOf("<smiles>");
   const end = text.indexOf("</smiles>");
@@ -13,213 +13,191 @@ function getCleanSmiles(text: string): string {
   return text.substring(start + 8, end).replace(/[\r\n\t\s]/g, "").trim();
 }
 
-// Calcule la chaîne de texte semi-développée linéaire
-function makeSemiDevelopedChain(carbonCount: number): string {
-  if (carbonCount <= 0) return "";
-  if (carbonCount === 1) return "CH₃";
-  const pieces = [];
-  for (let i = 0; i < carbonCount; i++) {
-    if (i === 0 || i === carbonCount - 1) pieces.push("CH₃");
-    else pieces.push("CH₂");
+// Analyse le fragment de chaîne carbonée et le traduit en nomenclature semi-développée linéaire
+function parseRadicalToSemiDev(chain: string): string {
+  // Supprime le carbone du carbonyle s'il est présent en fin de chaîne de l'anhydride/ester
+  let cleanChain = chain;
+  if (chain.endsWith("C") && !chain.includes("(C)")) {
+    cleanChain = chain.substring(0, chain.length - 1);
   }
-  return pieces.join("—");
+  
+  const len = cleanChain.length;
+  if (len === 0) return "";
+  if (len === 1) return "CH₃";
+  
+  const atoms = [];
+  for (let i = 0; i < len; i++) {
+    if (i === 0 || i === len - 1) atoms.push("CH₃");
+    else atoms.push("CH₂");
+  }
+  return atoms.join("—");
 }
 
 export default function ChemStructure({ excelLine }: ChemStructureProps) {
-  const smiles = getCleanSmiles(excelLine);
+  const smiles = extractSmiles(excelLine);
 
   if (!smiles) {
-    return <span className="text-xs text-gray-400">Structure introuvable</span>;
+    return <span className="text-xs text-gray-400">Structure non détectée</span>;
   }
 
-  // Dimensions fixes pour l'espace de dessin vectoriel
-  const svgWidth = 380;
-  const svgHeight = 180;
-
-  // Styles typographiques pour correspondre exactement à une publication ou un examen
-  const textProps = {
-    fontFamily: "monospace, Courier, serif",
-    fontSize: "15px",
-    fontWeight: "bold" as const,
-    fill: "#1f2937",
-    textAnchor: "middle" as const,
-    dominantBaseline: "central" as const,
-  };
+  // Styles CSS pour garantir la police fixe d'un manuel d'édition scientifique
+  const textClass = "font-mono text-base font-bold text-gray-800 tracking-wide select-none whitespace-nowrap";
+  const branchClass = "font-mono text-sm font-bold text-purple-600 select-none leading-none";
 
   // =========================================================================
-  // CAS (E) : LES ÉTHERS (ex: CCCCOCCCC)
-  // =========================================================================
-  if (smiles.includes("O") && !smiles.includes("=")) {
-    const parts = smiles.split("O");
-    const leftLen = parts[0].length;
-    const rightLen = parts[1].length;
-
-    // Transformation en chaînes textuelles (ex: CH3—CH2—CH2—CH2)
-    const topChain = makeSemiDevelopedChain(leftLen);
-    const bottomChain = makeSemiDevelopedChain(rightLen);
-
-    // Coordonnées calculées pour aligner les deux chaînes en parallèle
-    const chainX = 140; 
-    const topY = 50;
-    const bottomY = 130;
-    const oxygenX = 310;
-    const oxygenY = 90;
-
-    return (
-      <div className="bg-white p-2 inline-block rounded-xl border border-gray-100 shadow-sm select-none">
-        <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
-          {/* Chaîne supérieure */}
-          <text x={chainX} y={topY} {...textProps}>{topChain}</text>
-          
-          {/* Chaîne inférieure */}
-          <text x={chainX} y={bottomY} {...textProps}>{bottomChain}</text>
-          
-          {/* Atome d'oxygène central */}
-          <text x={oxygenX} y={oxygenY} {...textProps} fontSize="20px" fill="#dc2626">O</text>
-
-          {/* Liaisons inclinées depuis le dernier groupe CH2/CH3 des chaînes vers l'Oxygène */}
-          {/* Les coordonnées de départ tiennent compte de la longueur du texte de la chaîne */}
-          <line x1={chainX + (leftLen * 18)} y1={topY + 5} x2={oxygenX - 15} y2={oxygenY - 12} stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
-          <line x1={chainX + (rightLen * 18)} y1={bottomY - 5} x2={oxygenX - 15} y2={oxygenY + 12} stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      </div>
-    );
-  }
-
-  // =========================================================================
-  // CAS (A), (C), (D) : LES ANHYDRIDES (Contiennent (=O)OC(=O))
+  // 1. DÉTECTION AUTOMATIQUE : FAMILLE DES ANHYDRIDES (Contiennent (=O)OC(=O))
   // =========================================================================
   if (smiles.includes("(=O)OC(=O)")) {
     const parts = smiles.split("(=O)OC(=O)");
     const leftPart = parts[0];
     const rightPart = parts[1];
 
-    // Variables de configuration géométrique
-    let topText = "";
-    let bottomText = "";
-    
-    // Détecteurs de ramifications
-    let topRamification: { x: number; y: number } | null = null;
-    let bottomRamification: { x: number; y: number } | null = null;
-
-    // 1. Analyse de la chaîne supérieure (gauche du cœur d'anhydride)
+    // --- ANALYSE DE LA CHAÎNE DU HAUT (Partie gauche du SMILES) ---
+    let topChainHtml = null;
     if (leftPart.includes("(C)")) {
+      // Détection automatique de la position de la ramification Méthyle
       if (leftPart.startsWith("CCC(C)")) {
-        // Cas D : Ramification proche du carbonyle
-        topText = "CH₃—CH₂—CH—C";
-        topRamification = { x: 145, y: 20 }; // Position au-dessus du CH concerné
+        // Cas D : Ramification sur le carbone adjacent au carbonyle (C=O)
+        topChainHtml = (
+          <div className="flex flex-col items-center pl-20">
+            <span className={branchClass}>CH₃</span>
+            <span className={`${textClass} text-xs leading-3 my-0.5`}>│</span>
+            <span className={textClass}>CH₃—CH₂—CH—C</span>
+          </div>
+        );
       } else {
-        // Cas C : Ramification en bout de chaîne
-        topText = "CH₃—CH—CH₂—C";
-        topRamification = { x: 95, y: 20 };
+        // Cas C : Ramification éloignée du groupement carbonyle
+        topChainHtml = (
+          <div className="flex flex-col items-center pr-20">
+            <span className={branchClass}>CH₃</span>
+            <span className={`${textClass} text-xs leading-3 my-0.5`}>│</span>
+            <span className={textClass}>CH₃—CH—CH₂—C</span>
+          </div>
+        );
       }
     } else {
-      // Cas A : Chaîne linéaire
-      const carbons = leftPart.substring(0, leftPart.length - 1);
-      topText = makeSemiDevelopedChain(carbons) + "—C";
+      // Cas A : Chaîne linéaire automatisée
+      topChainHtml = <div className={textClass}>{parseRadicalToSemiDev(leftPart)}—C</div>;
     }
 
-    // 2. Analyse de la chaîne inférieure (droite du cœur d'anhydride)
+    // --- ANALYSE DE LA CHAÎNE DU BAS (Partie droite du SMILES) ---
+    let bottomChainHtml = null;
     if (rightPart.includes("(C)")) {
-      if (rightPart.startsWith("CC(C)C")) {
-        bottomText = "CH₃—CH₂—CH—C";
-        bottomRamification = { x: 145, y: 160 }; // Position en-dessous du CH concerné
+      if (rightPart.startsWith("CC(C)C") || rightPart.includes("C(C)C")) {
+        // Cas ramifié bas adjacent
+        bottomChainHtml = (
+          <div className="flex flex-col items-center pl-20 mt-2">
+            <span className={textClass}>CH₃—CH₂—CH—C</span>
+            <span className={`${textClass} text-xs leading-3 my-0.5`}>│</span>
+            <span className={branchClass}>CH₃</span>
+          </div>
+        );
       } else {
-        bottomText = "CH₃—CH—CH₂—C";
-        bottomRamification = { x: 95, y: 160 };
+        // Cas ramifié bas éloigné
+        bottomChainHtml = (
+          <div className="flex flex-col items-center pr-20 mt-2">
+            <span className={textClass}>CH₃—CH—CH₂—C</span>
+            <span className={`${textClass} text-xs leading-3 my-0.5`}>│</span>
+            <span className={branchClass}>CH₃</span>
+          </div>
+        );
       }
     } else {
-      bottomText = makeSemiDevelopedChain(rightPart) + "—C";
+      // Cas linéaire bas automatisé
+      bottomChainHtml = <div className={textClass}>{parseRadicalToSemiDev(rightPart)}—C</div>;
     }
-
-    // Positions clés du squelette de l'Anhydride
-    const topChainY = 50;
-    const bottomChainY = 130;
-    const oX = 320;
-    const oY = 90;
 
     return (
-      <div className="bg-white p-2 inline-block rounded-xl border border-gray-100 shadow-sm select-none">
-        <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
+      <div className="relative p-6 bg-white rounded-xl border border-gray-200 shadow-sm inline-flex items-center justify-center min-w-[380px] h-[190px]">
+        {/* Grille de positionnement moléculaire de l'Anhydride */}
+        <div className="flex flex-col justify-center items-end pr-14 gap-y-1 w-full">
           
-          {/* Ligne du haut : Radical + Carbonyle */}
-          <text x={150} y={topChainY} {...textProps}>{topText}</text>
-          {/* Double liaison Oxygène du haut (═O) inclinée à 45° ou verticale */}
-          <text x={245} y={topChainY - 25} {...textProps}>O</text>
-          <line x1={237} y1={topChainY - 12} x2={237} y2={topChainY - 2} stroke="#1f2937" strokeWidth="1.5" />
-          <line x1={242} y1={topChainY - 12} x2={242} y2={topChainY - 2} stroke="#1f2937" strokeWidth="1.5" />
+          {/* Bloc Supérieur + Son Oxygène double liaison */}
+          <div className="relative w-full flex justify-end items-end">
+            {topChainHtml}
+            <div className="flex flex-col items-center ml-1 select-none">
+              <span className={`${textClass} text-sm mb-0.5`}>O</span>
+              <span className={`${textClass} text-xs leading-3 mb-1`}>║</span>
+            </div>
+          </div>
 
-          {/* Ramification haute si existante */}
-          {topRamification && (
-            <>
-              <line x1={topRamification.x} y1={topChainY - 10} x2={topRamification.x} y2={topRamification.y + 8} stroke="#1f2937" strokeWidth="2" />
-              <text x={topRamification.x} y={topRamification.y} {...textProps} fill="#7c3aed">CH₃</text>
-            </>
-          )}
+          {/* Bloc Inférieur + Son Oxygène double liaison */}
+          <div className="relative w-full flex justify-end items-start mt-4">
+            {bottomChainHtml}
+            <div className="flex flex-col items-center ml-1 select-none">
+              <span className={`${textClass} text-xs leading-3 mt-1`}>║</span>
+              <span className={`${textClass} text-sm mt-0.5`}>O</span>
+            </div>
+          </div>
+        </div>
 
-          {/* Ligne du bas : Radical + Carbonyle */}
-          <text x={150} y={bottomChainY} {...textProps}>{bottomText}</text>
-          {/* Double liaison Oxygène du bas (═O) */}
-          <text x={245} y={bottomChainY + 25} {...textProps}>O</text>
-          <line x1={237} y1={bottomChainY + 12} x2={237} y2={bottomChainY + 2} stroke="#1f2937" strokeWidth="1.5" />
-          <line x1={242} y1={bottomChainY + 12} x2={242} y2={bottomChainY + 2} stroke="#1f2937" strokeWidth="1.5" />
+        {/* L'atome d'Oxygène faisant le pont central */}
+        <div className="absolute right-12 font-mono text-xl font-bold text-red-600 select-none">O</div>
 
-          {/* Ramification basse si existante */}
-          {bottomRamification && (
-            <>
-              <line x1={bottomRamification.x} y1={bottomChainY + 10} x2={bottomRamification.x} y2={bottomRamification.y - 8} stroke="#1f2937" strokeWidth="2" />
-              <text x={bottomRamification.x} y={bottomRamification.y} {...textProps} fill="#7c3aed">CH₃</text>
-            </>
-          )}
-
-          {/* Pont Oxygène central */}
-          <text x={oX} y={oY} {...textProps} fontSize="20px" fill="#dc2626">O</text>
-
-          {/* Liaisons obliques liant les Carbones des Carbonyles à l'Oxygène central */}
-          <line x1={265} y1={topChainY} x2={oX - 15} y2={oY - 12} stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
-          <line x1={265} y1={bottomChainY} x2={oX - 15} y2={oY + 12} stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
+        {/* Liaisons d'angles parfaites vers le pont oxygène */}
+        <svg className="absolute inset-0 pointer-events-none" width="100%" height="100%">
+          <line x1="71%" y1="39%" x2="81%" y2="49%" stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
+          <line x1="71%" y1="61%" x2="81%" y2="51%" stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </div>
     );
   }
 
   // =========================================================================
-  // CAS (B) : LES ESTERS (Contiennent (=O)O)
+  // 2. DÉTECTION AUTOMATIQUE : FAMILLE DES ESTERS (Contiennent (=O)O)
   // =========================================================================
   if (smiles.includes("(=O)O")) {
     const parts = smiles.split("(=O)O");
-    const acidCount = parts[0].length - 1; 
-    const alcoholCount = parts[1].length;
-
-    const leftChain = makeSemiDevelopedChain(acidCount) + "—C";
-    const rightChain = makeSemiDevelopedChain(alcoholCount);
+    const leftRadical = parseRadicalToSemiDev(parts[0]);
+    const rightRadical = parseRadicalToSemiDev(parts[1]);
 
     return (
-      <div className="bg-white p-2 inline-block rounded-xl border border-gray-100 shadow-sm select-none">
-        <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
-          {/* Partie Acide à gauche */}
-          <text x={110} y={70} {...textProps}>{leftChain}</text>
+      <div className="relative p-6 bg-white rounded-xl border border-gray-200 shadow-sm inline-flex items-center justify-center min-w-[360px] h-[140px]">
+        <div className="grid grid-cols-[auto_15px_auto] grid-rows-2 items-center gap-y-2">
+          {/* Chaîne principale acide carbonyle */}
+          <div className={`${textClass} pr-1`}>{leftRadical}—C</div>
           
-          {/* Double liaison Carbonyle du haut */}
-          <text x={185} y={35} {...textProps}>O</text>
-          <line x1={181} y1={45} x2={181} y2={58} stroke="#1f2937" strokeWidth="1.5" />
-          <line x1={186} y1={45} x2={186} y2={58} stroke="#1f2937" strokeWidth="1.5" />
+          {/* Groupe carbonyle double liaison O vers le haut */}
+          <div className="flex flex-col items-center select-none col-span-2 justify-self-start">
+            <span className={`${textClass} text-sm`}>O</span>
+            <span className={`${textClass} text-xs leading-3`}>║</span>
+          </div>
 
-          {/* Oxygène simple liaison */}
-          <text x={240} y={100} {...textProps} fontSize="20px" fill="#dc2626">O</text>
+          {/* Pont Oxygène simple liaison reliant la chaîne alcool à droite */}
+          <div className={`${textClass} text-xl text-red-600 pl-4 col-start-2 row-start-2`}>O</div>
+          <div className={`${textClass} pl-8 col-start-3 row-start-2`}>—{rightRadical}</div>
+        </div>
+      </div>
+    );
+  }
 
-          {/* Liaison oblique vers l'oxygène */}
-          <line x1={200} y1={75} x2={228} y2={92} stroke="#1f2937" strokeWidth="2" />
+  // =========================================================================
+  // 3. DÉTECTION AUTOMATIQUE : FAMILLE DES ÉTHERS (Contiennent "O" central simple)
+  // =========================================================================
+  if (smiles.includes("O") && !smiles.includes("=")) {
+    const parts = smiles.split("O");
+    const topChain = parseRadicalToSemiDev(parts[0]);
+    const bottomChain = parseRadicalToSemiDev(parts[1]);
 
-          {/* Liaison oblique sortant de l'oxygène vers la chaîne de droite */}
-          <line x1={252} y1={108} x2={275} y2={125} stroke="#1f2937" strokeWidth="2" />
+    return (
+      <div className="relative p-6 bg-white rounded-xl border border-gray-200 shadow-sm inline-flex items-center justify-center min-w-[360px] h-[160px]">
+        {/* Les deux chaînes radicalaires placées de manière strictement parallèle */}
+        <div className="flex flex-col gap-10 items-end pr-16 w-full">
+          <span className={textClass}>{topChain}</span>
+          <span className={textClass}>{bottomChain}</span>
+        </div>
 
-          {/* Partie Alcool décalée en bas à droite */}
-          <text x={315} y={135} {...textProps}>{rightChain}</text>
+        {/* Oxygène central décalé vers la droite */}
+        <div className="absolute right-12 font-mono text-2xl font-bold text-red-600 select-none">O</div>
+
+        {/* Liaisons obliques convergentes conformes au modèle de l'examen */}
+        <svg className="absolute inset-0 pointer-events-none" width="100%" height="100%">
+          <line x1="72%" y1="35%" x2="81%" y2="48%" stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
+          <line x1="72%" y1="65%" x2="81%" y2="52%" stroke="#1f2937" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </div>
     );
   }
 
-  return <div className="text-xs text-gray-400 p-2">Famille moléculaire non supportée</div>;
+  return <div className="text-xs text-gray-400 p-2">Formule brute ou SMILES non pris en charge</div>;
 }
