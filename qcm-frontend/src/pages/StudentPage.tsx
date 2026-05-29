@@ -203,7 +203,7 @@ export default function StudentPage() {
   }
 
   // ✨ COMPOSANT DE PARSING ET RENDU SÉCURISÉ POUR COMPOSER LE TEXTE ET LE SMILES
-  function MixedContentRenderer({ text }: { text: string }) {
+ function MixedContentRenderer({ text }: { text: string }) {
   if (!text) return null;
 
   // 1. Détection stricte avant tout nettoyage de texte
@@ -233,24 +233,21 @@ export default function StudentPage() {
 
   return (
     <div className="flex flex-col items-start w-full my-1">
-      {/* Rendu du texte d'avant (ex: "(A) : ") totalement isolé dans son propre bloc */}
+      {/* Rendu du texte d'avant totalement isolé dans son propre bloc */}
       {beforeText.trim().length > 0 && (
         <div className="mb-1 block text-gray-800">
           <Latex>{cleanLatex(beforeText)}</Latex>
         </div>
       )}
 
-      {/* Rendu du Canvas de la molécule totalement étanche */}
+      {/* RENDU DE LA MOLÉCULE MODIFIÉ ICI */}
       {cleanSmiles.length > 0 && (
         <div 
           className="my-3 bg-white rounded-xl p-3 border border-gray-200 shadow-md inline-block clear-both"
           style={{ minWidth: "160px", minHeight: "120px" }}
         >
-          {/* L'ajout de key={cleanSmiles} est MAGIQUE : elle force React 
-            à détruire l'ancien Canvas et à instancier un tout nouveau 
-            moteur de rendu ChemDoodle dès que la formule change !
-          */}
-          <ChemStructure key={cleanSmiles} smiles={cleanSmiles} />
+          {/* MODIFICATION : On change "smiles={cleanSmiles}" par "excelLine={text}" */}
+          <ChemStructure key={cleanSmiles} excelLine={text} />
         </div>
       )}
 
