@@ -206,56 +206,69 @@ export default function StudentPage() {
  function MixedContentRenderer({ text }: { text: string }) {
   if (!text) return null;
 
-  // 1. Détection stricte avant tout nettoyage de texte
-  if (!text.includes("<smiles>")) {
-    return <Latex>{cleanLatex(text)}</Latex>;
+  // 1. Extraction et nettoyage de sécurité si de vieilles balises <smiles> traînent encore
+  let processedText = text;
+  if (processedText.includes("<smiles>")) {
+    processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
   }
 
-  const startIdx = text.indexOf("<smiles>");
-  const endIdx = text.indexOf("</smiles>");
-
-  if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
-    return <Latex>{cleanLatex(text)}</Latex>;
+  // 2. Détection de la présence d'une image HTML (<img ... />)
+  if (!processedText.includes("<img")) {
+    // S'il n'y a pas d'image, on applique le traitement LaTeX habituel de manière propre
+    return <Latex>{cleanLatex(processedText)}</Latex>;
   }
 
-  // 2. Extraction des portions brutes
-  const beforeText = text.substring(0, startIdx);
-  const rawSmiles = text.substring(startIdx + 8, endIdx);
-  const afterText = text.substring(endIdx + 9);
+  // 3. Extraction chirurgicale si un combiné Texte + Balise Image est détecté
+  const imgStart = processedText.indexOf("<img");
+  const imgEnd = processedText.indexOf("/>", imgStart);
 
-  // 3. Nettoyage chirurgical du SMILES (Suppression des sauts de ligne Excel \r et \n)
-  const cleanSmiles = rawSmiles
-    .replace(/<\/?[^>]+(>|$)/g, "") // Supprime tout tag HTML résiduel
-    .replace(/&nbsp;/g, "")
-    .replace(/[\r\n\t]/g, "")       // Supprime les coupures invisibles d'Excel
-    .replace(/\s+/g, "")            // Supprime tous les espaces
-    .trim();
+  if (imgStart === -1 || imgEnd === -1) {
+    return <Latex>{cleanLatex(processedText)}</Latex>;
+  }
+
+  // Séparation du texte avant l'image, de la balise image elle-même, et du texte après
+  const textBefore = processedText.substring(0, imgStart);
+  const rawImgTag = processedText.substring(imgStart, imgEnd + 2);
+  const textAfter = processedText.substring(imgEnd + 2);
+
+  // Extraction de l'attribut 'src' à l'intérieur de la balise <img /> pour React
+  const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
+  const imgSrc = srcMatch ? srcMatch[1] : "";
+
+  // Extraction facultative des classes CSS pour conserver les dimensions voulues dans l'Excel
+  const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
+  const imgClass = classMatch ? classMatch[1] : "max-h-24 object-contain inline-block";
 
   return (
-    <div className="flex flex-col items-start w-full my-1">
-      {/* Rendu du texte d'avant totalement isolé dans son propre bloc */}
-      {beforeText.trim().length > 0 && (
-        <div className="mb-1 block text-gray-800">
-          <Latex>{cleanLatex(beforeText)}</Latex>
+    <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap">
+      {/* Rendu du texte introductif (avec support LaTeX si besoin, ex: (A), formules, etc.) */}
+      {textBefore.trim().length > 0 && (
+        <span className="text-gray-800 font-medium">
+          <Latex>{cleanLatex(textBefore)}</Latex>
+        </span>
+      )}
+
+      {/* Rendu haut de gamme de l'image de la molécule extraite du PDF */}
+      {imgSrc && (
+        <div className="bg-white rounded-lg p-2 border border-gray-100 shadow-sm transition-transform hover:scale-105 inline-block">
+          <img 
+            src={imgSrc} 
+            alt="Structure chimique" 
+            className={`${imgClass} rounded`}
+            loading="lazy"
+            onError={(e) => {
+              console.error(`Impossible de charger l'image chimique : ${imgSrc}`);
+              e.currentTarget.style.display = "none";
+            }}
+          />
         </div>
       )}
 
-      {/* RENDU DE LA MOLÉCULE MODIFIÉ ICI */}
-      {cleanSmiles.length > 0 && (
-        <div 
-          className="my-3 bg-white rounded-xl p-3 border border-gray-200 shadow-md inline-block clear-both"
-          style={{ minWidth: "160px", minHeight: "120px" }}
-        >
-          {/* MODIFICATION : On change "smiles={cleanSmiles}" par "excelLine={text}" */}
-          <ChemStructure key={cleanSmiles} excelLine={text} />
-        </div>
-      )}
-
-      {/* Rendu du texte d'après (s'il y en a un) isolé lui aussi */}
-      {afterText.trim().length > 0 && (
-        <div className="mt-1 block text-gray-800">
-          <Latex>{cleanLatex(afterText)}</Latex>
-        </div>
+      {/* Rendu du texte positionné après l'image s'il y en a un */}
+      {textAfter.trim().length > 0 && (
+        <span className="text-gray-600 text-sm">
+          <Latex>{cleanLatex(textAfter)}</Latex>
+        </span>
       )}
     </div>
   );
