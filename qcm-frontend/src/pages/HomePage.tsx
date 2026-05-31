@@ -123,7 +123,7 @@ export default function HomePage() {
         <div className="flex items-center justify-center gap-4 flex-wrap">
         <p className="m-0">Contactez-nous directement sur WhatsApp pour toute question ou assistance.</p>
         <a
-          href="https://wa.me/212600000000" // Remplace par ton vrai numéro WhatsApp
+          href="https://wa.me/212650188863" // Remplace par ton vrai numéro WhatsApp
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-5 py-2 bg-green-500 rounded-lg shadow hover:bg-green-600 transition"
