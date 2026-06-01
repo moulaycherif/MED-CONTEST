@@ -34,11 +34,13 @@ interface Astuce {
   cases?: TipCase[];
   pdfUrl?: string;
 }
+
 interface TipCase {
   title?: string;
   content?: string;
   image?: string;
 }
+
 interface Question {
   _id: string;
   texte?: string;
@@ -80,8 +82,17 @@ export default function StudentPage() {
   const [selectedTipId, setSelectedTipId] = useState<string | null>(null);
   const [selectedTip, setSelectedTip] = useState<Astuce | null>(null);
   const [focusMode, setFocusMode] = useState(false);
+
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
   const isShortResume = (selectedResume?.chapter?.length ?? 0) < 30;
+
+  // Configuration typée explicite pour éviter l'erreur TypeScript avec selectedMatiere
+  const subjectImages: Record<string, string> = {
+    Mathématique: mathsImg,
+    Physique: physiqueImg,
+    Chimie: chimieImg,
+    SVT: svtImg,
+  };
 
   // ✅ Touche ESC pour fermer le modal des astuces
   useEffect(() => {
@@ -202,77 +213,67 @@ export default function StudentPage() {
       .replace(/\s+/g, " ");   
   }
 
-  // ✨ COMPOSANT DE PARSING ET RENDU SÉCURISÉ POUR COMPOSER LE TEXTE ET LE SMILES
- function MixedContentRenderer({ text }: { text: string }) {
-  if (!text) return null;
+  // ✨ COMPOSANT DE PARSING ET RENDU POUR COMPOSER LE TEXTE ET LE SMILES
+  function MixedContentRenderer({ text }: { text: string }) {
+    if (!text) return null;
 
-  // 1. Extraction et nettoyage de sécurité si de vieilles balises <smiles> traînent encore
-  let processedText = text;
-  if (processedText.includes("<smiles>")) {
-    processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
+    let processedText = text;
+    if (processedText.includes("<smiles>")) {
+      processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
+    }
+
+    if (!processedText.includes("<img")) {
+      return <Latex>{cleanLatex(processedText)}</Latex>;
+    }
+
+    const imgStart = processedText.indexOf("<img");
+    const imgEnd = processedText.indexOf("/>", imgStart);
+
+    if (imgStart === -1 || imgEnd === -1) {
+      return <Latex>{cleanLatex(processedText)}</Latex>;
+    }
+
+    const textBefore = processedText.substring(0, imgStart);
+    const rawImgTag = processedText.substring(imgStart, imgEnd + 2);
+    const textAfter = processedText.substring(imgEnd + 2);
+
+    const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
+    const imgSrc = srcMatch ? srcMatch[1] : "";
+
+    const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
+    const imgClass = classMatch ? classMatch[1] : "max-h-24 object-contain inline-block";
+
+    return (
+      <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap">
+        {textBefore.trim().length > 0 && (
+          <span className="text-gray-800 font-medium">
+            <Latex>{cleanLatex(textBefore)}</Latex>
+          </span>
+        )}
+
+        {imgSrc && (
+          <div className="bg-white rounded-lg p-2 border border-gray-100 shadow-sm transition-transform hover:scale-105 inline-block">
+            <img 
+              src={imgSrc} 
+              alt="Structure chimique" 
+              className={`${imgClass} rounded`}
+              loading="lazy"
+              onError={(e) => {
+                console.error(`Impossible de charger l'image chimique : ${imgSrc}`);
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          </div>
+        )}
+
+        {textAfter.trim().length > 0 && (
+          <span className="text-gray-600 text-sm">
+            <Latex>{cleanLatex(textAfter)}</Latex>
+          </span>
+        )}
+      </div>
+    );
   }
-
-  // 2. Détection de la présence d'une image HTML (<img ... />)
-  if (!processedText.includes("<img")) {
-    // S'il n'y a pas d'image, on applique le traitement LaTeX habituel de manière propre
-    return <Latex>{cleanLatex(processedText)}</Latex>;
-  }
-
-  // 3. Extraction chirurgicale si un combiné Texte + Balise Image est détecté
-  const imgStart = processedText.indexOf("<img");
-  const imgEnd = processedText.indexOf("/>", imgStart);
-
-  if (imgStart === -1 || imgEnd === -1) {
-    return <Latex>{cleanLatex(processedText)}</Latex>;
-  }
-
-  // Séparation du texte avant l'image, de la balise image elle-même, et du texte après
-  const textBefore = processedText.substring(0, imgStart);
-  const rawImgTag = processedText.substring(imgStart, imgEnd + 2);
-  const textAfter = processedText.substring(imgEnd + 2);
-
-  // Extraction de l'attribut 'src' à l'intérieur de la balise <img /> pour React
-  const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
-  const imgSrc = srcMatch ? srcMatch[1] : "";
-
-  // Extraction facultative des classes CSS pour conserver les dimensions voulues dans l'Excel
-  const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
-  const imgClass = classMatch ? classMatch[1] : "max-h-24 object-contain inline-block";
-
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap">
-      {/* Rendu du texte introductif (avec support LaTeX si besoin, ex: (A), formules, etc.) */}
-      {textBefore.trim().length > 0 && (
-        <span className="text-gray-800 font-medium">
-          <Latex>{cleanLatex(textBefore)}</Latex>
-        </span>
-      )}
-
-      {/* Rendu haut de gamme de l'image de la molécule extraite du PDF */}
-      {imgSrc && (
-        <div className="bg-white rounded-lg p-2 border border-gray-100 shadow-sm transition-transform hover:scale-105 inline-block">
-          <img 
-            src={imgSrc} 
-            alt="Structure chimique" 
-            className={`${imgClass} rounded`}
-            loading="lazy"
-            onError={(e) => {
-              console.error(`Impossible de charger l'image chimique : ${imgSrc}`);
-              e.currentTarget.style.display = "none";
-            }}
-          />
-        </div>
-      )}
-
-      {/* Rendu du texte positionné après l'image s'il y en a un */}
-      {textAfter.trim().length > 0 && (
-        <span className="text-gray-600 text-sm">
-          <Latex>{cleanLatex(textAfter)}</Latex>
-        </span>
-      )}
-    </div>
-  );
-}
 
   function renderContent(content?: string) {
     if (!content) return null;
@@ -349,119 +350,118 @@ export default function StudentPage() {
       return <StudentDashboardStats />;
     }
     
-    {/* 🧩 Cas 1 : affichage des questions (QCE) */}
-if (section === "qcm" && currentExam) {
-  let lastGroupId: string | null = null;
-  if (questions.length === 0)
-    return (
-      <div className="text-center mt-10">
-        <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
-      </div>
-    );
-
-  return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold text-center mb-4 text-blue-800">📘 QCE — {currentExam}</h2>
-      {questions.map((q, idx) => {
-        const showGroupImage = q.groupId?.intro || (q.groupId?.image && q.groupId._id !== lastGroupId);
-        const isNewGroup = q.groupId?._id && q.groupId._id !== lastGroupId;
-        if (q.groupId?._id) {
-          lastGroupId = q.groupId._id;
-        }
-
+    // 🧩 Cas 1 : affichage des questions (QCE)
+    if (section === "qcm" && currentExam) {
+      let lastGroupId: string | null = null;
+      if (questions.length === 0)
         return (
-          <motion.div
-            key={q._id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 mb-4 bg-white rounded-xl shadow"
-          >
-            {/* 🖼 EN-TÊTE DE GROUPE MODIFIÉ ET SÉCURISÉ */}
-            {q.groupId?._id && isNewGroup && (
-              <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
-                {q.groupId?.intro && (
-                  <div className="text-gray-700 font-medium text-lg mb-4 italic w-full">
-                    {/* ✅ Remplacement de <Latex> par MixedContentRenderer pour décoder le SMILES du groupe */}
-                    <MixedContentRenderer text={q.groupId.intro} />
+          <div className="text-center mt-10">
+            <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
+          </div>
+        );
+
+      return (
+        <div className="p-4">
+          <h2 className="text-xl font-bold text-center mb-4 text-blue-800">📘 QCE — {currentExam}</h2>
+          {questions.map((q, idx) => {
+            const isNewGroup = q.groupId?._id && q.groupId._id !== lastGroupId;
+            if (q.groupId?._id) {
+              lastGroupId = q.groupId._id;
+            }
+
+            return (
+              <motion.div
+                key={q._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 mb-4 bg-white rounded-xl shadow"
+              >
+                {/* 🖼 EN-TÊTE DE GROUPE SÉCURISÉ CONTRE LES EN-TÊTES SANS IMAGE */}
+                {q.groupId?._id && isNewGroup && (
+                  <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
+                    {q.groupId?.intro && (
+                      <div className="text-gray-700 font-medium text-lg mb-4 italic w-full">
+                        <MixedContentRenderer text={q.groupId.intro} />
+                      </div>
+                    )}
+                    {/* ✅ Affichage conditionné : n'apparaît pas s'il n'y a pas d'image valide pour le groupe */}
+                    {q.groupId?.image && (
+                      <img
+                        src={getImageUrl(q.groupId.image)}
+                        className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
+                        alt="Illustration du groupe"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    )}
                   </div>
                 )}
-                {q.groupId?.image && (
+
+                {/* 🧠 RENDU DE LA QUESTION */}
+                <h3 className="font-semibold mb-2 text-lg mt-4 flex items-start gap-1">
+                  <span>Q{idx + 1}) </span>
+                  <div className="flex-1">
+                    <MixedContentRenderer text={q.texte || ""} />
+                  </div>
+                  <span className="text-purple-600 shrink-0"> ({q.note} pt)</span>
+                </h3>
+
+                {(!q.groupId || !q.groupId._id) && q.image && (
                   <img
-                    src={getImageUrl(q.groupId.image)}
-                    className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
-                    alt="Illustration du groupe"
+                    src={getImageUrl(q.image)}
+                    className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
+                    alt="Illustration"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 )}
-              </div>
-            )}
-
-            {/* 🧠 RENDU DE LA QUESTION */}
-            <h3 className="font-semibold mb-2 text-lg mt-4 flex items-start gap-1">
-              <span>Q{idx + 1}) </span>
-              <div className="flex-1">
-                <MixedContentRenderer text={q.texte || ""} />
-              </div>
-              <span className="text-purple-600 shrink-0"> ({q.note} pt)</span>
-            </h3>
-
-            {(!q.groupId || !q.groupId._id) && q.image && (
-              <img
-                src={getImageUrl(q.image)}
-                className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
-                alt="Illustration"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
-            )}
-            
-            {/* OPTIONS DE LA QUESTION */}
-            {q.options.map((opt, i) => {
-              return (
-                <label
-                  key={i}
-                  className={`flex items-start p-3 border rounded-lg cursor-pointer mb-2 transition-all ${
-                    submitted
-                      ? opt === q.reponseCorrecte
-                        ? "bg-green-100 border-green-400"
-                        : answers[q._id] === opt
-                        ? "bg-red-100 border-red-400"
-                        : ""
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={q._id}
-                    checked={answers[q._id] === opt}
-                    onChange={() => handleAnswerChange(q._id, opt)}
-                    disabled={submitted}
-                    className="mt-1 mr-3 shrink-0"
-                  />
-                  
-                  <div className="flex-1 w-full">
-                    <MixedContentRenderer text={opt} />
-                  </div>
-                </label>
-              );
-            })}
-          </motion.div>
-        );
-      })}
-      {!submitted ? (
-        <button
-          onClick={handleFinish}
-          className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-        >
-          ✅ Soumettre
-        </button>
-      ) : (
-        <div className="mt-4 text-center text-lg font-semibold text-blue-700">
-          ✅ Score final : {score} / {questions.reduce((sum, q) => sum + q.note, 0)}
+                
+                {/* OPTIONS DE LA QUESTION */}
+                {q.options.map((opt, i) => {
+                  return (
+                    <label
+                      key={i}
+                      className={`flex items-start p-3 border rounded-lg cursor-pointer mb-2 transition-all ${
+                        submitted
+                          ? opt === q.reponseCorrecte
+                            ? "bg-green-100 border-green-400"
+                            : answers[q._id] === opt
+                            ? "bg-red-100 border-red-400"
+                            : ""
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={q._id}
+                        checked={answers[q._id] === opt}
+                        onChange={() => handleAnswerChange(q._id, opt)}
+                        disabled={submitted}
+                        className="mt-1 mr-3 shrink-0"
+                      />
+                      
+                      <div className="flex-1 w-full">
+                        <MixedContentRenderer text={opt} />
+                      </div>
+                    </label>
+                  );
+                })}
+              </motion.div>
+            );
+          })}
+          {!submitted ? (
+            <button
+              onClick={handleFinish}
+              className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
+              ✅ Soumettre
+            </button>
+          ) : (
+            <div className="mt-4 text-center text-lg font-semibold text-blue-700">
+              ✅ Score final : {score} / {questions.reduce((sum, q) => sum + q.note, 0)}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
+      );
+    }
 
     // 🧩 Cas 2 : QCE par concours
     if (section === "concours") {
@@ -492,14 +492,7 @@ if (section === "qcm" && currentExam) {
 
     // 🧩 Cas 3 : QCE par matière
     if (section === "matiere" && selectedMatiere) {
-      const matiereImages: Record<string, string> = {
-        Mathématique: mathsImg,
-        Physique: physiqueImg,
-        Chimie: chimieImg,
-        SVT: svtImg,
-      };
-
-      const matiereImage = matiereImages[selectedMatiere];
+      const matiereImage = subjectImages[selectedMatiere];
       const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
 
       return (
@@ -529,13 +522,6 @@ if (section === "qcm" && currentExam) {
 
     // 🧩 Cas 4 : Soutien
     if (section === "soutien" && selectedMatiere) {
-      const subjectImages: Record<string, string> = {
-        Mathématique: mathsImg,
-        Physique: physiqueImg,
-        Chimie: chimieImg,
-        SVT: svtImg,
-      };
-
       const chaptersBySubject: Record<string, string[]> = {
         Mathématique: [
           "Chapitre I : Suites & Sommes",
@@ -873,7 +859,11 @@ if (section === "qcm" && currentExam) {
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => setSelectedChapter(chapter)}
             >
-              <img src={subjectImages[selectedMatiere] || mathsImg} alt={chapter} className="w-48 h-48 object-cover" />
+              <img 
+                src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
+                alt={chapter} 
+                className="w-48 h-48 object-cover" 
+              />
               <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
                 {chapter}
               </div>

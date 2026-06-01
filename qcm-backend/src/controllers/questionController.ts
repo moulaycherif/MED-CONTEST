@@ -5,7 +5,7 @@ import QuestionGroup from "../models/QuestionGroup";
 import XLSX from "xlsx";
 
 /* ============================================================
-   🔧 UTILITAIRES
+    🔧 UTILITAIRES
 ============================================================ */
 
 const normalize = (s: string) =>
@@ -24,7 +24,7 @@ const getCell = (row: any, key: string) => {
 };
 
 /* ============================================================
-   📥 GET QUESTIONS
+    📥 GET QUESTIONS
 ============================================================ */
 
 export const getQuestions = async (req: Request, res: Response) => {
@@ -44,13 +44,13 @@ export const getQuestions = async (req: Request, res: Response) => {
     }
 
     const questions = await Question.find(filter)
-  .populate({
-    path: "groupId",
-    model: "QuestionGroup",
-    select: "image intro subject exam order",
-  })
-  .sort({ "groupId.order": 1, _id: 1 })
-  .lean();
+      .populate({
+        path: "groupId",
+        model: "QuestionGroup",
+        select: "image intro subject exam order",
+      })
+      .sort({ "groupId.order": 1, _id: 1 })
+      .lean();
 
     res.json(questions);
   } catch (err) {
@@ -59,9 +59,8 @@ export const getQuestions = async (req: Request, res: Response) => {
   }
 };
 
-
 /* ============================================================
-   📥 IMPORT EXCEL — GROUPES + QUESTIONS (ROBUSTE)
+    📥 IMPORT EXCEL — GROUPES + QUESTIONS (ROBUSTE)
 ============================================================ */
 
 export const importExcel = async (req: Request, res: Response) => {
@@ -91,7 +90,6 @@ export const importExcel = async (req: Request, res: Response) => {
       const row = rows[i];
 
       const type = String(getCell(row, "Type")).trim().toUpperCase();
-
       const texte = String(getCell(row, "Texte de la question")).trim();
       const imageCell = String(getCell(row, "Image")).trim();
       const subjectCell = String(getCell(row, "Matière")).trim();
@@ -123,82 +121,74 @@ export const importExcel = async (req: Request, res: Response) => {
       const note = Number(getCell(row, "Note") || 1);
 
       /* ======================================================
-         🟦 CAS 1 — IMAGE SEULE → GROUPE
+         🟦 CAS 1 — GROUPE (IMAGE OPTIONNELLE)
       ====================================================== */
+      if (type === "GROUP") {
+        groupOrder++;
+
+        // Sécurité anti-crash : Si l'utilisateur met du code figure brut Mathpix, on extrait le texte avant
+        let cleanIntro = texte;
+        if (cleanIntro.includes("\\begin{figure}")) {
+          cleanIntro = cleanIntro.split("\\begin{figure}")[0].trim();
+        }
+
+        currentGroup = await QuestionGroup.create({
+          // ✅ MODIFICATION : L'image n'est plus obligatoire. On met l'URL uniquement si imageCell existe, sinon null.
+          image: imageCell ? `/uploads/questions/${imageCell}.png` : null,
+          intro: cleanIntro,
+          subject: lastSubject,
+          exam: lastExam,
+          order: groupOrder,
+        });
+
+        continue;
+      }
+
       /* ======================================================
-    🟦 CAS 1 — IMAGE SEULE → GROUPE (CORRIGÉ)
-====================================================== */
-if (type === "GROUP") {
-  if (!imageCell) {
-    throw new Error(`GROUP sans image ligne ${i + 2}`);
-  }
+         🟩 CAS 2 — QUESTION SIMPLE (sans groupe)
+      ====================================================== */
+      if (type === "SIMPLE") {
+        await Question.create({
+          texte,
+          image: imageCell ? `/uploads/questions/${imageCell}.png` : null, 
+          options,
+          reponseCorrecte,
+          subject: lastSubject,
+          exam: lastExam,
+          note,
+          groupId: null,
+          order: ++questionOrder,
+        });
+        continue;
+      }
 
-  groupOrder++;
+      /* ======================================================
+         🟨 CAS 3 — QUESTION DE GROUPE (texte + image)
+      ====================================================== */
+      if (type === "QUESTION") {
+        if (!currentGroup) {
+          throw new Error(`QUESTION sans GROUP ligne ${i + 2}`);
+        }
 
-  // Sécurité anti-crash : Si l'utilisateur met du code figure brut Mathpix, on extrait le texte avant
-  let cleanIntro = texte;
-  if (cleanIntro.includes("\\begin{figure}")) {
-    cleanIntro = cleanIntro.split("\\begin{figure}")[0].trim();
-  }
+        await Question.create({
+          texte,
+          image: imageCell ? `/uploads/questions/${imageCell}.png` : null, 
+          options,
+          reponseCorrecte,
+          subject: lastSubject,
+          exam: lastExam,
+          note,
+          groupId: currentGroup._id,
+          order: ++questionOrder,
+        });
+        continue;
+      }
 
-  currentGroup = await QuestionGroup.create({
-    image: `/uploads/questions/${imageCell}.png`,
-    intro: cleanIntro, // ✨ AJOUT REQUIS : Enregistre le texte introductif dans le groupe
-    subject: lastSubject,
-    exam: lastExam,
-    order: groupOrder,
-  });
+    } // ✅ fermeture du for
 
-  continue;
-}
-
-  /* ======================================================
-    🟩 CAS 2 — QUESTION SIMPLE (sans groupe)
-====================================================== */
-if (type === "SIMPLE") {
-  await Question.create({
-    texte,
-    // ✅ Modifié : On vérifie si une image est présente dans la cellule Excel
-    image: imageCell ? `/uploads/questions/${imageCell}.png` : null, 
-    options,
-    reponseCorrecte,
-    subject: lastSubject,
-    exam: lastExam,
-    note,
-    groupId: null,
-    order: ++questionOrder,
-  });
-  continue;
-}
-
-/* ======================================================
-    🟨 CAS 3 — QUESTION DE GROUPE (texte + image)
-====================================================== */
-if (type === "QUESTION") {
-  if (!currentGroup) {
-    throw new Error(`QUESTION sans GROUP ligne ${i + 2}`);
-  }
-
-  await Question.create({
-    texte,
-    // ✅ Modifié : Permet aussi d'ajouter une image spécifique à cette sous-question si besoin
-    image: imageCell ? `/uploads/questions/${imageCell}.png` : null, 
-    options,
-    reponseCorrecte,
-    subject: lastSubject,
-    exam: lastExam,
-    note,
-    groupId: currentGroup._id,
-    order: ++questionOrder,
-  });
-  continue;
-}
-
-} // ✅ fermeture du for
-
-res.json({
-  message: "✅ Import Excel terminé avec succès",
-});
+    res.json({
+      message: "✅ Import Excel terminé avec succès",
+    });
 
   } catch (error: any) {
     console.error("❌ Import Excel error:", error);
@@ -210,7 +200,7 @@ res.json({
 };
 
 /* ============================================================
-   📚 AUTRES ROUTES
+    📚 AUTRES ROUTES
 ============================================================ */
 
 export const getExams = async (_req: Request, res: Response) => {
