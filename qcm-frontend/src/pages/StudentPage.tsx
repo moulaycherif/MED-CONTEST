@@ -45,6 +45,7 @@ interface Question {
   _id: string;
   texte?: string;
   image?: string | null;
+  subject?: string; // Ajouté pour trier par composante matière
   groupId?: {
     _id: string;
     image?: string | null;
@@ -86,7 +87,6 @@ export default function StudentPage() {
   const matieres = ["Mathématique", "Physique", "Chimie", "SVT"];
   const isShortResume = (selectedResume?.chapter?.length ?? 0) < 30;
 
-  // Configuration typée explicite pour éviter l'erreur TypeScript avec selectedMatiere
   const subjectImages: Record<string, string> = {
     Mathématique: mathsImg,
     Physique: physiqueImg,
@@ -94,7 +94,14 @@ export default function StudentPage() {
     SVT: svtImg,
   };
 
-  // ✅ Touche ESC pour fermer le modal des astuces
+  // Configuration de l'ordre officiel des composantes du Concours
+  const componentsOrder = [
+    { key: "SVT", label: "Composante 1 : Sciences de la vie", coeff: 1 },
+    { key: "Physique", label: "Composante 2 : Physique", coeff: 1 },
+    { key: "Chimie", label: "Composante 3 : Chimie", coeff: 1 },
+    { key: "Mathématique", label: "Composante 4 : Mathématiques", coeff: 1 }
+  ];
+
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -105,7 +112,6 @@ export default function StudentPage() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
-  // ✅ Charger la liste des examens
   useEffect(() => {
     const token = localStorage.getItem("token");
     axios
@@ -116,7 +122,6 @@ export default function StudentPage() {
       .catch((err) => console.error("❌ Exams load error", err));
   }, []);
 
-  // ✅ Charger les résumés
   useEffect(() => {
     if (selectedAction !== "Résumé" || !selectedChapter) return;
     const token = localStorage.getItem("token"); 
@@ -131,7 +136,6 @@ export default function StudentPage() {
       });
   }, [selectedAction, selectedChapter]);
 
-  // ✅ Charger les questions d'un examen
   useEffect(() => {
     if (currentExam) {
       let url = `${API_BASE_URL}/api/questions?exam=${encodeURIComponent(currentExam)}`;
@@ -151,7 +155,6 @@ export default function StudentPage() {
     }
   }, [currentExam, selectedMatiere]);
 
-  // ✅ Charger les astuces
   useEffect(() => {
     if (!selectedChapter) return;
     if (selectedAction === "Astuces") {
@@ -161,7 +164,6 @@ export default function StudentPage() {
     }
   }, [selectedAction, selectedChapter]);
 
-  // ✅ Charger les exercices
   useEffect(() => {
     if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
       const token = localStorage.getItem("token");
@@ -180,7 +182,6 @@ export default function StudentPage() {
     }
   }, [selectedAction, selectedChapter, selectedMatiere]);
 
-  // --- Utilitaires ---
   const resetQcm = () => {
     setCurrentExam(null);
     setCurrentExamId(null);
@@ -213,7 +214,6 @@ export default function StudentPage() {
       .replace(/\s+/g, " ");   
   }
 
-  // ✨ COMPOSANT DE PARSING ET RENDU POUR COMPOSER LE TEXTE ET LE SMILES
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
 
@@ -259,7 +259,6 @@ export default function StudentPage() {
               className={`${imgClass} rounded`}
               loading="lazy"
               onError={(e) => {
-                console.error(`Impossible de charger l'image chimique : ${imgSrc}`);
                 e.currentTarget.style.display = "none";
               }}
             />
@@ -350,71 +349,96 @@ export default function StudentPage() {
       return <StudentDashboardStats />;
     }
     
-    // 🧩 Cas 1 : affichage des questions (QCE)
+    // 🧩 Cas 1 : Affichage ordonné des questions (QCE par Concours / Matière)
     if (section === "qcm" && currentExam) {
-      let lastGroupId: string | null = null;
-      if (questions.length === 0)
+      if (questions.length === 0) {
         return (
           <div className="text-center mt-10">
             <p className="text-gray-700 text-lg">Aucune question trouvée pour {currentExam}.</p>
           </div>
         );
+      }
+
+      // Si on est dans le cadre global du concours (pas de matière unique sélectionnée), on regroupe par composantes ordonnées
+      const renderingBlocks = !selectedMatiere 
+        ? componentsOrder.map(comp => {
+            // Associer l'index original à la question pour garder la numérotation globale continue (Q1, Q2...)
+            const compsQuestions = questions
+              .map((q, originalIdx) => ({ q, originalIdx }))
+              .filter(item => item.q.subject?.toLowerCase().startsWith(comp.key.toLowerCase().substring(0, 4)));
+            return { ...comp, items: compsQuestions };
+          }).filter(block => block.items.length > 0)
+        : [{ label: `Questions pour la matière : ${selectedMatiere}`, coeff: null, items: questions.map((q, originalIdx) => ({ q, originalIdx })) }];
+
+      let lastGroupId: string | null = null;
 
       return (
         <div className="p-4">
-          <h2 className="text-xl font-bold text-center mb-4 text-blue-800">📘 QCE — {currentExam}</h2>
-          {questions.map((q, idx) => {
-            const isNewGroup = q.groupId?._id && q.groupId._id !== lastGroupId;
-            if (q.groupId?._id) {
-              lastGroupId = q.groupId._id;
-            }
+          <h2 className="text-2xl font-bold text-center mb-6 text-blue-900 border-b pb-2">📘 QCE — {currentExam}</h2>
+          
+          {renderingBlocks.map((block, bIdx) => (
+            <div key={bIdx} className="mb-8">
+              {/* En-tête de la composante / matière */}
+              <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white px-4 py-3 rounded-xl font-bold shadow-md mb-4 flex justify-between items-center text-md md:text-lg">
+                <span>{block.label}</span>
+                {block.coeff !== null && (
+                  <span className="bg-white/20 text-yellow-300 px-3 py-1 rounded-full text-sm">
+                    Coefficient : {block.coeff}
+                  </span>
+                )}
+              </div>
 
-            return (
-              <motion.div
-                key={q._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 mb-4 bg-white rounded-xl shadow"
-              >
-                {/* 🖼 EN-TÊTE DE GROUPE SÉCURISÉ CONTRE LES EN-TÊTES SANS IMAGE */}
-                {q.groupId?._id && isNewGroup && (
-                  <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
-                    {q.groupId?.intro && (
-                      <div className="text-gray-700 font-medium text-lg mb-4 italic w-full">
-                        <MixedContentRenderer text={q.groupId.intro} />
+              {block.items.map(({ q, originalIdx }) => {
+                const isNewGroup = q.groupId?._id && q.groupId._id !== lastGroupId;
+                if (q.groupId?._id) {
+                  lastGroupId = q.groupId._id;
+                }
+
+                return (
+                  <motion.div
+                    key={q._id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 mb-4 bg-white rounded-xl shadow border border-gray-100"
+                  >
+                    {/* En-tête de groupe sécurisé (sans image brisée s'il n'y en a pas) */}
+                    {q.groupId?._id && isNewGroup && (
+                      <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
+                        {q.groupId?.intro && (
+                          <div className="text-gray-700 font-medium text-lg mb-4 italic w-full">
+                            <MixedContentRenderer text={q.groupId.intro} />
+                          </div>
+                        )}
+                        {q.groupId?.image && (
+                          <img
+                            src={getImageUrl(q.groupId.image)}
+                            className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
+                            alt="Illustration du groupe"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        )}
                       </div>
                     )}
-                    {/* ✅ Affichage conditionné : n'apparaît pas s'il n'y a pas d'image valide pour le groupe */}
-                    {q.groupId?.image && (
+
+                    {/* Contenu textuel de la question */}
+                    <h3 className="font-semibold mb-2 text-lg mt-2 flex items-start gap-1">
+                      <span className="text-blue-800 font-bold">Q{originalIdx + 1}) </span>
+                      <div className="flex-1">
+                        <MixedContentRenderer text={q.texte || ""} />
+                      </div>
+                      <span className="text-purple-600 shrink-0 text-sm bg-purple-50 px-2 py-0.5 rounded-full">({q.note} pt)</span>
+                    </h3>
+
+                    {(!q.groupId || !q.groupId._id) && q.image && (
                       <img
-                        src={getImageUrl(q.groupId.image)}
-                        className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
-                        alt="Illustration du groupe"
+                        src={getImageUrl(q.image)}
+                        className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
+                        alt="Illustration"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                    )}
-                  </div>
-                )}
-
-                {/* 🧠 RENDU DE LA QUESTION */}
-                <h3 className="font-semibold mb-2 text-lg mt-4 flex items-start gap-1">
-                  <span>Q{idx + 1}) </span>
-                  <div className="flex-1">
-                    <MixedContentRenderer text={q.texte || ""} />
-                  </div>
-                  <span className="text-purple-600 shrink-0"> ({q.note} pt)</span>
-                </h3>
-
-                {(!q.groupId || !q.groupId._id) && q.image && (
-                  <img
-                    src={getImageUrl(q.image)}
-                    className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
-                    alt="Illustration"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 )}
                 
-                {/* OPTIONS DE LA QUESTION */}
+                {/* Options (Boutons radio de réponse) */}
                 {q.options.map((opt, i) => {
                   return (
                     <label
@@ -422,11 +446,11 @@ export default function StudentPage() {
                       className={`flex items-start p-3 border rounded-lg cursor-pointer mb-2 transition-all ${
                         submitted
                           ? opt === q.reponseCorrecte
-                            ? "bg-green-100 border-green-400"
+                            ? "bg-green-100 border-green-400 font-medium"
                             : answers[q._id] === opt
-                            ? "bg-red-100 border-red-400"
-                            : ""
-                          : "hover:bg-gray-100"
+                            ? "bg-red-100 border-red-400 font-medium"
+                            : "opacity-60"
+                          : "hover:bg-blue-50/40 border-gray-200"
                       }`}
                     >
                       <input
@@ -435,9 +459,8 @@ export default function StudentPage() {
                         checked={answers[q._id] === opt}
                         onChange={() => handleAnswerChange(q._id, opt)}
                         disabled={submitted}
-                        className="mt-1 mr-3 shrink-0"
+                        className="mt-1 mr-3 shrink-0 accent-blue-700"
                       />
-                      
                       <div className="flex-1 w-full">
                         <MixedContentRenderer text={opt} />
                       </div>
@@ -445,18 +468,23 @@ export default function StudentPage() {
                   );
                 })}
               </motion.div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ))}
+
           {!submitted ? (
-            <button
-              onClick={handleFinish}
-              className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-            >
-              ✅ Soumettre
-            </button>
+            <div className="text-center mt-6">
+              <button
+                onClick={handleFinish}
+                className="px-8 py-3 bg-green-600 text-white font-bold rounded-xl shadow-md hover:bg-green-700 transition transform hover:scale-102"
+              >
+                ✅ Soumettre le sujet complet
+              </button>
+            </div>
           ) : (
-            <div className="mt-4 text-center text-lg font-semibold text-blue-700">
-              ✅ Score final : {score} / {questions.reduce((sum, q) => sum + q.note, 0)}
+            <div className="mt-6 text-center text-xl font-bold text-blue-800 bg-blue-50 border border-blue-200 py-3 rounded-xl max-w-md mx-auto shadow-sm">
+              🏁 Score total du concours : {score} / {questions.reduce((sum, q) => sum + q.note, 0)}
             </div>
           )}
         </div>
@@ -748,7 +776,6 @@ export default function StudentPage() {
                         return (
                           <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-sm transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
-                            
                             <div className="flex-1 w-full">
                               <MixedContentRenderer text={opt} />
                             </div>
@@ -768,7 +795,7 @@ export default function StudentPage() {
             </div>
             <div className="flex justify-between mt-4">
               <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">⬅️ Précédent</button>
-              <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === exercises.length - 1} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">➡️ Suivant</button>
+              <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, exercises.length - 1)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">➡️ Suivant</button>
             </div>
             {!exerciseSubmitted && (
               <button
@@ -875,7 +902,6 @@ export default function StudentPage() {
     return <StudentDashboardStats />;
   };
 
-  // --- Layout Principal ---
   return (
     <div
       className="h-screen w-screen flex text-black overflow-hidden"
