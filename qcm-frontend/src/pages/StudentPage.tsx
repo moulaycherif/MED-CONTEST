@@ -45,7 +45,7 @@ interface Question {
   _id: string;
   texte?: string;
   image?: string | null;
-  subject?: string; // Ajouté pour trier par composante matière
+  subject?: string;
   groupId?: {
     _id: string;
     image?: string | null;
@@ -94,7 +94,6 @@ export default function StudentPage() {
     SVT: svtImg,
   };
 
-  // Configuration de l'ordre officiel des composantes du Concours
   const componentsOrder = [
     { key: "SVT", label: "Composante 1 : Sciences de la vie", coeff: 1 },
     { key: "Physique", label: "Composante 2 : Physique", coeff: 1 },
@@ -359,10 +358,8 @@ export default function StudentPage() {
         );
       }
 
-      // Si on est dans le cadre global du concours (pas de matière unique sélectionnée), on regroupe par composantes ordonnées
       const renderingBlocks = !selectedMatiere 
         ? componentsOrder.map(comp => {
-            // Associer l'index original à la question pour garder la numérotation globale continue (Q1, Q2...)
             const compsQuestions = questions
               .map((q, originalIdx) => ({ q, originalIdx }))
               .filter(item => item.q.subject?.toLowerCase().startsWith(comp.key.toLowerCase().substring(0, 4)));
@@ -399,7 +396,8 @@ export default function StudentPage() {
                     key={q._id}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-4 mb-4 bg-white rounded-xl shadow border border-gray-100"
+                    // ⬛ Trait du cadre de la question tracé proprement en NOIR (border-gray-950)
+                    className="p-5 mb-5 bg-white rounded-xl border-2 border-gray-950 shadow-sm"
                   >
                     {/* En-tête de groupe sécurisé (sans image brisée s'il n'y en a pas) */}
                     {q.groupId?._id && isNewGroup && (
@@ -421,12 +419,12 @@ export default function StudentPage() {
                     )}
 
                     {/* Contenu textuel de la question */}
-                    <h3 className="font-semibold mb-2 text-lg mt-2 flex items-start gap-1">
-                      <span className="text-blue-800 font-bold">Q{originalIdx + 1}) </span>
+                    <h3 className="font-semibold mb-3 text-lg mt-1 flex items-start gap-1">
+                      <span className="text-blue-900 font-bold">Q{originalIdx + 1}) </span>
                       <div className="flex-1">
                         <MixedContentRenderer text={q.texte || ""} />
                       </div>
-                      <span className="text-purple-600 shrink-0 text-sm bg-purple-50 px-2 py-0.5 rounded-full">({q.note} pt)</span>
+                      <span className="text-purple-700 shrink-0 text-sm bg-purple-50 px-2 py-0.5 rounded-full font-medium">({q.note} pt)</span>
                     </h3>
 
                     {(!q.groupId || !q.groupId._id) && q.image && (
@@ -435,39 +433,42 @@ export default function StudentPage() {
                         className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
                         alt="Illustration"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                )}
-                
-                {/* Options (Boutons radio de réponse) */}
-                {q.options.map((opt, i) => {
-                  return (
-                    <label
-                      key={i}
-                      className={`flex items-start p-3 border rounded-lg cursor-pointer mb-2 transition-all ${
-                        submitted
-                          ? opt === q.reponseCorrecte
-                            ? "bg-green-100 border-green-400 font-medium"
-                            : answers[q._id] === opt
-                            ? "bg-red-100 border-red-400 font-medium"
-                            : "opacity-60"
-                          : "hover:bg-blue-50/40 border-gray-200"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name={q._id}
-                        checked={answers[q._id] === opt}
-                        onChange={() => handleAnswerChange(q._id, opt)}
-                        disabled={submitted}
-                        className="mt-1 mr-3 shrink-0 accent-blue-700"
                       />
-                      <div className="flex-1 w-full">
-                        <MixedContentRenderer text={opt} />
-                      </div>
-                    </label>
-                  );
-                })}
-              </motion.div>
+                    )}
+                    
+                    {/* Options (Boutons de réponse) */}
+                    <div className="space-y-2 mt-3">
+                      {q.options.map((opt, i) => {
+                        return (
+                          <label
+                            key={i}
+                            // 🔲 Traits des cadres des options tracés proprement en GRIS (border-gray-300) par défaut
+                            className={`flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer transition-all ${
+                              submitted
+                                ? opt === q.reponseCorrecte
+                                  ? "bg-green-100 !border-green-500 font-medium"
+                                  : answers[q._id] === opt
+                                  ? "bg-red-100 !border-red-500 font-medium"
+                                  : "opacity-60"
+                                : "hover:bg-blue-50/50 hover:border-blue-400"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={q._id}
+                              checked={answers[q._id] === opt}
+                              onChange={() => handleAnswerChange(q._id, opt)}
+                              disabled={submitted}
+                              className="mt-1 mr-3 shrink-0 accent-blue-800"
+                            />
+                            <div className="flex-1 w-full text-gray-900 font-normal">
+                              <MixedContentRenderer text={opt} />
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
                 );
               })}
             </div>
