@@ -243,9 +243,9 @@ export default function StudentPage() {
     const imgClass = classMatch ? classMatch[1] : "max-h-24 object-contain inline-block";
 
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap text-justify">
         {textBefore.trim().length > 0 && (
-          <span className="text-gray-800 font-medium">
+          <span className="text-gray-800 font-medium text-justify block w-full">
             <Latex>{cleanLatex(textBefore)}</Latex>
           </span>
         )}
@@ -265,7 +265,7 @@ export default function StudentPage() {
         )}
 
         {textAfter.trim().length > 0 && (
-          <span className="text-gray-600 text-sm">
+          <span className="text-gray-600 text-sm text-justify block w-full">
             <Latex>{cleanLatex(textAfter)}</Latex>
           </span>
         )}
