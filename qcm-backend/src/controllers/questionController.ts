@@ -204,8 +204,21 @@ export const importExcel = async (req: Request, res: Response) => {
 ============================================================ */
 
 export const getExams = async (_req: Request, res: Response) => {
-  const exams = await Exam.find().sort({ title: 1 });
-  res.json(exams);
+  try {
+    const exams = await Question.distinct("exam");
+
+    res.json(
+      exams
+        .sort()
+        .map((title) => ({
+          _id: title,
+          title,
+        }))
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur examens" });
+  }
 };
 
 export const getSubjectsByExam = async (req: Request, res: Response) => {
