@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import QuizPage from "./QuizPage";
+import axios from "../api/axios";
+import QuizPage from "./StudentQuiz";
 
 interface Question {
   _id?: string;

@@ -4,7 +4,7 @@ import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Upload } from "lucide-react";
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
 export default function ImportExcel({ onImported }: { onImported?: () => void }) {

@@ -1,15 +1,27 @@
 import express from "express";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import Student from "../models/Student";
 import Admin from "../models/Admin";
 import { verifyAdmin } from "../middleware/verifyAdmin";
-import { authenticateStudent, AuthenticatedRequest } from "../middleware/authMiddleware";
+import { authenticateStudent } from "../middleware/authMiddleware";
+
+// Importations des fonctions centralisées de votre contrôleur
+import { 
+  loginStudent, 
+  logoutStudent, 
+  createStudent, 
+  getStudents, 
+  deleteStudent 
+} from "../controllers/authController";
 
 dotenv.config();
 const router = express.Router();
-const SECRET = process.env.JWT_SECRET || "super_secret_key";
+const JWT_SECRET = process.env.JWT_SECRET || "votre_secret_jwt_super_securise";
+
+// ==========================================
+// 🔑 ROUTES ADMINISTRATEUR (ADMIN)
+// ==========================================
 
 // 🔹 Créer admin (initialisation)
 router.post("/create-admin", async (req, res) => {
@@ -41,28 +53,32 @@ router.post("/admin/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) return res.status(400).json({ error: "Mot de passe incorrect" });
 
-    const token = jwt.sign({ id: admin._id, role: "admin" }, SECRET, { expiresIn: "7d" });
-    res.json({ message: "Connexion admin ✅", token, admin: { id: admin._id, name: admin.name, email: admin.email } });
+    // Payload de l'admin (ajusté selon vos besoins d'origine)
+    const token = jwt.sign({ id: admin._id, role: "admin" }, JWT_SECRET, { expiresIn: "7d" });
+    res.json({ 
+      message: "Connexion admin ✅", 
+      token, 
+      admin: { id: admin._id, name: admin.name, email: admin.email } 
+    });
   } catch (err) {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
-// 🔹 Login étudiant
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const student = await Student.findOne({ email });
-    if (!student) return res.status(400).json({ error: "Étudiant non trouvé" });
+// ==========================================
+// 🎓 ROUTES ÉTUDIANTS (STUDENT) & SESSION UNIQUE
+// ==========================================
 
-    const isMatch = await bcrypt.compare(password, student.password);
-    if (!isMatch) return res.status(400).json({ error: "Mot de passe incorrect" });
+// 🔹 Login étudiant (Utilise la logique sécurisée de authController)
+router.post("/login", loginStudent);
 
-    const token = jwt.sign({ id: student._id, email: student.email, role: "student" }, SECRET, { expiresIn: "2h" });
-    res.json({ message: "Connexion étudiant ✅", token });
-  } catch (err) {
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
+// 🔒 Logout étudiant : Libère instantanément la session unique dans MongoDB
+router.post("/logout", authenticateStudent, logoutStudent);
+
+// 🔹 Gestion des étudiants (Exemple d'intégration si non-déclarés ailleurs)
+// Ces routes sont protégées : l'étudiant doit avoir un token valide ET être sur le bon poste
+router.get("/students", authenticateStudent, getStudents);
+router.post("/students", authenticateStudent, createStudent);
+router.delete("/students/:id", authenticateStudent, deleteStudent);
 
 export default router;

@@ -1,6 +1,6 @@
 // src/pages/StudentQuiz.tsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useLocation } from "react-router-dom";
 import { API_BASE_URL } from "../config";

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import axios from "axios";
+import axios from "../api/axios";
 
 interface Question {
   questionText: string;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../api/axios"; // Ajustez le chemin relatif vers votre fichier axios.ts
 import { API_BASE_URL } from "../config";
 // 🔥 Remplacement de TipTapEditor par RichMathEditor
 import RichMathEditor from "../components/RichMathEditor";

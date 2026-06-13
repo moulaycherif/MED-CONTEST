@@ -1,7 +1,7 @@
 import React, { useRef, useMemo } from "react";
 import ReactQuill from "react-quill";
 import katex from "katex";
-import axios from "axios";
+import axios from "../api/axios";
 import { API_BASE_URL } from "../config";
 
 import "react-quill/dist/quill.snow.css";

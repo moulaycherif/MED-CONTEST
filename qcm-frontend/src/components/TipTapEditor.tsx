@@ -1,7 +1,7 @@
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import axios from "axios";
+import axios from "../api/axios";
 import { API_BASE_URL } from "../config";
 import { convertMathMLToLatex } from "../utils/mathConverter";
 import { useEffect } from "react";
