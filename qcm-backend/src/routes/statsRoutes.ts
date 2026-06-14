@@ -1,5 +1,4 @@
 import express from "express";
-
 import {
   getStudentStats,
   getQcmStats,
@@ -7,8 +6,8 @@ import {
   getSuccessEvolution,
 } from "../controllers/statsController";
 
-import { authenticateStudent } from "../middleware/auth";
-
+// ✅ Utilisez le middleware mis à jour avec la vérification de session unique
+import { authenticateStudent } from "../middleware/authMiddleware"; 
 
 const router = express.Router();
 
