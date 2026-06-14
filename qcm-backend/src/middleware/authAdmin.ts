@@ -17,7 +17,7 @@ export const authenticateAdmin = async (
   if (!token) return res.status(401).json({ error: "Token manquant" });
 
   try {
-    const decoded: any = jwt.verify(token, SECRET);
+    const decoded: any = jwt.verify(token, JWT_SECRET);
     
     // 💡 Note : On utilise decoded.userId car c'est la clé injectée lors du loginAdmin
     const admin = await Admin.findById(decoded.userId);
