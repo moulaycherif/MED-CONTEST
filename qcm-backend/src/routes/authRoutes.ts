@@ -1,15 +1,18 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import Admin from "../models/Admin";
-import { verifyAdmin } from "../middleware/verifyAdmin";
+
+// 🛡️ Vos middlewares de sécurité
+import { authenticateAdmin } from "../middleware/authAdmin"; // 👈 Utilisation de votre middleware admin mis à jour
 import { authenticateStudent } from "../middleware/authMiddleware";
 
-// Importations des fonctions centralisées de votre contrôleur
+// 📦 Importation de TOUTES les fonctions centralisées et sécurisées du contrôleur
 import { 
   loginStudent, 
   logoutStudent, 
+  loginAdmin,   // 👈 Ajouté pour la session unique Admin
+  logoutAdmin,  // 👈 Ajouté pour libérer la session unique Admin
   createStudent, 
   getStudents, 
   deleteStudent 
@@ -17,13 +20,12 @@ import {
 
 dotenv.config();
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || "votre_secret_jwt_super_securise";
 
 // ==========================================
 // 🔑 ROUTES ADMINISTRATEUR (ADMIN)
 // ==========================================
 
-// 🔹 Créer admin (initialisation)
+// 🔹 Créer admin (initialisation automatique via variables d'environnement)
 router.post("/create-admin", async (req, res) => {
   try {
     const existingAdmin = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
@@ -34,39 +36,25 @@ router.post("/create-admin", async (req, res) => {
       name: process.env.ADMIN_NAME,
       email: process.env.ADMIN_EMAIL,
       password: hashedPassword,
-      role: "admin",
+      currentSessionId: null, // Initialisé proprement
+      currentIp: null
     });
     await admin.save();
     res.json({ message: "Admin créé ✅", admin });
   } catch (err) {
-    res.status(500).json({ error: "Erreur serveur" });
+    res.status(500).json({ error: "Erreur serveur lors de la création initiale de l'admin" });
   }
 });
 
-// 🔹 Login admin
-router.post("/admin/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(400).json({ error: "Admin introuvable" });
+// 🔹 Login admin (Utilise désormais la logique sécurisée à session unique de authController)
+router.post("/admin/login", loginAdmin);
 
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) return res.status(400).json({ error: "Mot de passe incorrect" });
+// 🔒 Logout admin : Libère instantanément la session unique admin dans MongoDB
+router.post("/admin/logout", authenticateAdmin, logoutAdmin);
 
-    // Payload de l'admin (ajusté selon vos besoins d'origine)
-    const token = jwt.sign({ id: admin._id, role: "admin" }, JWT_SECRET, { expiresIn: "7d" });
-    res.json({ 
-      message: "Connexion admin ✅", 
-      token, 
-      admin: { id: admin._id, name: admin.name, email: admin.email } 
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
 
 // ==========================================
-// 🎓 ROUTES ÉTUDIANTS (STUDENT) & SESSION UNIQUE
+// 🎓 ROUTES ÉTUDIANTS (STUDENT) & PANEL ADMIN
 // ==========================================
 
 // 🔹 Login étudiant (Utilise la logique sécurisée de authController)
@@ -75,10 +63,10 @@ router.post("/login", loginStudent);
 // 🔒 Logout étudiant : Libère instantanément la session unique dans MongoDB
 router.post("/logout", authenticateStudent, logoutStudent);
 
-// 🔹 Gestion des étudiants (Exemple d'intégration si non-déclarés ailleurs)
-// Ces routes sont protégées : l'étudiant doit avoir un token valide ET être sur le bon poste
-router.get("/students", authenticateStudent, getStudents);
-router.post("/students", authenticateStudent, createStudent);
-router.delete("/students/:id", authenticateStudent, deleteStudent);
+// 🛠️ Gestion des étudiants par l'administrateur
+// ⚠️ Correction : Ces routes utilisent 'authenticateAdmin' car seul l'admin doit gérer les comptes !
+router.get("/students", authenticateAdmin, getStudents);
+router.post("/students", authenticateAdmin, createStudent);
+router.delete("/students/:id", authenticateAdmin, deleteStudent);
 
 export default router;

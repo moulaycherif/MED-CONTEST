@@ -3,9 +3,14 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs"; // 👈 Intégration de bcrypt pour les mots de passe hachés
 import User from "../models/Student";
+import Admin from "../models/Admin"; // 👈 Ajout de l'import pour le modèle Admin
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
 
 const JWT_SECRET = process.env.JWT_SECRET || "votre_secret_jwt_super_securise";
+
+// ==========================================
+// 🔹 PARTIE ÉTUDIANT
+// ==========================================
 
 // 🔹 Connexion de l'étudiant (Login avec Session Unique et Hachage Bcrypt)
 export const loginStudent = async (req: Request, res: Response) => {
@@ -60,10 +65,9 @@ export const loginStudent = async (req: Request, res: Response) => {
   }
 };
 
-// 🔹 Déconnexion (Logout pour vider la session en base)
+// 🔹 Déconnexion de l'étudiant (Logout pour vider la session en base)
 export const logoutStudent = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // req.auth.userId est injecté automatiquement par le middleware authenticateStudent
     const userId = req.auth?.userId; 
     
     if (userId) {
@@ -80,6 +84,87 @@ export const logoutStudent = async (req: AuthenticatedRequest, res: Response) =>
     res.status(500).json({ error: "Erreur serveur lors de la déconnexion" });
   }
 };
+
+// ==========================================
+// 🔐 PARTIE ADMINISTRATEUR (Intégrée & Adaptée)
+// ==========================================
+
+// 🔹 Connexion de l'administrateur (Login avec Session Unique et Hachage Bcrypt)
+export const loginAdmin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. Trouver l'admin par email
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(401).json({ error: "Identifiants invalides" });
+    }
+
+    // 2. 🔐 Sécurité : Vérification du mot de passe haché de l'admin
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Identifiants invalides" });
+    }
+
+    // 3. Sécurité : Générer un ID unique pour CETTE nouvelle session admin
+    const newSessionId = crypto.randomUUID();
+    const userIp = (req.headers["x-forwarded-for"] as string) || req.ip || "0.0.0.0";
+
+    // 4. Écraser la session précédente en base de données
+    admin.currentSessionId = newSessionId;
+    admin.currentIp = userIp;
+    await admin.save();
+
+    // 5. Signature du token contenant le userId et le sessionId unique de l'admin
+    const token = jwt.sign(
+      { 
+        userId: admin._id, 
+        sessionId: newSessionId,
+        isAdmin: true 
+      },
+      JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    res.json({
+      message: "Connexion réussie (Admin)",
+      token,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        isAdmin: true
+      }
+    });
+  } catch (err) {
+    console.error("❌ Erreur Login Admin :", err);
+    res.status(500).json({ error: "Erreur serveur lors de la connexion de l'admin" });
+  }
+};
+
+// 🔹 Déconnexion de l'administrateur
+export const logoutAdmin = async (req: Request, res: Response) => {
+  try {
+    // Si vous utilisez un type de requête personnalisé pour l'admin (ex: req.admin)
+    const adminId = (req as any).admin?._id; 
+    
+    if (adminId) {
+      await Admin.findByIdAndUpdate(adminId, {
+        currentSessionId: null,
+        currentIp: null
+      });
+    }
+
+    res.json({ message: "Déconnexion Admin réussie" });
+  } catch (err) {
+    console.error("❌ Erreur lors du logout admin :", err);
+    res.status(500).json({ error: "Erreur serveur lors de la déconnexion" });
+  }
+};
+
+// ==========================================
+// ⚙️ GESTION DU PANEL (Actions Admin sur Étudiants)
+// ==========================================
 
 // 🔹 Créer un étudiant (admin uniquement) - VERSION SÉCURISÉE AVEC HACHAGE
 export const createStudent = async (req: Request, res: Response) => {
