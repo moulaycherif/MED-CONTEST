@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import api from "./axios"; // 👈 Importation de votre instance axios configurée
+import api from "../api/axios"; // 👈 Importation de votre instance axios configurée
 
 export default function Navbar() {
   const location = useLocation();
