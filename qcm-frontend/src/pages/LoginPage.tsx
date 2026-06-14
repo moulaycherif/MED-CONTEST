@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "../config";
@@ -9,10 +9,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [adminToken, setadminToken] = useState<string | null>(localStorage.getItem("adminToken"));
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token") || localStorage.getItem("adminToken"));
   const [role, setRole] = useState<"admin" | "student" | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // 🔄 Auto-détection du rôle si un token existe déjà au chargement de la page
+  useEffect(() => {
+    if (localStorage.getItem("adminToken")) {
+      setRole("admin");
+    } else if (localStorage.getItem("token")) {
+      setRole("student");
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,13 +34,16 @@ export default function LoginPage() {
         password,
       });
 
-      setToken(adminRes.data.token);
       localStorage.setItem("adminToken", adminRes.data.token);
+      setToken(adminRes.data.token);
       setRole("admin");
       setLoading(false);
+
+      // ⚡ Déclencheur magique pour actualiser instantanément la Navbar
+      window.dispatchEvent(new Event("authChange"));
       return;
     } catch (err) {
-      // Si ce n’est pas un admin, on essaie étudiant
+      // Si ce n’est pas un admin, on passe à l'essai étudiant
     }
 
     try {
@@ -42,17 +53,20 @@ export default function LoginPage() {
         password,
       });
 
-      setToken(studentRes.data.token);
       localStorage.setItem("token", studentRes.data.token);
+      setToken(studentRes.data.token);
       setRole("student");
       setLoading(false);
+
+      // ⚡ Déclencheur magique pour actualiser instantanément la Navbar
+      window.dispatchEvent(new Event("authChange"));
     } catch (err: any) {
       setError(err.response?.data?.error || "Email ou mot de passe incorrect ❌");
       setLoading(false);
     }
   };
 
-  // 🔹 Redirection dynamique après login
+  // 🔹 Redirection ou affichage dynamique après login
   if (token && role === "admin") return <AdminDashboard />;
   if (token && role === "student") return <StudentPage token={token} />;
 
@@ -100,7 +114,7 @@ export default function LoginPage() {
         {error && <p className="text-red-600 text-center mt-3">{error}</p>}
 
         <p className="text-gray-500 text-center text-sm mt-6">
-          © 2025 Med-Contest — Tous droits réservés
+          © 2026 Med-Contest — Tous droits réservés
         </p>
       </motion.div>
     </div>

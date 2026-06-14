@@ -1,13 +1,34 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import api from "../api/axios"; // 👈 Importation de votre instance axios configurée
+import api from "../api/axios"; // 👈 Votre instance axios configurée
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 🔄 On vérifie dynamiquement si l'utilisateur est connecté via le token
-  const isAuthenticated = !!localStorage.getItem("token");
+  // 1️⃣ On crée un état React pour l'authentification (inititialisé avec la valeur actuelle du token)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+    !!localStorage.getItem("token")
+  );
+
+  // 2️⃣ Écouteur automatique : Chaque fois que l'utilisateur change de page (ex: arrive du Login),
+  // ou qu'un événement d'authentification a lieu, on recalcule l'état du bouton.
+  useEffect(() => {
+    const checkAuth = () => {
+      setIsAuthenticated(!!localStorage.getItem("token"));
+    };
+
+    checkAuth(); // Vérification à chaque changement de route (location.pathname)
+
+    // Optionnel mais recommandé : écoute un événement personnalisé si la page de Login n'utilise pas de redirection brute
+    window.addEventListener("authChange", checkAuth);
+    window.addEventListener("storage", checkAuth); // Utile si l'état change depuis un autre onglet
+
+    return () => {
+      window.removeEventListener("authChange", checkAuth);
+      window.removeEventListener("storage", checkAuth);
+    };
+  }, [location.pathname]); // 👈 Déclencheur magique : s'exécute dès que l'URL change
 
   // 🔒 Logique de déconnexion propre (Backend + Frontend)
   const handleLogout = async () => {
@@ -17,8 +38,9 @@ export default function Navbar() {
     } catch (err) {
       console.error("Erreur lors de la déconnexion backend :", err);
     } finally {
-      // 2. Dans tous les cas (même si le serveur est indisponible), on nettoie le navigateur
+      // 2. Dans tous les cas, on nettoie le navigateur
       localStorage.removeItem("token");
+      setIsAuthenticated(false); // 👈 On met à jour l'état immédiatement
       navigate("/");
     }
   };
@@ -52,7 +74,7 @@ export default function Navbar() {
         <Link to="/contact" className="hover:text-blue-500 transition">Contact</Link>
       </div>
 
-      {/* Bouton à droite : Conditionnel selon l'état de connexion */}
+      {/* Bouton à droite : Conditionnel et désormais 100% dynamique */}
       <div className="flex items-center gap-3">
         {isAuthenticated ? (
           <button
