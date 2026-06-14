@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/axios";
 import { API_BASE_URL } from "../config";
-
 import "react-quill/dist/quill.snow.css";
 import RichMathEditor from "../components/RichMathEditor";
 
@@ -13,7 +12,6 @@ interface SubQuestion {
   correctAnswer: string;
   explanation: string;
 }
-
 // 🔹 Interface Exercice
 interface Exercise {
   _id: string;
@@ -30,25 +28,20 @@ const emptySubQuestion: SubQuestion = {
   correctAnswer: "",
   explanation: "",
 };
-
 const AdminExercises: React.FC = () => {
   // 🔹 Données
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [chapters, setChapters] = useState<string[]>([]);
-
   // 🔹 Filtres
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
-
   // 🔹 Énoncé principal
   const [contextText, setContextText] = useState("");
   const [contextImage, setContextImage] =
     useState<File | null>(null);
-
   const [previewUrl, setPreviewUrl] =
     useState<string | null>(null);
-
   // 🔹 Sous-questions
   const [subQuestions, setSubQuestions] = useState<
     SubQuestion[]
@@ -57,7 +50,6 @@ const AdminExercises: React.FC = () => {
   // =====================================================
   // 🔹 CHARGEMENT DES EXERCICES
   // =====================================================
-
   useEffect(() => {
     fetchExercises();
   }, []);
@@ -67,15 +59,11 @@ const AdminExercises: React.FC = () => {
       const res = await axios.get(
         `${API_BASE_URL}/api/exercises`
       );
-
       const data: Exercise[] = res.data;
-
       setExercises(data);
-
       const uniqueSubjects = Array.from(
         new Set(data.map((q) => q.subject))
       );
-
       setSubjects(uniqueSubjects);
     } catch (err) {
       console.error(
@@ -88,45 +76,36 @@ const AdminExercises: React.FC = () => {
   // =====================================================
   // 🔹 CHAPITRES SELON MATIÈRE
   // =====================================================
-
   useEffect(() => {
     if (!subject) {
       setChapters([]);
       return;
     }
-
     const filtered = exercises.filter(
       (q) => q.subject === subject
     );
-
     const uniqueChapters = [
       ...new Set(filtered.map((q) => q.chapter)),
     ];
-
     setChapters(uniqueChapters);
   }, [subject, exercises]);
 
   // =====================================================
   // 🔹 PREVIEW IMAGE
   // =====================================================
-
   useEffect(() => {
     if (!contextImage) {
       setPreviewUrl(null);
       return;
     }
-
     const objectUrl = URL.createObjectURL(contextImage);
-
     setPreviewUrl(objectUrl);
-
     return () => URL.revokeObjectURL(objectUrl);
   }, [contextImage]);
 
   // =====================================================
   // 🔹 FILTRAGE TABLEAU
   // =====================================================
-
   const filteredExercises = exercises.filter((q) => {
     return (
       (subject ? q.subject === subject : true) &&
@@ -137,7 +116,6 @@ const AdminExercises: React.FC = () => {
   // =====================================================
   // 🔹 GESTION SOUS-QUESTIONS
   // =====================================================
-
   const handleAddSubQuestion = () => {
     setSubQuestions([
       ...subQuestions,
@@ -149,59 +127,47 @@ const AdminExercises: React.FC = () => {
       },
     ]);
   };
-
   const handleRemoveSubQuestion = (index: number) => {
     const updated = [...subQuestions];
-
     updated.splice(index, 1);
-
     setSubQuestions(updated);
   };
-
   const handleSubQuestionChange = (
     index: number,
     field: keyof SubQuestion,
     value: string
   ) => {
     const updated = [...subQuestions];
-
     updated[index] = {
       ...updated[index],
       [field]: value,
     };
-
     setSubQuestions(updated);
   };
-
   const handleOptionChange = (
     qIndex: number,
     optIndex: number,
     value: string
   ) => {
     const updated = [...subQuestions];
-
     updated[qIndex].options[optIndex] = value;
-
     setSubQuestions(updated);
   };
 
   // =====================================================
   // 🔹 VALIDATION HTML VIDE
   // =====================================================
-
   const isEditorEmpty = (html: string) => {
     const cleaned = html
       .replace(/<(.|\n)*?>/g, "")
       .replace(/&nbsp;/g, "")
       .trim();
-
     return cleaned.length === 0;
   };
 
   // =====================================================
   // 🔹 SOUMISSION
   // =====================================================
-
   const handleSubmit = async () => {
     // 🔹 Vérifications principales
     if (!subject || !chapter) {
@@ -210,18 +176,15 @@ const AdminExercises: React.FC = () => {
       );
       return;
     }
-
     if (isEditorEmpty(contextText)) {
       alert(
         "⚠️ Veuillez saisir l'énoncé principal."
       );
       return;
     }
-
     // 🔹 Vérification sous-questions
     for (let i = 0; i < subQuestions.length; i++) {
       const q = subQuestions[i];
-
       // ✅ question obligatoire
       if (isEditorEmpty(q.questionText)) {
         alert(
@@ -231,12 +194,10 @@ const AdminExercises: React.FC = () => {
         );
         return;
       }
-
       // ✅ au moins 2 options remplies
       const validOptions = q.options.filter(
         (opt) => opt.trim() !== ""
       );
-
       if (validOptions.length < 2) {
         alert(
           `⚠️ La question ${
@@ -245,7 +206,6 @@ const AdminExercises: React.FC = () => {
         );
         return;
       }
-
       // ✅ bonne réponse obligatoire
       if (!q.correctAnswer.trim()) {
         alert(
@@ -256,21 +216,16 @@ const AdminExercises: React.FC = () => {
         return;
       }
     }
-
     try {
       const adminToken =
         localStorage.getItem("adminToken");
-
       const formData = new FormData();
-
       formData.append("subject", subject);
       formData.append("chapter", chapter);
-
       formData.append(
         "contextText",
         contextText
       );
-
       // 🔹 Nettoyage avant envoi
       const cleanedSubQuestions = subQuestions.map(
         (q) => ({
@@ -282,19 +237,16 @@ const AdminExercises: React.FC = () => {
           explanation: q.explanation,
         })
       );
-
       formData.append(
         "subQuestions",
         JSON.stringify(cleanedSubQuestions)
       );
-
       if (contextImage) {
         formData.append(
           "contextImage",
           contextImage
         );
       }
-
       await axios.post(
         `${API_BASE_URL}/api/exercises`,
         formData,
@@ -306,11 +258,9 @@ const AdminExercises: React.FC = () => {
           },
         }
       );
-
       alert(
         "✅ Exercice ajouté avec succès"
       );
-
       // 🔹 Reset
       setSubject("");
       setChapter("");
@@ -441,7 +391,7 @@ const AdminExercises: React.FC = () => {
             📚 Énoncé global du problème
           </h3>
 
-          <div className="bg-white rounded-lg mb-4">
+          <div className="bg-white rounded-lg mb-4 text-lg">
             <RichMathEditor
               value={contextText}
               onChange={setContextText}
@@ -541,7 +491,7 @@ const AdminExercises: React.FC = () => {
                 🧠 Texte de la question
               </label>
 
-              <div className="mb-5 bg-white">
+              <div className="mb-5 bg-white text-lg">
                 <RichMathEditor
                   value={subQ.questionText}
                   onChange={(val) =>
@@ -560,7 +510,7 @@ const AdminExercises: React.FC = () => {
                 💡 Explication pédagogique
               </label>
 
-              <div className="mb-5 bg-white">
+              <div className="mb-5 bg-white text-lg">
                 <RichMathEditor
                   value={subQ.explanation}
                   onChange={(val) =>
@@ -733,7 +683,7 @@ const AdminExercises: React.FC = () => {
                   dangerouslySetInnerHTML={{
                     __html: q.contextText,
                   }}
-                  className="line-clamp-2"
+                  className="line-clamp-2 text-base text-gray-800"
                 />
               </td>
 

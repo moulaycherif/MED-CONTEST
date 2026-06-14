@@ -749,9 +749,9 @@ export default function StudentPage() {
             <div className="bg-white p-6 rounded-xl shadow border-t-4 border-blue-600">
               <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">Énoncé</h3>
-                <div className="text-lg [&_.ql-editor]:text-md [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:mb-2">
-                  <ReactQuill value={processQuillText(currentEx.contextText)} readOnly={true} theme="bubble" />
-                </div>
+                <div className="text-lg [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:mb-2">
+  <ReactQuill value={processQuillText(currentEx.contextText)} readOnly={true} theme="bubble" />
+</div>
                 {currentEx.contextImage && (
                   <img 
                     src={getImageUrl(currentEx.contextImage)} 
@@ -764,18 +764,18 @@ export default function StudentPage() {
               <div className="space-y-3">
                 {currentEx.subQuestions?.map((subQ: any, index: number) => (
                   <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">
-                    <div className="font-medium mb-2 flex items-start text-md leading-relaxed">
-                      <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[11px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
-                      <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-md [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
-                        <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
-                      </div>
-                    </div>
+                    <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
+  <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
+  <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
+    <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
+  </div>
+</div>
                     <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-1">
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
                         const isCorrect = opt === subQ.correctAnswer;
                         return (
-                          <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-sm transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
+                          <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
                             <div className="flex-1 w-full">
                               <MixedContentRenderer text={opt} />
