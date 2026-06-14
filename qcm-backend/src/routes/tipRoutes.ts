@@ -1,6 +1,6 @@
 import express from "express";
 import Tip from "../models/Tip";
-import { authenticateStudent } from "../middleware/auth";
+import { authenticateStudent } from "../middleware/authMiddleware";
 import { verifyAdmin } from "../middleware/verifyAdmin";
 
 const router = express.Router();

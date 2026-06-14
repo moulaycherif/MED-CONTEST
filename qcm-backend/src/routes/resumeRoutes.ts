@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticateStudent } from "../middleware/auth";   // 🔥
+import { authenticateStudent } from "../middleware/authMiddleware";   // 🔥
 import generateResumeBuffer from "../scripts/generateResume";
 import Resume from "../models/resume";
 import { supabase } from "../config/supabase";
