@@ -1,54 +1,55 @@
+// src/components/Navbar.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import api from "../api/axios"; // 👈 Votre instance axios configurée
+import api from "../api/axios"; 
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 1️⃣ On crée un état React pour l'authentification (inititialisé avec la valeur actuelle du token)
+  // 1️⃣ Vérifie si l'un des deux tokens existe
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
-    !!localStorage.getItem("token")
+    !!localStorage.getItem("token") || !!localStorage.getItem("adminToken")
   );
 
-  // 2️⃣ Écouteur automatique : Chaque fois que l'utilisateur change de page (ex: arrive du Login),
-  // ou qu'un événement d'authentification a lieu, on recalcule l'état du bouton.
+  // 2️⃣ Écouteur automatique d'état d'authentification
   useEffect(() => {
     const checkAuth = () => {
-      setIsAuthenticated(!!localStorage.getItem("token"));
+      setIsAuthenticated(!!localStorage.getItem("token") || !!localStorage.getItem("adminToken"));
     };
 
-    checkAuth(); // Vérification à chaque changement de route (location.pathname)
+    checkAuth();
 
-    // Optionnel mais recommandé : écoute un événement personnalisé si la page de Login n'utilise pas de redirection brute
     window.addEventListener("authChange", checkAuth);
-    window.addEventListener("storage", checkAuth); // Utile si l'état change depuis un autre onglet
+    window.addEventListener("storage", checkAuth); 
 
     return () => {
       window.removeEventListener("authChange", checkAuth);
       window.removeEventListener("storage", checkAuth);
     };
-  }, [location.pathname]); // 👈 Déclencheur magique : s'exécute dès que l'URL change
+  }, [location.pathname]); 
 
-  // 🔒 Logique de déconnexion propre (Backend + Frontend)
+  // 🔒 Logique de déconnexion unifiée
   const handleLogout = async () => {
     try {
-      // 1. On prévient le backend pour libérer les champs de session (currentSessionId) dans MongoDB
-      await api.post("/api/auth/logout"); 
+      const isAdmin = !!localStorage.getItem("adminToken");
+      const logoutUrl = isAdmin ? "/api/auth/admin/logout" : "/api/auth/logout";
+      
+      await api.post(logoutUrl); 
     } catch (err) {
       console.error("Erreur lors de la déconnexion backend :", err);
     } finally {
-      // 2. Dans tous les cas, on nettoie le navigateur
+      // Nettoyage complet
       localStorage.removeItem("token");
-      setIsAuthenticated(false); // 👈 On met à jour l'état immédiatement
+      localStorage.removeItem("adminToken");
+      setIsAuthenticated(false); 
       navigate("/");
     }
   };
 
-  // 🩺 Gestion de la fermeture/déconnexion via le bouton "Med-Contest"
   const handleLogoClick = (e: React.MouseEvent) => {
     if (isAuthenticated) {
-      e.preventDefault(); // On stoppe le lien direct du <Link>
+      e.preventDefault(); 
       if (confirm("Voulez-vous fermer l'application et vous déconnecter ?")) {
         handleLogout();
       }
@@ -57,7 +58,6 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-md shadow-md z-50 px-8 py-4 flex justify-between items-center">
-      {/* Logo à gauche (Déconnecte proprement si connecté) */}
       <Link
         to="/"
         onClick={handleLogoClick}
@@ -66,7 +66,6 @@ export default function Navbar() {
         🩺 Med-Contest
       </Link>
 
-      {/* Liens au centre */}
       <div className="hidden md:flex gap-6 text-gray-700 font-medium">
         <Link to="/" className="hover:text-blue-500 transition">Accueil</Link>
         <Link to="/demo" className="hover:text-blue-500 transition">Démo</Link>
@@ -74,7 +73,6 @@ export default function Navbar() {
         <Link to="/contact" className="hover:text-blue-500 transition">Contact</Link>
       </div>
 
-      {/* Bouton à droite : Conditionnel et désormais 100% dynamique */}
       <div className="flex items-center gap-3">
         {isAuthenticated ? (
           <button

@@ -25,6 +25,9 @@ export const authenticateAdmin = async (
 
     // 🛑 SÉCURITÉ POSTE UNIQUE ADMIN
     // Si la session du token ne correspond plus à celle enregistrée en BDD : expulsion !
+console.log("Token session ID - ADMIN :", decoded.sessionId);
+console.log("BDD session ID - ADMIN :", admin.currentSessionId);
+
     if (admin.currentSessionId !== decoded.sessionId) {
       return res.status(403).json({ 
         code: "SESSION_KICKED", 
