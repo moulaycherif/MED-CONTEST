@@ -519,35 +519,54 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 3 : QCE par matière
-    if (section === "matiere" && selectedMatiere) {
-      const matiereImage = subjectImages[selectedMatiere];
-      const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
+   // 🧩 Cas 3 : QCE par matière (Corrigé pour préserver les dimensions de l'image)
+if (section === "matiere" && selectedMatiere) {
+  const matiereImage = subjectImages[selectedMatiere];
+  const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
 
-      return (
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-wrap gap-6 justify-start items-start min-h-full p-4"
+    >
+      {filteredExams.map((exam) => (
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
+          key={exam._id}
+          whileHover={{ scale: 1.05 }}
+          // "w-48" maintient la carte alignée horizontalement avec la largeur de l'image
+          className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white border border-gray-100 flex flex-col transition-all"
+          onClick={() => {
+            resetQcm(); 
+            setSection("qcm"); 
+            setCurrentExam(exam.title); 
+            setCurrentExamId(exam._id);
+          }}
         >
-          {filteredExams.map((exam) => (
-            <motion.div
-              key={exam._id}
-              whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
-              onClick={() => {
-                resetQcm(); setSection("qcm"); setCurrentExam(exam.title); setCurrentExamId(exam._id);
-              }}
-            >
-              <img src={matiereImage} alt={`${selectedMatiere} — ${exam.title}`} className="w-48 h-48 object-cover" />
-              <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-white text-center py-2 font-semibold">
-                {selectedMatiere} — {exam.title}
-              </div>
-            </motion.div>
-          ))}
+          {/* Zone Image : stricte, fixe et inviolable */}
+          <div className="w-48 h-48 bg-gray-50 shrink-0 overflow-hidden">
+            <img 
+              src={matiereImage} 
+              alt={`${selectedMatiere} — ${exam.title}`} 
+              className="w-full h-full object-cover" 
+            />
+          </div>
+
+          {/* Zone Texte : Déplacée en dessous, hauteur fixe (h-14) pour garder l'alignement des cartes */}
+          <div 
+            className="bg-green-700 text-white text-center px-2 py-2 text-xs md:text-sm font-semibold flex items-center justify-center h-14 min-w-0"
+            title={`${selectedMatiere} — ${exam.title}`}
+          >
+            {/* Limite le texte à 2 lignes maximum s'il est trop long, évitant de casser le design */}
+            <span className="line-clamp-2 break-words leading-tight">
+              {selectedMatiere} — {exam.title}
+            </span>
+          </div>
         </motion.div>
-      );
-    }
+      ))}
+    </motion.div>
+  );
+}
 
     // 🧩 Cas 4 : Soutien
     if (section === "soutien" && selectedMatiere) {
