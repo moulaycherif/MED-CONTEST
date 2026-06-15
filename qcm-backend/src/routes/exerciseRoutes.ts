@@ -88,6 +88,8 @@ router.post("/", authenticateAdmin, verifyAdmin, upload.single("contextImage"), 
 // ======================================================
 // 📥 NOUVEAU : Importation fichier Excel (.xlsx / .xls)
 // ======================================================
+// routes/exerciseRoutes.ts
+
 router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<void> => {
   try {
     const { subject, chapter } = req.body;
@@ -96,11 +98,10 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       return;
     }
     if (!subject || !chapter) {
-      res.status(400).json({ error: "La matière et le chapitre sont obligatoires pour l'import." });
+      res.status(400).json({ error: "La matière et le chapitre sont obligatoires." });
       return;
     }
 
-    // Extraction des données de la feuille Excel
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheetData: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
@@ -110,39 +111,68 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       return;
     }
 
-    // Parcours des lignes Excel et création unitaire des structures contextes/questions
     let importedCount = 0;
+
     for (const row of sheetData) {
-      const enonce = row.Enonce || row.Question; // Fallback s'il n'y a pas d'énoncé global séparé
-      const typeQuestion = row.Type?.toLowerCase() === "vrai_faux" ? "vrai_faux" : "qcm";
-      
+      // 🛡️ ÉTAPE CRUCIALE : On crée un objet propre avec des clés nettoyées en minuscules et sans espaces
+      const cleanRow: any = {};
+      Object.keys(row).forEach((key) => {
+        const cleanKey = key.trim().toLowerCase().replace(/[\s_\-]/g, "");
+        cleanRow[cleanKey] = row[key];
+      });
+
+      // 🔍 Mappages tolérants (gère "enonce", "question", "type", etc.)
+      const enonce = cleanRow["enonce"] || cleanRow["contexte"] || "Exercice global";
+      const questionText = cleanRow["question"] || cleanRow["text"] || "";
+      const typeQuestion = String(cleanRow["type"] || "qcm").toLowerCase().trim();
+
+      if (!questionText) continue; // Saute les lignes vides sans question
+
       let optionsArray: string[] = [];
+
       if (typeQuestion === "vrai_faux") {
         optionsArray = ["Vrai", "Faux"];
       } else {
-        optionsArray = [row.OptionA, row.OptionB, row.OptionC, row.OptionD].filter(o => o !== undefined && String(o).trim() !== "");
+        // 🔄 Récupération ultra-souple : trouve "optiona", "option A", "optionA", "optA", etc.
+        const optA = cleanRow["optiona"] || cleanRow["opta"] || "";
+        const optB = cleanRow["optionb"] || cleanRow["optb"] || "";
+        const optC = cleanRow["optionc"] || cleanRow["optc"] || "";
+        const optD = cleanRow["optiond"] || cleanRow["optd"] || "";
+
+        optionsArray = [optA, optB, optC, optD]
+          .map((o) => String(o).trim())
+          .filter((o) => o !== "undefined" && o !== "");
       }
 
+      // 🚨 Si après extraction le tableau est toujours vide, on applique un fallback de secours pour éviter le crash 500
+      if (optionsArray.length < 2) {
+        console.warn("⚠️ Ligne Excel invalide ou mal lue, fallbacks appliqués pour la question :", questionText);
+        optionsArray = ["Option A manquante", "Option B manquante"];
+      }
+
+      const bonneReponseRaw = cleanRow["bonnereponse"] || cleanRow["correctanswer"] || "";
+      
       await Exercise.create({
         subject,
         chapter,
         contextText: enonce,
         contextImage: "",
         subQuestions: [{
-          questionText: row.Question,
-          qType: typeQuestion,
+          questionText,
+          qType: typeQuestion === "vrai_faux" ? "vrai_faux" : "qcm",
           options: optionsArray,
-          correctAnswer: String(row.BonneReponse).trim(),
-          explanation: row.Explication || ""
+          correctAnswer: String(bonneReponseRaw).trim(),
+          explanation: cleanRow["explication"] || cleanRow["explanation"] || ""
         }]
       });
+
       importedCount++;
     }
 
     res.status(200).json({ success: true, message: `Importation réussie de ${importedCount} exercices.` });
   } catch (error) {
     console.error("Erreur import Excel :", error);
-    res.status(500).json({ error: "Erreur lors du traitement du fichier Excel." });
+    res.status(500).json({ error: "Erreur interne lors du traitement du fichier Excel." });
   }
 });
 
