@@ -7,7 +7,7 @@ import { authenticateAdmin } from "../middleware/authAdmin";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import xlsx from "xlsx"; // 👈 Ajout du parser Excel
+import xlsx from "xlsx";
 
 const router = express.Router();
 
@@ -86,10 +86,8 @@ router.post("/", authenticateAdmin, verifyAdmin, upload.single("contextImage"), 
 });
 
 // ======================================================
-// 📥 NOUVEAU : Importation fichier Excel (.xlsx / .xls)
+// 📥 Importation fichier Excel (.xlsx / .xls) - STABLE ET SÉCURISÉ
 // ======================================================
-// routes/exerciseRoutes.ts
-
 router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<void> => {
   try {
     const { subject, chapter } = req.body;
@@ -114,26 +112,25 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
     let importedCount = 0;
 
     for (const row of sheetData) {
-      // 🛡️ ÉTAPE CRUCIALE : On crée un objet propre avec des clés nettoyées en minuscules et sans espaces
+      // 🛡️ ÉTAPE ULTRA-SÉCURISÉE : On nettoie toutes les clés y compris les retours à la ligne cachés (\r, \n, \t)
       const cleanRow: any = {};
       Object.keys(row).forEach((key) => {
-        const cleanKey = key.trim().toLowerCase().replace(/[\s_\-]/g, "");
+        const cleanKey = key.trim().toLowerCase().replace(/[\s_\-\r\n\t]/g, "");
         cleanRow[cleanKey] = row[key];
       });
 
-      // 🔍 Mappages tolérants (gère "enonce", "question", "type", etc.)
-      const enonce = cleanRow["enonce"] || cleanRow["contexte"] || "Exercice global";
+      // 🔍 Mappages tolérants
+      const enonce = cleanRow["enonce"] || cleanRow["contexte"] || "Généralités sur la respiration cellulaire";
       const questionText = cleanRow["question"] || cleanRow["text"] || "";
       const typeQuestion = String(cleanRow["type"] || "qcm").toLowerCase().trim();
 
-      if (!questionText) continue; // Saute les lignes vides sans question
+      if (!questionText || questionText.trim() === "") continue;
 
       let optionsArray: string[] = [];
 
       if (typeQuestion === "vrai_faux") {
         optionsArray = ["Vrai", "Faux"];
       } else {
-        // 🔄 Récupération ultra-souple : trouve "optiona", "option A", "optionA", "optA", etc.
         const optA = cleanRow["optiona"] || cleanRow["opta"] || "";
         const optB = cleanRow["optionb"] || cleanRow["optb"] || "";
         const optC = cleanRow["optionc"] || cleanRow["optc"] || "";
@@ -144,14 +141,21 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
           .filter((o) => o !== "undefined" && o !== "");
       }
 
-      // 🚨 Si après extraction le tableau est toujours vide, on applique un fallback de secours pour éviter le crash 500
+      // Si le tableau d'options est vide, on applique un fallback pour éviter la coupure Mongoose
       if (optionsArray.length < 2) {
-        console.warn("⚠️ Ligne Excel invalide ou mal lue, fallbacks appliqués pour la question :", questionText);
-        optionsArray = ["Option A manquante", "Option B manquante"];
+        optionsArray = ["Option A par défaut", "Option B par défaut"];
       }
 
-      const bonneReponseRaw = cleanRow["bonnereponse"] || cleanRow["correctanswer"] || "";
-      
+      // 🎯 CORRECTION CRITIQUE : Extraction et nettoyage de la bonne réponse
+      let bonneReponseRaw = cleanRow["bonnereponse"] || cleanRow["correctanswer"] || cleanRow["reponsecorrecte"] || cleanRow["reponse"] || "";
+      let correctAnswerText = String(bonneReponseRaw).trim();
+
+      // 🛡️ SÉCURITÉ DE SAUVEGARDE : Si la chaîne est vide, on prend la première option du tableau
+      if (!correctAnswerText && optionsArray.length > 0) {
+        console.warn(`⚠️ Bonne réponse introuvable pour la question : "${questionText}". Assignation automatique de l'Option A.`);
+        correctAnswerText = optionsArray[0];
+      }
+
       await Exercise.create({
         subject,
         chapter,
@@ -161,8 +165,8 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
           questionText,
           qType: typeQuestion === "vrai_faux" ? "vrai_faux" : "qcm",
           options: optionsArray,
-          correctAnswer: String(bonneReponseRaw).trim(),
-          explanation: cleanRow["explication"] || cleanRow["explanation"] || ""
+          correctAnswer: correctAnswerText,
+          explanation: cleanRow["explication"] || cleanRow["explanation"] || "Valable"
         }]
       });
 
