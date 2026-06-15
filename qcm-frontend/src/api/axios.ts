@@ -6,16 +6,17 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// 🔹 1. Intercepteur de Requête (Ajout du token)
+// 🔹 1. Intercepteur de Requête Adaptatif (Admin ou Étudiant)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    // 🔄 Récupère le token admin en priorité, sinon le token étudiant
+    const token = localStorage.getItem("adminToken") || localStorage.getItem("token");
 
     if (token) {
       config.headers = {
         ...config.headers,
         Authorization: `Bearer ${token}`,
-      } as any; // Casté en as any si TypeScript rouspète sur la structure stricte des headers
+      } as any;
     }
 
     return config;
@@ -25,8 +26,7 @@ api.interceptors.request.use(
   }
 );
 
-// 🔒 2. NOUVEAU : Intercepteur de Réponse (Sécurité Poste Unique)
-
+// 🔒 2. Intercepteur de Réponse
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -34,25 +34,27 @@ api.interceptors.response.use(
       const status = error.response.status;
       const errorCode = error.response.data?.code;
 
-      // 🚨 CAS 1 : Session écrasée par un autre appareil (403)
-      // 🚨 CAS 2 : Jeton techniquement expiré ou corrompu (401)
-      if (status === 403 || status === 401 || errorCode === "SESSION_KICKED") {
+      // ⚠️ Ignorer l'erreur si elle provient directement des tentatives de login 
+      // pour éviter de vider le stockage sur une simple faute de frappe de mot de passe
+      const isLoginRequest = error.config.url?.includes("/api/auth/login") || error.config.url?.includes("/api/auth/admin/login");
+
+      if (!isLoginRequest && (status === 403 || status === 401 || errorCode === "SESSION_KICKED")) {
         
-        // 1. Nettoyage complet des jetons
+        // 1. Nettoyage complet
         localStorage.removeItem("token");
         localStorage.removeItem("adminToken");
 
-        // 2. Message adapté à la situation
+        // 2. Message adapté
         if (status === 403 || errorCode === "SESSION_KICKED") {
-          alert("⚠️ Déconnexion : Votre compte est actif sur un autre appareil.");
+          alert("⚠️ Déconnexion : Accès refusé ou compte actif sur un autre appareil.");
         } else {
           alert("🔑 Votre session a expiré. Veuillez vous reconnecter.");
         }
 
-        // 3. Redirection immédiate
+        // 3. Redirection
         window.location.href = "/login";
         
-        return new Promise(() => {}); // Stop le flux de l'erreur
+        return new Promise(() => {}); 
       }
     }
 
