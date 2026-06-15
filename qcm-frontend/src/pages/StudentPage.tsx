@@ -519,7 +519,7 @@ export default function StudentPage() {
       );
     }
 
-   // 🧩 Cas 3 : QCE par matière (Corrigé pour préserver les dimensions de l'image)
+   // 🧩 Cas 3 : QCE par matière (Corrigé avec rétrécissement et bridage du texte long)
 if (section === "matiere" && selectedMatiere) {
   const matiereImage = subjectImages[selectedMatiere];
   const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
@@ -528,37 +528,33 @@ if (section === "matiere" && selectedMatiere) {
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-wrap gap-6 justify-start items-start min-h-full p-4"
+      className="flex flex-wrap gap-6 justify-start items-start min-h-full"
     >
       {filteredExams.map((exam) => (
         <motion.div
           key={exam._id}
           whileHover={{ scale: 1.05 }}
-          // "w-48" maintient la carte alignée horizontalement avec la largeur de l'image
-          className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white border border-gray-100 flex flex-col transition-all"
+          className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all w-48 h-48 shrink-0"
           onClick={() => {
-            resetQcm(); 
-            setSection("qcm"); 
-            setCurrentExam(exam.title); 
-            setCurrentExamId(exam._id);
+            resetQcm(); setSection("qcm"); setCurrentExam(exam.title); setCurrentExamId(exam._id);
           }}
         >
-          {/* Zone Image : stricte, fixe et inviolable */}
-          <div className="w-48 h-48 bg-gray-50 shrink-0 overflow-hidden">
-            <img 
-              src={matiereImage} 
-              alt={`${selectedMatiere} — ${exam.title}`} 
-              className="w-full h-full object-cover" 
-            />
-          </div>
-
-          {/* Zone Texte : Déplacée en dessous, hauteur fixe (h-14) pour garder l'alignement des cartes */}
+          {/* L'image fait toujours 100% de la carte */}
+          <img 
+            src={matiereImage} 
+            alt={`${selectedMatiere} — ${exam.title}`} 
+            className="w-full h-full object-cover" 
+          />
+          
+          {/* 🚨 LE BANDEAU CORRECTEUR :
+              - On baisse la taille du texte à "text-[10px]" (ultra compact mais lisible).
+              - On limite à max 2 lignes ("line-clamp-2").
+              - On met une hauteur max ("max-h-[44px]") pour bloquer l'ascension du bandeau. */}
           <div 
-            className="bg-green-700 text-white text-center px-2 py-2 text-xs md:text-sm font-semibold flex items-center justify-center h-14 min-w-0"
-            title={`${selectedMatiere} — ${exam.title}`}
+            className="absolute bottom-0 left-0 right-0 bg-green-700/75 text-white text-center px-1 py-1.5 font-medium text-[10px] leading-tight max-h-[44px] flex items-center justify-center overflow-hidden"
+            title={`${selectedMatiere} — ${exam.title}`} // Permet de lire le titre complet au survol de la souris
           >
-            {/* Limite le texte à 2 lignes maximum s'il est trop long, évitant de casser le design */}
-            <span className="line-clamp-2 break-words leading-tight">
+            <span className="line-clamp-2 break-words">
               {selectedMatiere} — {exam.title}
             </span>
           </div>
