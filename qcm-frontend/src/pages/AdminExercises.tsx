@@ -328,31 +328,6 @@ const AdminExercises: React.FC = () => {
       </div>
 
       {/* ===================================================== */}
-      {/* 📥 SECTION NOUVELLE : ENCART D'IMPORTATION EXCEL */}
-      {/* ===================================================== */}
-      <div className="mb-8 p-5 border-2 border-dashed border-green-300 bg-green-50/30 rounded-xl">
-        <h3 className="font-bold text-green-800 text-lg mb-1">📥 Importer des questions en masse via un fichier Excel</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Le fichier doit comporter les colonnes suivantes : <b>Enonce</b> (contexte), <b>Question</b>, <b>Type</b> (<i>qcm</i> ou <i>vrai_faux</i>), <b>OptionA</b>, <b>OptionB</b>, <b>OptionC</b>, <b>OptionD</b>, <b>BonneReponse</b>, <b>Explication</b>.
-        </p>
-        <form onSubmit={handleExcelImport} className="flex flex-col md:flex-row gap-4 items-center">
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-            className="bg-white p-2 rounded border w-full md:w-auto"
-          />
-          <button
-            type="submit"
-            disabled={importing}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2.5 rounded-lg transition disabled:opacity-50 tracking-wide shadow-sm"
-          >
-            {importing ? "Traitement de l'import..." : "Lancer l'importation Excel"}
-          </button>
-        </form>
-      </div>
-
-      {/* ===================================================== */}
       {/* 🔹 FILTRES DE VISUALISATION DU TABLEAU */}
       {/* ===================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -385,12 +360,39 @@ const AdminExercises: React.FC = () => {
       </div>
 
       {/* ===================================================== */}
-      {/* 🔹 FORMULAIRE MANUEL */}
+      {/* 🔹 FORMULAIRE PRINCIPAL (SAISIE + BUTTON DISCRET D'IMPORT) */}
       {/* ===================================================== */}
       <div className="mb-8 p-6 border rounded-lg shadow bg-white">
-        <h2 className="text-xl font-bold mb-6 text-blue-800">
-          ➕ Saisie manuelle d'un problème complet
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b">
+          <h2 className="text-xl font-bold text-blue-800 flex items-center gap-2">
+            ➕ Créer un nouvel exercice
+          </h2>
+          
+          {/* 📥 Bouton d'importation discret intégré directement dans la ligne d'en-tête */}
+          <form onSubmit={handleExcelImport} className="flex flex-wrap items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">Ou import Excel :</span>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+              className="text-xs text-gray-600 max-w-[180px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer"
+            />
+            <button
+              type="submit"
+              disabled={importing || !excelFile}
+              className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded transition disabled:opacity-40 shadow-sm"
+            >
+              {importing ? "Import..." : "Lancer"}
+            </button>
+          </form>
+        </div>
+
+        {/* Alerte contextuelle si les informations de liaison communes sont manquantes pour l'import */}
+        {excelFile && (!subject || !chapter) && (
+          <div className="mb-4 p-2 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded-md font-medium animate-pulse">
+            ⚠️ Attention : Veuillez définir une <b>Matière cible</b> et un <b>Chapitre cible</b> dans l'encart bleu tout en haut pour débloquer l'importation de votre fichier.
+          </div>
+        )}
 
         {/* ===================================================== */}
         {/* 🔹 ÉNONCÉ GLOBAL */}
@@ -459,7 +461,7 @@ const AdminExercises: React.FC = () => {
                 Question {qIndex + 1}
               </h4>
 
-              {/* 🔄 NOUVEAU : SÉLECTEUR CONTEXTUEL DU FORMAT DE QUESTION */}
+              {/* 🔄 FORMAT DE QUESTION */}
               <div className="mb-4">
                 <label className="block font-semibold mb-2 text-orange-700">
                   ⚙️ Format de saisie de la question
