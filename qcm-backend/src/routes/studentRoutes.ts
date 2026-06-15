@@ -36,16 +36,13 @@ router.get("/exams/:examId/questions", authenticateStudent, async (req, res) => 
 
   const questions = await Question.find({ exam: exam.title });
 
-  console.log("🔥 QUESTIONS appelé par", req.student.email, "→", exam.title);
-
   res.json(questions);
 });
 
 
 // 🔹 Soumettre les réponses d’un examen (QCM)
 router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
-  console.log("🔥 QCM SUBMIT appelé par", req.student?.email);
-
+  
   try {
     const examId = req.params.examId;
     const studentId = req.student!._id.toString();
@@ -79,9 +76,6 @@ router.post("/exams/:examId/submit", authenticateStudent, async (req, res) => {
   subject,
   referenceId: examId,
 });
-
-
-    console.log("🔥 QCM enregistré pour", req.student._id.toString(), subject);
 
     res.json({ message: "Examen soumis ✅", score });
   } catch (err) {

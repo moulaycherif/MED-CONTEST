@@ -41,8 +41,6 @@ export const authenticateStudent = async (
     // 🛑 3. SÉCURITÉ POSTE UNIQUE : Comparaison des sessions
     // Si l'ID de session du token n'est pas identique à celui stocké en base,
     // cela signifie que cet étudiant s'est connecté sur un autre ordinateur/navigateur.
-console.log("Token session ID :", decoded.sessionId);
-console.log("BDD session ID :", student.currentSessionId);
 
     if (student.currentSessionId !== decoded.sessionId) {
       return res.status(403).json({ 

@@ -2,9 +2,6 @@ import React from "react";
 
 import { API_BASE_URL } from "../config";
 
-console.log("🔥🔥🔥 QuestionCard LOADED 🔥🔥🔥");
-
-
 interface Question {
   _id: string;
   texte?: string;
