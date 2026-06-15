@@ -882,7 +882,7 @@ if (section === "matiere" && selectedMatiere) {
         ];
         return (
           <div className="flex flex-col items-center justify-center gap-8 mt-20">
-            <h2 className="text-2xl font-bold text-gray-800">{selectedChapter}</h2>
+            <h2 className="text-2xl font-bold text-gray-800 text-center max-w-2xl px-4">{selectedChapter}</h2>
             <div className="flex gap-8">
               {actions.map((action, index) => (
                 <motion.button
@@ -894,29 +894,40 @@ if (section === "matiere" && selectedMatiere) {
                 >
                   {action.label}
                 </motion.button>
-              ))}
+               ))}
             </div>
           </div>
         );
       }
 
-      // 👉 5) Liste des chapitres
+      // 👉 5) Liste des chapitres (CORRIGÉ : Protège l'image et adapte les titres longs)
       return (
-        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
+        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full p-4">
           {chapters.map((chapter, index) => (
             <motion.div
               key={index}
               whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+              // Ajout de w-48 et flex-col pour sortir le texte de l'image
+              className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white border border-gray-100 flex flex-col transition-all"
               onClick={() => setSelectedChapter(chapter)}
             >
-              <img 
-                src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
-                alt={chapter} 
-                className="w-48 h-48 object-cover" 
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
-                {chapter}
+              {/* Conteneur Image fixe et inviolable */}
+              <div className="w-48 h-48 bg-gray-50 shrink-0 overflow-hidden">
+                <img 
+                  src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
+                  alt={chapter} 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+
+              {/* Zone Texte : Placée en dessous, hauteur fixe et texte bridé à 3 lignes max */}
+              <div 
+                className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
+                title={chapter} // Permet de lire le titre complet au survol de la souris
+              >
+                <span className="line-clamp-3 break-words leading-tight">
+                  {chapter}
+                </span>
               </div>
             </motion.div>
           ))}
