@@ -4,14 +4,16 @@ import { API_BASE_URL } from "../config";
 import "react-quill/dist/quill.snow.css";
 import RichMathEditor from "../components/RichMathEditor";
 
-// 🔹 Interface Sous-question
+// 🔹 Interface Sous-question augmentée pour gérer le type de question
 interface SubQuestion {
   _id?: string;
   questionText: string;
+  qType: 'qcm' | 'vrai_faux'; // 👈 Ajout du type discriminatif
   options: string[];
   correctAnswer: string;
   explanation: string;
 }
+
 // 🔹 Interface Exercice
 interface Exercise {
   _id: string;
@@ -24,28 +26,30 @@ interface Exercise {
 
 const emptySubQuestion: SubQuestion = {
   questionText: "",
+  qType: "qcm", // 👈 Par défaut au format QCM
   options: ["", "", "", ""],
   correctAnswer: "",
   explanation: "",
 };
+
 const AdminExercises: React.FC = () => {
   // 🔹 Données
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [chapters, setChapters] = useState<string[]>([]);
-  // 🔹 Filtres
+  // 🔹 Filtres / Saisie principale
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
   // 🔹 Énoncé principal
   const [contextText, setContextText] = useState("");
-  const [contextImage, setContextImage] =
-    useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] =
-    useState<string | null>(null);
+  const [contextImage, setContextImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   // 🔹 Sous-questions
-  const [subQuestions, setSubQuestions] = useState<
-    SubQuestion[]
-  >([emptySubQuestion]);
+  const [subQuestions, setSubQuestions] = useState<SubQuestion[]>([emptySubQuestion]);
+
+  // 📥 États dédiés à l'importation de fichiers Excel
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
 
   // =====================================================
   // 🔹 CHARGEMENT DES EXERCICES
@@ -56,20 +60,13 @@ const AdminExercises: React.FC = () => {
 
   const fetchExercises = async () => {
     try {
-      const res = await axios.get(
-        `${API_BASE_URL}/api/exercises`
-      );
+      const res = await axios.get(`${API_BASE_URL}/api/exercises`);
       const data: Exercise[] = res.data;
       setExercises(data);
-      const uniqueSubjects = Array.from(
-        new Set(data.map((q) => q.subject))
-      );
+      const uniqueSubjects = Array.from(new Set(data.map((q) => q.subject)));
       setSubjects(uniqueSubjects);
     } catch (err) {
-      console.error(
-        "❌ Erreur chargement exercices :",
-        err
-      );
+      console.error("❌ Erreur chargement exercices :", err);
     }
   };
 
@@ -81,12 +78,8 @@ const AdminExercises: React.FC = () => {
       setChapters([]);
       return;
     }
-    const filtered = exercises.filter(
-      (q) => q.subject === subject
-    );
-    const uniqueChapters = [
-      ...new Set(filtered.map((q) => q.chapter)),
-    ];
+    const filtered = exercises.filter((q) => q.subject === subject);
+    const uniqueChapters = [...new Set(filtered.map((q) => q.chapter))];
     setChapters(uniqueChapters);
   }, [subject, exercises]);
 
@@ -121,34 +114,40 @@ const AdminExercises: React.FC = () => {
       ...subQuestions,
       {
         questionText: "",
+        qType: "qcm",
         options: ["", "", "", ""],
         correctAnswer: "",
         explanation: "",
       },
     ]);
   };
+
   const handleRemoveSubQuestion = (index: number) => {
     const updated = [...subQuestions];
     updated.splice(index, 1);
     setSubQuestions(updated);
   };
-  const handleSubQuestionChange = (
-    index: number,
-    field: keyof SubQuestion,
-    value: string
-  ) => {
+
+  const handleSubQuestionChange = (index: number, field: keyof SubQuestion, value: string) => {
     const updated = [...subQuestions];
+
+    // 🔄 Logique adaptative automatique si le type de question change
+    if (field === "qType" && value === "vrai_faux") {
+      updated[index].options = ["Vrai", "Faux"];
+      updated[index].correctAnswer = ""; // On réinitialise pour forcer une sélection propre
+    } else if (field === "qType" && value === "qcm") {
+      updated[index].options = ["", "", "", ""];
+      updated[index].correctAnswer = "";
+    }
+
     updated[index] = {
       ...updated[index],
       [field]: value,
     };
     setSubQuestions(updated);
   };
-  const handleOptionChange = (
-    qIndex: number,
-    optIndex: number,
-    value: string
-  ) => {
+
+  const handleOptionChange = (qIndex: number, optIndex: number, value: string) => {
     const updated = [...subQuestions];
     updated[qIndex].options[optIndex] = value;
     setSubQuestions(updated);
@@ -166,20 +165,57 @@ const AdminExercises: React.FC = () => {
   };
 
   // =====================================================
-  // 🔹 SOUMISSION
+  // 🔹 ACTION : INTERACTION ET IMPORTATION DU FICHIER EXCEL
+  // =====================================================
+  const handleExcelImport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!excelFile) {
+      alert("⚠️ Veuillez sélectionner un fichier Excel (.xlsx ou .xls) au préalable.");
+      return;
+    }
+    if (!subject || !chapter) {
+      alert("⚠️ Renseignez obligatoirement la matière et le chapitre cibles ci-dessus pour y lier l'importation.");
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const adminToken = localStorage.getItem("adminToken");
+      const formData = new FormData();
+      formData.append("excelFile", excelFile);
+      formData.append("subject", subject);
+      formData.append("chapter", chapter);
+
+      const res = await axios.post(`${API_BASE_URL}/api/exercises/import-excel`, formData, {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      alert(`✅ ${res.data.message}`);
+      setExcelFile(null);
+      // Actualisation dynamique de la liste
+      fetchExercises();
+    } catch (err: any) {
+      console.error("Erreur lors de l'import :", err);
+      alert(err.response?.data?.error || "❌ Une erreur est survenue lors de l'intégration du fichier Excel.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  // =====================================================
+  // 🔹 SOUMISSION MANUELLE
   // =====================================================
   const handleSubmit = async () => {
     // 🔹 Vérifications principales
     if (!subject || !chapter) {
-      alert(
-        "⚠️ Veuillez renseigner la matière et le chapitre."
-      );
+      alert("⚠️ Veuillez renseigner la matière et le chapitre.");
       return;
     }
     if (isEditorEmpty(contextText)) {
-      alert(
-        "⚠️ Veuillez saisir l'énoncé principal."
-      );
+      alert("⚠️ Veuillez saisir l'énoncé principal.");
       return;
     }
     // 🔹 Vérification sous-questions
@@ -187,90 +223,62 @@ const AdminExercises: React.FC = () => {
       const q = subQuestions[i];
       // ✅ question obligatoire
       if (isEditorEmpty(q.questionText)) {
-        alert(
-          `⚠️ Le texte de la question ${
-            i + 1
-          } est vide.`
-        );
+        alert(`⚠️ Le texte de la question ${i + 1} est vide.`);
         return;
       }
-      // ✅ au moins 2 options remplies
-      const validOptions = q.options.filter(
-        (opt) => opt.trim() !== ""
-      );
-      if (validOptions.length < 2) {
-        alert(
-          `⚠️ La question ${
-            i + 1
-          } doit contenir au moins 2 options.`
-        );
-        return;
+      // ✅ Si c'est un QCM, au moins 2 options remplies
+      if (q.qType === "qcm") {
+        const validOptions = q.options.filter((opt) => opt.trim() !== "");
+        if (validOptions.length < 2) {
+          alert(`⚠️ La question ${i + 1} (QCM) doit contenir au moins 2 options.`);
+          return;
+        }
       }
       // ✅ bonne réponse obligatoire
       if (!q.correctAnswer.trim()) {
-        alert(
-          `⚠️ Veuillez sélectionner la bonne réponse pour la question ${
-            i + 1
-          }.`
-        );
+        alert(`⚠️ Veuillez sélectionner la bonne réponse pour la question ${i + 1}.`);
         return;
       }
     }
     try {
-      const adminToken =
-        localStorage.getItem("adminToken");
+      const adminToken = localStorage.getItem("adminToken");
       const formData = new FormData();
       formData.append("subject", subject);
       formData.append("chapter", chapter);
-      formData.append(
-        "contextText",
-        contextText
-      );
+      formData.append("contextText", contextText);
+
       // 🔹 Nettoyage avant envoi
-      const cleanedSubQuestions = subQuestions.map(
-        (q) => ({
-          questionText: q.questionText.trim(),
-          options: q.options.filter(
-            (opt) => opt.trim() !== ""
-          ),
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation,
-        })
-      );
-      formData.append(
-        "subQuestions",
-        JSON.stringify(cleanedSubQuestions)
-      );
+      const cleanedSubQuestions = subQuestions.map((q) => ({
+        questionText: q.questionText.trim(),
+        qType: q.qType,
+        options: q.qType === "vrai_faux" ? ["Vrai", "Faux"] : q.options.filter((opt) => opt.trim() !== ""),
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+      }));
+
+      formData.append("subQuestions", JSON.stringify(cleanedSubQuestions));
+
       if (contextImage) {
-        formData.append(
-          "contextImage",
-          contextImage
-        );
+        formData.append("contextImage", contextImage);
       }
-      await axios.post(
-        `${API_BASE_URL}/api/exercises`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${adminToken}`,
-            "Content-Type":
-              "multipart/form-data",
-          },
-        }
-      );
-      alert(
-        "✅ Exercice ajouté avec succès"
-      );
+      await axios.post(`${API_BASE_URL}/api/exercises`, formData, {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      alert("✅ Exercice ajouté avec succès");
+      
       // 🔹 Reset
       setSubject("");
       setChapter("");
       setContextText("");
       setContextImage(null);
       setPreviewUrl(null);
-
       setSubQuestions([
         {
           questionText: "",
+          qType: "qcm",
           options: ["", "", "", ""],
           correctAnswer: "",
           explanation: "",
@@ -279,14 +287,8 @@ const AdminExercises: React.FC = () => {
 
       fetchExercises();
     } catch (err) {
-      console.error(
-        "❌ Erreur création exercice :",
-        err
-      );
-
-      alert(
-        "❌ Erreur lors de la création de l'exercice"
-      );
+      console.error("❌ Erreur création exercice :", err);
+      alert("❌ Erreur lors de la création de l'exercice");
     }
   };
 
@@ -295,32 +297,73 @@ const AdminExercises: React.FC = () => {
       {/* ===================================================== */}
       {/* 🔹 TITRE */}
       {/* ===================================================== */}
-
       <h1 className="text-3xl font-bold mb-6 text-center">
         📘 Gestion des Exercices du Soutien
       </h1>
 
       {/* ===================================================== */}
-      {/* 🔹 FILTRES */}
+      {/* 🔹 BLOC DE CONFIGURATION COMMUNE (MATIÈRE / CHAPITRE) */}
       {/* ===================================================== */}
+      <div className="p-4 border bg-blue-50/50 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label className="block font-semibold mb-1 text-gray-700">Matière cible</label>
+          <input
+            type="text"
+            placeholder="Matière (ex: Anatomie)"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="border p-3 rounded-lg w-full bg-white"
+          />
+        </div>
+        <div>
+          <label className="block font-semibold mb-1 text-gray-700">Chapitre cible</label>
+          <input
+            type="text"
+            placeholder="Chapitre (ex: Le Système Nerveux)"
+            value={chapter}
+            onChange={(e) => setChapter(e.target.value)}
+            className="border p-3 rounded-lg w-full bg-white"
+          />
+        </div>
+      </div>
 
+      {/* ===================================================== */}
+      {/* 📥 SECTION NOUVELLE : ENCART D'IMPORTATION EXCEL */}
+      {/* ===================================================== */}
+      <div className="mb-8 p-5 border-2 border-dashed border-green-300 bg-green-50/30 rounded-xl">
+        <h3 className="font-bold text-green-800 text-lg mb-1">📥 Importer des questions en masse via un fichier Excel</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Le fichier doit comporter les colonnes suivantes : <b>Enonce</b> (contexte), <b>Question</b>, <b>Type</b> (<i>qcm</i> ou <i>vrai_faux</i>), <b>OptionA</b>, <b>OptionB</b>, <b>OptionC</b>, <b>OptionD</b>, <b>BonneReponse</b>, <b>Explication</b>.
+        </p>
+        <form onSubmit={handleExcelImport} className="flex flex-col md:flex-row gap-4 items-center">
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+            className="bg-white p-2 rounded border w-full md:w-auto"
+          />
+          <button
+            type="submit"
+            disabled={importing}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2.5 rounded-lg transition disabled:opacity-50 tracking-wide shadow-sm"
+          >
+            {importing ? "Traitement de l'import..." : "Lancer l'importation Excel"}
+          </button>
+        </form>
+      </div>
+
+      {/* ===================================================== */}
+      {/* 🔹 FILTRES DE VISUALISATION DU TABLEAU */}
+      {/* ===================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <select
           value={subject}
-          onChange={(e) =>
-            setSubject(e.target.value)
-          }
+          onChange={(e) => setSubject(e.target.value)}
           className="border p-3 rounded-lg"
         >
-          <option value="">
-            Toutes les matières
-          </option>
-
+          <option value="">Toutes les matières</option>
           {subjects.map((subj) => (
-            <option
-              key={subj}
-              value={subj}
-            >
+            <option key={subj} value={subj}>
               {subj}
             </option>
           ))}
@@ -328,21 +371,13 @@ const AdminExercises: React.FC = () => {
 
         <select
           value={chapter}
-          onChange={(e) =>
-            setChapter(e.target.value)
-          }
+          onChange={(e) => setChapter(e.target.value)}
           className="border p-3 rounded-lg"
           disabled={!subject}
         >
-          <option value="">
-            Tous les chapitres
-          </option>
-
+          <option value="">Tous les chapitres</option>
           {chapters.map((chap) => (
-            <option
-              key={chap}
-              value={chap}
-            >
+            <option key={chap} value={chap}>
               {chap}
             </option>
           ))}
@@ -350,47 +385,20 @@ const AdminExercises: React.FC = () => {
       </div>
 
       {/* ===================================================== */}
-      {/* 🔹 FORMULAIRE */}
+      {/* 🔹 FORMULAIRE MANUEL */}
       {/* ===================================================== */}
-
       <div className="mb-8 p-6 border rounded-lg shadow bg-white">
-        <h2 className="text-xl font-bold mb-6">
-          ➕ Créer un nouvel exercice
+        <h2 className="text-xl font-bold mb-6 text-blue-800">
+          ➕ Saisie manuelle d'un problème complet
         </h2>
-
-        {/* 🔹 Matière / Chapitre */}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Matière"
-            value={subject}
-            onChange={(e) =>
-              setSubject(e.target.value)
-            }
-            className="border p-3 rounded-lg"
-          />
-
-          <input
-            type="text"
-            placeholder="Chapitre"
-            value={chapter}
-            onChange={(e) =>
-              setChapter(e.target.value)
-            }
-            className="border p-3 rounded-lg"
-          />
-        </div>
 
         {/* ===================================================== */}
         {/* 🔹 ÉNONCÉ GLOBAL */}
         {/* ===================================================== */}
-
         <div className="bg-gray-50 p-5 rounded-xl border mb-8">
           <h3 className="font-bold text-lg mb-4">
             📚 Énoncé global du problème
           </h3>
-
           <div className="bg-white rounded-lg mb-4 text-lg">
             <RichMathEditor
               value={contextText}
@@ -399,38 +407,25 @@ const AdminExercises: React.FC = () => {
           </div>
 
           {/* 🔹 Upload image */}
-
           <label className="font-semibold block mb-2">
-            🖼 Image de l'énoncé
-            (optionnelle)
+            🖼 Image de l'énoncé (optionnelle)
           </label>
-
           <input
             type="file"
             accept="image/*"
             onChange={(e) =>
-              setContextImage(
-                e.target.files?.[0] || null
-              )
+              setContextImage(e.target.files?.[0] || null)
             }
             className="mb-4"
           />
 
           {/* 🔹 Preview image réduite */}
-
           {previewUrl && (
             <div className="flex justify-center">
               <img
                 src={previewUrl}
                 alt="Preview"
-                className="
-                  max-w-[220px]
-                  max-h-[180px]
-                  object-contain
-                  rounded-lg
-                  border
-                  shadow-sm
-                "
+                className="max-w-[220px] max-h-[180px] object-contain rounded-lg border shadow-sm"
               />
             </div>
           )}
@@ -439,8 +434,7 @@ const AdminExercises: React.FC = () => {
         {/* ===================================================== */}
         {/* 🔹 SOUS-QUESTIONS */}
         {/* ===================================================== */}
-
-        <h3 className="font-bold text-lg mb-4">
+        <h3 className="font-bold text-lg mb-4 text-gray-800">
           🎯 Sous-questions
         </h3>
 
@@ -448,34 +442,14 @@ const AdminExercises: React.FC = () => {
           {subQuestions.map((subQ, qIndex) => (
             <div
               key={qIndex}
-              className="
-                bg-white
-                p-5
-                rounded-xl
-                border
-                border-blue-200
-                shadow-sm
-                relative
-              "
+              className="bg-white p-5 rounded-xl border border-blue-200 shadow-sm relative"
             >
               {/* 🔹 Bouton supprimer */}
-
               {subQuestions.length > 1 && (
                 <button
                   type="button"
-                  onClick={() =>
-                    handleRemoveSubQuestion(
-                      qIndex
-                    )
-                  }
-                  className="
-                    absolute
-                    top-3
-                    right-3
-                    text-red-500
-                    hover:text-red-700
-                    font-semibold
-                  "
+                  onClick={() => handleRemoveSubQuestion(qIndex)}
+                  className="absolute top-3 right-3 text-red-500 hover:text-red-700 font-semibold"
                 >
                   ❌ Supprimer
                 </button>
@@ -485,116 +459,82 @@ const AdminExercises: React.FC = () => {
                 Question {qIndex + 1}
               </h4>
 
-              {/* 🔹 Texte question */}
+              {/* 🔄 NOUVEAU : SÉLECTEUR CONTEXTUEL DU FORMAT DE QUESTION */}
+              <div className="mb-4">
+                <label className="block font-semibold mb-2 text-orange-700">
+                  ⚙️ Format de saisie de la question
+                </label>
+                <select
+                  value={subQ.qType}
+                  onChange={(e) => handleSubQuestionChange(qIndex, "qType", e.target.value as any)}
+                  className="border p-2 rounded-lg bg-orange-50 font-medium cursor-pointer focus:ring-2 focus:ring-orange-300"
+                >
+                  <option value="qcm">QCM Classique (Plusieurs options)</option>
+                  <option value="vrai_faux">Quiz Vrai ou Faux</option>
+                </select>
+              </div>
 
+              {/* 🔹 Texte question */}
               <label className="block font-semibold mb-2">
                 🧠 Texte de la question
               </label>
-
               <div className="mb-5 bg-white text-lg">
                 <RichMathEditor
                   value={subQ.questionText}
-                  onChange={(val) =>
-                    handleSubQuestionChange(
-                      qIndex,
-                      "questionText",
-                      val
-                    )
-                  }
+                  onChange={(val) => handleSubQuestionChange(qIndex, "questionText", val)}
                 />
               </div>
 
               {/* 🔹 Explication */}
-
               <label className="block font-semibold mb-2">
                 💡 Explication pédagogique
               </label>
-
               <div className="mb-5 bg-white text-lg">
                 <RichMathEditor
                   value={subQ.explanation}
-                  onChange={(val) =>
-                    handleSubQuestionChange(
-                      qIndex,
-                      "explanation",
-                      val
-                    )
-                  }
+                  onChange={(val) => handleSubQuestionChange(qIndex, "explanation", val)}
                 />
               </div>
 
-              {/* 🔹 Options */}
-
-              <label className="block font-semibold mb-2">
-                📝 Options de réponse
-              </label>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
-                {subQ.options.map(
-                  (opt, optIndex) => (
-                    <input
-                      key={optIndex}
-                      type="text"
-                      placeholder={`Option ${
-                        optIndex + 1
-                      }`}
-                      value={opt}
-                      onChange={(e) =>
-                        handleOptionChange(
-                          qIndex,
-                          optIndex,
-                          e.target.value
-                        )
-                      }
-                      className="
-                        border
-                        p-3
-                        rounded-lg
-                        w-full
-                      "
-                    />
-                  )
-                )}
-              </div>
+              {/* 🔹 Options adaptées selon le type choisi */}
+              {subQ.qType === "qcm" ? (
+                <>
+                  <label className="block font-semibold mb-2">
+                    📝 Options de réponse
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+                    {subQ.options.map((opt, optIndex) => (
+                      <input
+                        key={optIndex}
+                        type="text"
+                        placeholder={`Option ${optIndex + 1}`}
+                        value={opt}
+                        onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
+                        className="border p-3 rounded-lg w-full"
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="p-3 bg-gray-50 rounded-lg border border-dashed mb-5 text-gray-700 font-medium text-sm">
+                  📢 Mode <b>Vrai / Faux</b> configuré. Les boutons d'options seront auto-générés pour l'étudiant.
+                </div>
+              )}
 
               {/* 🔹 Bonne réponse */}
-
               <label className="block font-semibold mb-2">
                 ✅ Bonne réponse
               </label>
-
               <select
-                className="
-                  border
-                  p-3
-                  rounded-lg
-                  w-full
-                  bg-green-50
-                "
+                className="border p-3 rounded-lg w-full bg-green-50 font-medium"
                 value={subQ.correctAnswer}
-                onChange={(e) =>
-                  handleSubQuestionChange(
-                    qIndex,
-                    "correctAnswer",
-                    e.target.value
-                  )
-                }
+                onChange={(e) => handleSubQuestionChange(qIndex, "correctAnswer", e.target.value)}
               >
-                <option value="">
-                  Sélectionnez la bonne
-                  réponse...
-                </option>
-
+                <option value="">Sélectionnez la bonne réponse...</option>
                 {subQ.options
-                  .filter(
-                    (opt) =>
-                      opt.trim() !== ""
-                  )
+                  .filter((opt) => opt && opt.trim() !== "")
                   .map((opt, optIndex) => (
-                    <option
-                      key={optIndex}
-                      value={opt}
-                    >
+                    <option key={optIndex} value={opt}>
                       {opt}
                     </option>
                   ))}
@@ -604,21 +544,9 @@ const AdminExercises: React.FC = () => {
         </div>
 
         {/* 🔹 Ajouter question */}
-
         <button
           onClick={handleAddSubQuestion}
-          className="
-            w-full
-            py-3
-            mb-6
-            border-2
-            border-dashed
-            border-blue-400
-            text-blue-600
-            rounded-xl
-            hover:bg-blue-50
-            font-bold
-          "
+          className="w-full py-3 mb-6 border-2 border-dashed border-blue-400 text-blue-600 rounded-xl hover:bg-blue-50 font-bold"
         >
           ➕ Ajouter une sous-question
         </button>
@@ -626,91 +554,46 @@ const AdminExercises: React.FC = () => {
         <hr className="my-6" />
 
         {/* 🔹 Submit */}
-
         <button
           onClick={handleSubmit}
-          className="
-            w-full
-            bg-green-600
-            hover:bg-green-700
-            transition
-            text-white
-            font-bold
-            px-4
-            py-4
-            rounded-xl
-            text-lg
-            shadow
-          "
+          className="w-full bg-green-600 hover:bg-green-700 transition text-white font-bold px-4 py-4 rounded-xl text-lg shadow"
         >
           ✅ Sauvegarder l'exercice complet
         </button>
       </div>
 
       {/* ===================================================== */}
-      {/* 🔹 TABLEAU */}
+      {/* 🔹 TABLEAU DE RESTITUTION */}
       {/* ===================================================== */}
-
       <table className="w-full border border-gray-300 shadow bg-white">
         <thead className="bg-gray-100">
           <tr>
-            <th className="border p-3 text-left">
-              Énoncé
-            </th>
-
-            <th className="border p-3">
-              Questions
-            </th>
-
-            <th className="border p-3">
-              Matière
-            </th>
-
-            <th className="border p-3">
-              Chapitre
-            </th>
+            <th className="border p-3 text-left">Énoncé</th>
+            <th className="border p-3">Questions</th>
+            <th className="border p-3">Matière</th>
+            <th className="border p-3">Chapitre</th>
           </tr>
         </thead>
-
         <tbody>
           {filteredExercises.map((q) => (
-            <tr
-              key={q._id}
-              className="hover:bg-gray-50"
-            >
+            <tr key={q._id} className="hover:bg-gray-50">
               <td className="border p-3">
                 <div
-                  dangerouslySetInnerHTML={{
-                    __html: q.contextText,
-                  }}
+                  dangerouslySetInnerHTML={{ __html: q.contextText }}
                   className="line-clamp-2 text-base text-gray-800"
                 />
               </td>
-
               <td className="border p-3 text-center font-bold text-blue-600">
                 {q.subQuestions?.length || 0}
               </td>
-
-              <td className="border p-3 text-center">
-                {q.subject}
-              </td>
-
-              <td className="border p-3 text-center">
-                {q.chapter}
-              </td>
+              <td className="border p-3 text-center">{q.subject}</td>
+              <td className="border p-3 text-center">{q.chapter}</td>
             </tr>
           ))}
 
           {filteredExercises.length === 0 && (
             <tr>
-              <td
-                colSpan={4}
-                className="
-                  text-center
-                  p-6
-                  text-gray-500
-                "
-              >
+              <td colSpan={4} className="text-center p-6 text-gray-500">
                 Aucun exercice trouvé
               </td>
             </tr>

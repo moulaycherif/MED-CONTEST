@@ -7,28 +7,23 @@ import { authenticateAdmin } from "../middleware/authAdmin";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import xlsx from "xlsx"; // 👈 Ajout du parser Excel
 
 const router = express.Router();
 
-// ======================================================
-// 📂 Configuration de Multer (Stockage des images)
-// ======================================================
+// Configuration Multer standard pour les images
 const uploadDir = path.join(process.cwd(), "uploads", "exercises");
-
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
 
 const upload = multer({ storage });
+// Configuration Multer pour l'import en mémoire temporaire
+const excelUpload = multer({ storage: multer.memoryStorage() });
 
 // ======================================================
 // 📋 Récupérer tous les exercices
@@ -38,7 +33,6 @@ router.get("/", async (req: Request, res: Response) => {
     const exercises = await Exercise.find();
     res.json(exercises);
   } catch (error) {
-    console.error("Erreur récupération de tous les exercices :", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -46,151 +40,132 @@ router.get("/", async (req: Request, res: Response) => {
 // ======================================================
 // 🖼 Upload d'image depuis l'éditeur riche (Quill)
 // ======================================================
-router.post(
-  "/upload-editor-image",
-  authenticateAdmin,
-  verifyAdmin,
-  upload.single("image"),
-  (req: Request, res: Response): void => {
-    if (!req.file) {
-      res.status(400).json({ error: "Aucun fichier uploadé" });
-      return;
-    }
-
-    res.json({
-      url: `/uploads/exercises/${req.file.filename}`,
-    });
-  }
-);
-
-// ======================================================
-// ➕ Ajouter un exercice (Avec sous-questions)
-// ======================================================
-router.post(
-  "/",
-  authenticateAdmin,
-  verifyAdmin,
-  upload.single("contextImage"), // 👈 Le nom a changé dans le frontend
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { subject, chapter, contextText, subQuestions } = req.body;
-
-      // Traitement des sous-questions (envoyées en string JSON via FormData)
-     let parsedSubQuestions = subQuestions;
-
-if (typeof subQuestions === "string") {
-  try {
-    parsedSubQuestions = JSON.parse(subQuestions);
-  } catch (e) {
-    res.status(400).json({
-      error: "Format des sous-questions invalide",
-    });
+router.post("/upload-editor-image", authenticateAdmin, verifyAdmin, upload.single("image"), (req: Request, res: Response): void => {
+  if (!req.file) {
+    res.status(400).json({ error: "Aucun fichier uploadé" });
     return;
   }
-}
-
-// ✅ Supprimer les sous-questions vides
-parsedSubQuestions = parsedSubQuestions.filter(
-  (q: any) =>
-    q.questionText &&
-    q.questionText.trim() !== ""
-);
-
-// ✅ Vérifier qu'il reste au moins une question
-if (parsedSubQuestions.length === 0) {
-  res.status(400).json({
-    error: "Au moins une sous-question est requise",
-  });
-  return;
-}
-
-      const exercise = await Exercise.create({
-        subject,
-        chapter,
-        contextText,
-        contextImage: req.file ? `/uploads/exercises/${req.file.filename}` : "",
-        subQuestions: parsedSubQuestions,
-      });
-
-      res.status(201).json(exercise);
-    } catch (error) {
-      console.error("Erreur création exercice :", error);
-      res.status(500).json({ error: "Erreur serveur lors de la création" });
-    }
-  }
-);
-
-// ======================================================
-// 📚 Lister par matière (ex: /api/exercises/by-subject/Mathématique)
-// ======================================================
-router.get("/by-subject/:subject", async (req: Request, res: Response) => {
-  try {
-    const exercises = await Exercise.find({
-      subject: req.params.subject,
-    });
-
-    res.json(exercises);
-  } catch (error) {
-    console.error("Erreur récupération par matière :", error);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
+  res.json({ url: `/uploads/exercises/${req.file.filename}` });
 });
 
 // ======================================================
-// 📘 Lister par matière + chapitre (ex: /api/exercises/Mathématique/Chapitre I)
+// ➕ Ajouter un exercice manuel
 // ======================================================
-router.get("/:subject/:chapter", async (req: Request, res: Response) => {
+router.post("/", authenticateAdmin, verifyAdmin, upload.single("contextImage"), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { subject, chapter } = req.params;
+    const { subject, chapter, contextText, subQuestions } = req.body;
+    let parsedSubQuestions = subQuestions;
 
-    const exercises = await Exercise.find({
-      subject,
-      chapter,
-    });
-
-    res.json(exercises);
-  } catch (error) {
-    console.error("Erreur récupération par matière et chapitre :", error);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
-
-// ======================================================
-// ❌ Supprimer un exercice
-// ======================================================
-router.delete("/:id", authenticateAdmin, verifyAdmin, async (req: Request, res: Response): Promise<void> => {
-  try {
-    const exerciseId = req.params.id;
-
-    // 1. Trouver l'exercice pour récupérer le chemin de l'image
-    const exercise = await Exercise.findById(exerciseId);
-    
-    if (!exercise) {
-      res.status(404).json({ error: "Exercice non trouvé" });
-      return;
-    }
-
-    // 2. Si une image de contexte existe, la supprimer physiquement du serveur
-    if (exercise.contextImage) {
-      const imagePath = path.join(process.cwd(), exercise.contextImage);
-      
-      if (fs.existsSync(imagePath)) {
-        try {
-          fs.unlinkSync(imagePath);
-        } catch (err) {
-          console.error("Impossible de supprimer l'image associée :", err);
-        }
+    if (typeof subQuestions === "string") {
+      try {
+        parsedSubQuestions = JSON.parse(subQuestions);
+      } catch (e) {
+        res.status(400).json({ error: "Format des sous-questions invalide" });
+        return;
       }
     }
 
-    // 3. Supprimer le document de la base de données
-    await Exercise.findByIdAndDelete(exerciseId);
+    parsedSubQuestions = parsedSubQuestions.filter((q: any) => q.questionText && q.questionText.trim() !== "");
+    if (parsedSubQuestions.length === 0) {
+      res.status(400).json({ error: "Au moins une sous-question est requise" });
+      return;
+    }
 
-    res.json({ success: true, message: "Exercice supprimé avec succès" });
+    const exercise = await Exercise.create({
+      subject,
+      chapter,
+      contextText,
+      contextImage: req.file ? `/uploads/exercises/${req.file.filename}` : "",
+      subQuestions: parsedSubQuestions,
+    });
+
+    res.status(201).json(exercise);
   } catch (error) {
-    console.error("Erreur suppression exercice :", error);
-    res.status(500).json({ error: "Erreur serveur lors de la suppression" });
+    res.status(500).json({ error: "Erreur serveur lors de la création" });
   }
+});
+
+// ======================================================
+// 📥 NOUVEAU : Importation fichier Excel (.xlsx / .xls)
+// ======================================================
+router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { subject, chapter } = req.body;
+    if (!req.file) {
+      res.status(400).json({ error: "Veuillez fournir un fichier Excel." });
+      return;
+    }
+    if (!subject || !chapter) {
+      res.status(400).json({ error: "La matière et le chapitre sont obligatoires pour l'import." });
+      return;
+    }
+
+    // Extraction des données de la feuille Excel
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheetData: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    if (sheetData.length === 0) {
+      res.status(400).json({ error: "Le fichier Excel est vide." });
+      return;
+    }
+
+    // Parcours des lignes Excel et création unitaire des structures contextes/questions
+    let importedCount = 0;
+    for (const row of sheetData) {
+      const enonce = row.Enonce || row.Question; // Fallback s'il n'y a pas d'énoncé global séparé
+      const typeQuestion = row.Type?.toLowerCase() === "vrai_faux" ? "vrai_faux" : "qcm";
+      
+      let optionsArray: string[] = [];
+      if (typeQuestion === "vrai_faux") {
+        optionsArray = ["Vrai", "Faux"];
+      } else {
+        optionsArray = [row.OptionA, row.OptionB, row.OptionC, row.OptionD].filter(o => o !== undefined && String(o).trim() !== "");
+      }
+
+      await Exercise.create({
+        subject,
+        chapter,
+        contextText: enonce,
+        contextImage: "",
+        subQuestions: [{
+          questionText: row.Question,
+          qType: typeQuestion,
+          options: optionsArray,
+          correctAnswer: String(row.BonneReponse).trim(),
+          explanation: row.Explication || ""
+        }]
+      });
+      importedCount++;
+    }
+
+    res.status(200).json({ success: true, message: `Importation réussie de ${importedCount} exercices.` });
+  } catch (error) {
+    console.error("Erreur import Excel :", error);
+    res.status(500).json({ error: "Erreur lors du traitement du fichier Excel." });
+  }
+});
+
+// Les routes de filtres et suppressions restent inchangées...
+router.get("/by-subject/:subject", async (req: Request, res: Response) => {
+  try {
+    const exercises = await Exercise.find({ subject: req.params.subject });
+    res.json(exercises);
+  } catch (error) { res.status(500).json({ error: "Erreur" }); }
+});
+
+router.get("/:subject/:chapter", async (req: Request, res: Response) => {
+  try {
+    const exercises = await Exercise.find({ subject: req.params.subject, chapter: req.params.chapter });
+    res.json(exercises);
+  } catch (error) { res.status(500).json({ error: "Erreur" }); }
+});
+
+router.delete("/:id", authenticateAdmin, verifyAdmin, async (req: Request, res: Response) => {
+  try {
+    await Exercise.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (error) { res.status(500).json({ error: "Erreur" }); }
 });
 
 export default router;

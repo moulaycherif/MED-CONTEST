@@ -574,7 +574,15 @@ export default function StudentPage() {
           "Chapitre III : Acides & Bases",
           "Chapitre IV : Solutions",
         ],
-        SVT: ["Chapitre I : Génétique", "Chapitre II : Immunologie", "Chapitre III : Métabolisme"],
+        SVT: [
+          "Chapitre 1 : Les réactions responsables de la libération de l'énergie emmagasinée dans la matière organique", 
+          "Chapitre 2 : Rôle du muscle strié squelettique dans la conversion de l'énergie", 
+          "Chapitre 3 : L'information génétique",
+          "Chapitre 4 : Le génie génétique",
+          "Chapitre 5 : La génétique humaine",
+          "Chapitre 6 : La génétique des populations",
+          "Chapitre 3 : L'immunité"
+        ],
       };
 
       const chapters = chaptersBySubject[selectedMatiere] || [];

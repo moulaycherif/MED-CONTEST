@@ -6,6 +6,7 @@ import mongoose, { Document, Schema } from "mongoose";
 // ======================================================
 export interface ISubQuestion {
   questionText: string;
+  qType: 'qcm' | 'vrai_faux'; // 👈 Nouveau : Type de la sous-question
   options: string[];
   correctAnswer: string;
   explanation: string;
@@ -26,22 +27,29 @@ export interface IExercise extends Document {
 // 🗄️ Schémas Mongoose
 // ======================================================
 
-// 1. Schéma pour une sous-question
 const subQuestionSchema = new Schema<ISubQuestion>({
   questionText: {
     type: String,
     required: [true, "Le texte de la question est requis"],
   },
+  qType: {
+    type: String,
+    enum: ['qcm', 'vrai_faux'],
+    default: 'qcm', // 👈 Par défaut, reste au format QCM
+  },
   options: {
     type: [String],
     required: [true, "Les options de réponse sont requises"],
     validate: {
-      validator: function (val: string[]) {
-        // On s'assure de ne compter que les options non vides
+      validator: function (this: any, val: string[]) {
+        // Si c'est un Vrai/Faux, on s'assure d'avoir 2 options
+        if (this.qType === 'vrai_faux') {
+          return val.length === 2;
+        }
         const validOptions = val.filter(opt => opt && opt.trim() !== "");
         return validOptions.length >= 2;
       },
-      message: "Une question doit comporter au moins 2 options de réponse valides.",
+      message: "Nombre d'options de réponse invalides pour ce type de question.",
     },
   },
   correctAnswer: {
@@ -54,7 +62,6 @@ const subQuestionSchema = new Schema<ISubQuestion>({
   },
 });
 
-// 2. Schéma global de l'exercice (Le Problème)
 const exerciseSchema = new Schema<IExercise>(
   {
     subject: {
@@ -76,7 +83,7 @@ const exerciseSchema = new Schema<IExercise>(
       default: "",
     },
     subQuestions: {
-      type: [subQuestionSchema], // 👈 Intégration du tableau de sous-questions
+      type: [subQuestionSchema],
       required: true,
       validate: {
         validator: function (val: ISubQuestion[]) {
@@ -92,7 +99,7 @@ const exerciseSchema = new Schema<IExercise>(
     },
   },
   {
-    timestamps: true, // Génère automatiquement createdAt et updatedAt
+    timestamps: true,
   }
 );
 

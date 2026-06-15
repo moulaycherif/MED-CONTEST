@@ -26,22 +26,36 @@ api.interceptors.request.use(
 );
 
 // 🔒 2. NOUVEAU : Intercepteur de Réponse (Sécurité Poste Unique)
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // 🚨 MODIFICATION ICI : On éjecte dès qu'il y a un 403 (ou si le code match)
-    if (
-      error.response && 
-      (error.response.status === 403 || error.response.data?.code === "SESSION_KICKED")
-    ) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("adminToken");
+    if (error.response) {
+      const status = error.response.status;
+      const errorCode = error.response.data?.code;
 
-      alert("⚠️ Déconnexion : Votre compte est actif sur un autre appareil.");
-      window.location.href = "/login";
-      
-      return new Promise(() => {});
+      // 🚨 CAS 1 : Session écrasée par un autre appareil (403)
+      // 🚨 CAS 2 : Jeton techniquement expiré ou corrompu (401)
+      if (status === 403 || status === 401 || errorCode === "SESSION_KICKED") {
+        
+        // 1. Nettoyage complet des jetons
+        localStorage.removeItem("token");
+        localStorage.removeItem("adminToken");
+
+        // 2. Message adapté à la situation
+        if (status === 403 || errorCode === "SESSION_KICKED") {
+          alert("⚠️ Déconnexion : Votre compte est actif sur un autre appareil.");
+        } else {
+          alert("🔑 Votre session a expiré. Veuillez vous reconnecter.");
+        }
+
+        // 3. Redirection immédiate
+        window.location.href = "/login";
+        
+        return new Promise(() => {}); // Stop le flux de l'erreur
+      }
     }
+
     return Promise.reject(error);
   }
 );
