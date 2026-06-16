@@ -506,7 +506,10 @@ export default function StudentPage() {
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
-                resetQcm(); setSection("qcm"); setCurrentExam(exam.title); setCurrentExamId(exam._id);
+                resetQcm();
+                setSection("qcm");
+                setCurrentExam(exam.title);
+                setCurrentExamId(exam._id);
               }}
             >
               <img src={concoursImg} className="w-48 h-48 object-cover" alt={exam.title} />
@@ -519,50 +522,43 @@ export default function StudentPage() {
       );
     }
 
-   // 🧩 Cas 3 : QCE par matière (Corrigé avec rétrécissement et bridage du texte long)
-if (section === "matiere" && selectedMatiere) {
-  const matiereImage = subjectImages[selectedMatiere];
-  const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
+    // 🧩 Cas 3 : QCE par matière
+    if (section === "matiere" && selectedMatiere) {
+      const matiereImage = subjectImages[selectedMatiere];
+      const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-wrap gap-6 justify-start items-start min-h-full"
-    >
-      {filteredExams.map((exam) => (
+      return (
         <motion.div
-          key={exam._id}
-          whileHover={{ scale: 1.05 }}
-          className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all w-48 h-48 shrink-0"
-          onClick={() => {
-            resetQcm(); setSection("qcm"); setCurrentExam(exam.title); setCurrentExamId(exam._id);
-          }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-6 justify-start items-start min-h-full"
         >
-          {/* L'image fait toujours 100% de la carte */}
-          <img 
-            src={matiereImage} 
-            alt={`${selectedMatiere} — ${exam.title}`} 
-            className="w-full h-full object-cover" 
-          />
-          
-          {/* 🚨 LE BANDEAU CORRECTEUR :
-              - On baisse la taille du texte à "text-[10px]" (ultra compact mais lisible).
-              - On limite à max 2 lignes ("line-clamp-2").
-              - On met une hauteur max ("max-h-[44px]") pour bloquer l'ascension du bandeau. */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 bg-green-700/75 text-white text-center px-1 py-1.5 font-medium text-[10px] leading-tight max-h-[44px] flex items-center justify-center overflow-hidden"
-            title={`${selectedMatiere} — ${exam.title}`} // Permet de lire le titre complet au survol de la souris
-          >
-            <span className="line-clamp-2 break-words">
-              {selectedMatiere} — {exam.title}
-            </span>
-          </div>
+          {filteredExams.map((exam) => (
+            <motion.div
+              key={exam._id}
+              whileHover={{ scale: 1.05 }}
+              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all w-48 h-48 shrink-0"
+              onClick={() => {
+                resetQcm();
+                setSection("qcm");
+                setCurrentExam(exam.title);
+                setCurrentExamId(exam._id);
+              }}
+            >
+              <img src={matiereImage} alt={`${selectedMatiere} — ${exam.title}`} className="w-full h-full object-cover" />
+              <div
+                className="absolute bottom-0 left-0 right-0 bg-green-700/75 text-white text-center px-1 py-1.5 font-medium text-[10px] leading-tight max-h-[44px] flex items-center justify-center overflow-hidden"
+                title={`${selectedMatiere} — ${exam.title}`}
+              >
+                <span className="line-clamp-2 break-words">
+                  {selectedMatiere} — {exam.title}
+                </span>
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
-      ))}
-    </motion.div>
-  );
-}
+      );
+    }
 
     // 🧩 Cas 4 : Soutien
     if (section === "soutien" && selectedMatiere) {
@@ -590,8 +586,8 @@ if (section === "matiere" && selectedMatiere) {
           "Chapitre IV : Solutions",
         ],
         SVT: [
-          "Chapitre 1 : Les réactions responsables de la libération de l'énergie emmagasinée dans la matière organique", 
-          "Chapitre 2 : Rôle du muscle strié squelettique dans la conversion de l'énergie", 
+          "Chapitre 1 : Les réactions responsables de la libération de l'énergie emmagasinée dans la matière organique",
+          "Chapitre 2 : Rôle du muscle strié squelettique dans la conversion de l'énergie",
           "Chapitre 3 : L'information génétique",
           "Chapitre 4 : Le génie génétique",
           "Chapitre 5 : La génétique humaine",
@@ -637,7 +633,6 @@ if (section === "matiere" && selectedMatiere) {
               </div>
             )}
 
-            {/* 🔥 MODAL ASTUCES */}
             {selectedTip && (
               <motion.div
                 className={`fixed inset-0 flex items-center justify-center z-50 transition ${
@@ -722,7 +717,6 @@ if (section === "matiere" && selectedMatiere) {
               </div>
             )}
 
-            {/* 🔥 MODAL RÉSUMÉS */}
             {selectedResume && (
               <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setSelectedResume(null)}>
                 <div onClick={(e) => e.stopPropagation()} className={`bg-white rounded-2xl shadow-2xl w-full max-w-2xl ${isShortResume ? "max-h-[55vh]" : "max-h-[75vh]"} flex flex-col`}>
@@ -766,33 +760,58 @@ if (section === "matiere" && selectedMatiere) {
                 border-radius: 8px;
               }
             `}</style>
+            
             <div className="mb-4 text-center">
               <p className="font-semibold text-gray-600">Problème {exerciseIndex + 1} / {exercises.length}</p>
             </div>
-            <div className="bg-white p-6 rounded-xl shadow border-t-4 border-blue-600">
-              <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">Énoncé</h3>
-                <div className="text-lg [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:mb-2">
-  <ReactQuill value={processQuillText(currentEx.contextText)} readOnly={true} theme="bubble" />
-</div>
+            
+            {/* 👈 Modification des paddings pour réduire l'espace vide */}
+            <div className="bg-white p-4 rounded-xl shadow border-t-4 border-blue-600">
+              
+              <div className="mb-4 border-b pb-4 bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wide">Énoncé</h3>
+                <div className="text-base [&_.ql-editor]:p-0 [&_.ql-editor]:text-base [&_.ql-editor]:leading-snug [&_.ql-editor_p]:mb-1">
+                  <ReactQuill value={processQuillText(currentEx.contextText)} readOnly={true} theme="bubble" />
+                </div>
                 {currentEx.contextImage && (
                   <img 
                     src={getImageUrl(currentEx.contextImage)} 
                     alt="Contexte" 
-                    className="mt-4 mx-auto block object-contain max-h-[260px]" 
+                    className="mt-2 mx-auto block object-contain max-h-[150px]" 
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 )}
               </div>
+              
               <div className="space-y-3">
                 {currentEx.subQuestions?.map((subQ: any, index: number) => (
                   <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">
-                    <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
-  <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
-  <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
-    <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
-  </div>
-</div>
+                    
+                    <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">
+                      
+                      <div className="flex items-start w-full">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
+                        <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
+                          <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
+                        </div>
+                      </div>
+
+                      {/* 👈 NOUVEAU : Affichage conditionnel de l'image de la sous-question sans dépendre de getImageUrl backend */}
+                      {subQ.image && (
+                        <div className="mt-3 w-full">
+                          <img 
+                            src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image}`} 
+                            alt="Illustration" 
+                            className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
+                            onError={(e) => { 
+                              console.error("Image non trouvée :", e.currentTarget.src);
+                              e.currentTarget.style.display = 'none'; 
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    
                     <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-1">
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
@@ -807,6 +826,7 @@ if (section === "matiere" && selectedMatiere) {
                         );
                       })}
                     </div>
+                    
                     {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
                       <div className="ml-6 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
                         <span className="font-bold flex items-center mb-1">💡 Correction :</span>
@@ -817,10 +837,12 @@ if (section === "matiere" && selectedMatiere) {
                 ))}
               </div>
             </div>
+            
             <div className="flex justify-between mt-4">
               <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">⬅️ Précédent</button>
               <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, exercises.length - 1)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">➡️ Suivant</button>
             </div>
+            
             {!exerciseSubmitted && (
               <button
                 onClick={async () => {
@@ -900,18 +922,16 @@ if (section === "matiere" && selectedMatiere) {
         );
       }
 
-      // 👉 5) Liste des chapitres (CORRIGÉ : Protège l'image et adapte les titres longs)
+      // 👉 5) Liste des chapitres
       return (
         <div className="flex flex-wrap gap-6 justify-start items-start min-h-full p-4">
           {chapters.map((chapter, index) => (
             <motion.div
               key={index}
               whileHover={{ scale: 1.05 }}
-              // Ajout de w-48 et flex-col pour sortir le texte de l'image
               className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white border border-gray-100 flex flex-col transition-all"
               onClick={() => setSelectedChapter(chapter)}
             >
-              {/* Conteneur Image fixe et inviolable */}
               <div className="w-48 h-48 bg-gray-50 shrink-0 overflow-hidden">
                 <img 
                   src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
@@ -919,11 +939,9 @@ if (section === "matiere" && selectedMatiere) {
                   className="w-full h-full object-cover" 
                 />
               </div>
-
-              {/* Zone Texte : Placée en dessous, hauteur fixe et texte bridé à 3 lignes max */}
               <div 
                 className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
-                title={chapter} // Permet de lire le titre complet au survol de la souris
+                title={chapter}
               >
                 <span className="line-clamp-3 break-words leading-tight">
                   {chapter}
@@ -957,7 +975,6 @@ if (section === "matiere" && selectedMatiere) {
           <button
             onClick={() => {
               resetQcm();
-              setCurrentExam(null);
               setSection("concours");
               setSelectedMatiere(null);
               setSelectedChapter(null);

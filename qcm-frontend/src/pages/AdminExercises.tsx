@@ -4,14 +4,15 @@ import { API_BASE_URL } from "../config";
 import "react-quill/dist/quill.snow.css";
 import RichMathEditor from "../components/RichMathEditor";
 
-// 🔹 Interface Sous-question augmentée pour gérer le type de question
+// 🔹 Interface Sous-question augmentée pour gérer le type de question et l'image
 interface SubQuestion {
   _id?: string;
   questionText: string;
-  qType: 'qcm' | 'vrai_faux'; // 👈 Ajout du type discriminatif
+  qType: 'qcm' | 'vrai_faux'; 
   options: string[];
   correctAnswer: string;
   explanation: string;
+  image?: string; // 👈 AJOUT DU CHAMP IMAGE
 }
 
 // 🔹 Interface Exercice
@@ -26,10 +27,11 @@ interface Exercise {
 
 const emptySubQuestion: SubQuestion = {
   questionText: "",
-  qType: "qcm", // 👈 Par défaut au format QCM
+  qType: "qcm",
   options: ["", "", "", ""],
   correctAnswer: "",
   explanation: "",
+  image: "", // 👈 INITIALISATION DU CHAMP
 };
 
 const AdminExercises: React.FC = () => {
@@ -118,6 +120,7 @@ const AdminExercises: React.FC = () => {
         options: ["", "", "", ""],
         correctAnswer: "",
         explanation: "",
+        image: "",
       },
     ]);
   };
@@ -157,6 +160,7 @@ const AdminExercises: React.FC = () => {
   // 🔹 VALIDATION HTML VIDE
   // =====================================================
   const isEditorEmpty = (html: string) => {
+    if (html.includes('<img')) return false; // 👈 AJOUT: Ignore si contient une image manuelle
     const cleaned = html
       .replace(/<(.|\n)*?>/g, "")
       .replace(/&nbsp;/g, "")
@@ -221,9 +225,9 @@ const AdminExercises: React.FC = () => {
     // 🔹 Vérification sous-questions
     for (let i = 0; i < subQuestions.length; i++) {
       const q = subQuestions[i];
-      // ✅ question obligatoire
-      if (isEditorEmpty(q.questionText)) {
-        alert(`⚠️ Le texte de la question ${i + 1} est vide.`);
+      // ✅ question ou image obligatoire
+      if (isEditorEmpty(q.questionText) && !q.image) {
+        alert(`⚠️ Le texte ou l'image de la question ${i + 1} est obligatoire.`);
         return;
       }
       // ✅ Si c'est un QCM, au moins 2 options remplies
@@ -254,6 +258,7 @@ const AdminExercises: React.FC = () => {
         options: q.qType === "vrai_faux" ? ["Vrai", "Faux"] : q.options.filter((opt) => opt.trim() !== ""),
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
+        image: q.image?.trim() || "", // 👈 AJOUT dans la BD
       }));
 
       formData.append("subQuestions", JSON.stringify(cleanedSubQuestions));
@@ -282,6 +287,7 @@ const AdminExercises: React.FC = () => {
           options: ["", "", "", ""],
           correctAnswer: "",
           explanation: "",
+          image: "",
         },
       ]);
 
@@ -486,6 +492,18 @@ const AdminExercises: React.FC = () => {
                   onChange={(val) => handleSubQuestionChange(qIndex, "questionText", val)}
                 />
               </div>
+
+              {/* 👈 AJOUT : Champ pour le nom de l'image pour la sous question */}
+              <label className="block font-semibold mb-2 text-purple-700">
+                🖼️ Nom de l'image de la question (optionnel)
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: SVT_QCM5_Q6.png"
+                value={subQ.image || ""}
+                onChange={(e) => handleSubQuestionChange(qIndex, "image", e.target.value)}
+                className="border p-3 rounded-lg w-full mb-5 bg-purple-50 focus:ring-2 focus:ring-purple-300"
+              />
 
               {/* 🔹 Explication */}
               <label className="block font-semibold mb-2">
