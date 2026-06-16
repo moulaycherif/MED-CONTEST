@@ -596,7 +596,7 @@ if (section === "matiere" && selectedMatiere) {
           "Chapitre 4 : Le génie génétique",
           "Chapitre 5 : La génétique humaine",
           "Chapitre 6 : La génétique des populations",
-          "Chapitre 3 : L'immunité"
+          "Chapitre 7 : L'immunité"
         ],
       };
 
