@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import axios from "../api/axios"; // Ajustez le chemin relatif vers votre fichier axios.ts
+import axios from "../api/axios"; 
 import { useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
@@ -70,6 +70,8 @@ export default function StudentPage() {
   const [answers, setAnswers] = useState<{ [id: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  
+  // États pour les exercices
   const [exercises, setExercises] = useState<any[]>([]);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [exerciseAnswers, setExerciseAnswers] = useState<{ [id: string]: string }>({});
@@ -77,6 +79,7 @@ export default function StudentPage() {
   const [exerciseScore, setExerciseScore] = useState<number | null>(null);
   const [wrongExercises, setWrongExercises] = useState<any[]>([]);
   const [exerciseAttempt, setExerciseAttempt] = useState(1);
+  
   const [astuces, setAstuces] = useState<Astuce[]>([]);
   const [resumes, setResumes] = useState<any[]>([]);
   const [selectedResume, setSelectedResume] = useState<any | null>(null);
@@ -163,6 +166,7 @@ export default function StudentPage() {
     }
   }, [selectedAction, selectedChapter]);
 
+  // 🌟 NOUVEAU : Récupération ET Regroupement par Énoncé
   useEffect(() => {
     if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
       const token = localStorage.getItem("token");
@@ -171,7 +175,34 @@ export default function StudentPage() {
           headers: { Authorization: `Bearer ${token}` }
         })
         .then((res) => {
-          setExercises(res.data || []);
+          const rawExercises = res.data || [];
+          
+          // 🔄 Logique de regroupement des sous-questions partageant le même énoncé
+          const groupedExercises: any[] = [];
+          
+          rawExercises.forEach((ex: any) => {
+            const existingGroup = groupedExercises.find(
+              (g) => 
+                (g.contextText || "").trim() === (ex.contextText || "").trim() && 
+                g.contextImage === ex.contextImage
+            );
+            
+            if (existingGroup) {
+              // Si l'énoncé existe déjà, on lui ajoute la(les) sous-question(s)
+              existingGroup.subQuestions = [
+                ...existingGroup.subQuestions, 
+                ...(ex.subQuestions || [])
+              ];
+            } else {
+              // Sinon, on crée un nouveau groupe d'énoncé
+              groupedExercises.push({ 
+                ...ex, 
+                subQuestions: [...(ex.subQuestions || [])] 
+              });
+            }
+          });
+
+          setExercises(groupedExercises);
           setExerciseIndex(0);
           setExerciseAnswers({});
           setExerciseSubmitted(false);
@@ -215,30 +246,23 @@ export default function StudentPage() {
 
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
-
     let processedText = text;
     if (processedText.includes("<smiles>")) {
       processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
     }
-
     if (!processedText.includes("<img")) {
       return <Latex>{cleanLatex(processedText)}</Latex>;
     }
-
     const imgStart = processedText.indexOf("<img");
     const imgEnd = processedText.indexOf("/>", imgStart);
-
     if (imgStart === -1 || imgEnd === -1) {
       return <Latex>{cleanLatex(processedText)}</Latex>;
     }
-
     const textBefore = processedText.substring(0, imgStart);
     const rawImgTag = processedText.substring(imgStart, imgEnd + 2);
     const textAfter = processedText.substring(imgEnd + 2);
-
     const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
     const imgSrc = srcMatch ? srcMatch[1] : "";
-
     const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
     const imgClass = classMatch ? classMatch[1] : "max-h-24 object-contain inline-block";
 
@@ -249,21 +273,11 @@ export default function StudentPage() {
             <Latex>{cleanLatex(textBefore)}</Latex>
           </span>
         )}
-
         {imgSrc && (
           <div className="bg-white rounded-lg p-2 border border-gray-100 shadow-sm transition-transform hover:scale-105 inline-block">
-            <img 
-              src={imgSrc} 
-              alt="Structure chimique" 
-              className={`${imgClass} rounded`}
-              loading="lazy"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
+            <img src={imgSrc} alt="Illustration" className={`${imgClass} rounded`} loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }}/>
           </div>
         )}
-
         {textAfter.trim().length > 0 && (
           <span className="text-gray-600 text-sm text-justify block w-full">
             <Latex>{cleanLatex(textAfter)}</Latex>
@@ -348,7 +362,7 @@ export default function StudentPage() {
       return <StudentDashboardStats />;
     }
     
-    // 🧩 Cas 1 : Affichage ordonné des questions (QCE par Concours / Matière)
+    // 🧩 Cas 1 : QCE par Concours / Matière
     if (section === "qcm" && currentExam) {
       if (questions.length === 0) {
         return (
@@ -375,7 +389,6 @@ export default function StudentPage() {
           
           {renderingBlocks.map((block, bIdx) => (
             <div key={bIdx} className="mb-8">
-              {/* En-tête de la composante / matière */}
               <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white px-4 py-3 rounded-xl font-bold shadow-md mb-4 flex justify-between items-center text-md md:text-lg">
                 <span>{block.label}</span>
                 {block.coeff !== null && (
@@ -396,10 +409,8 @@ export default function StudentPage() {
                     key={q._id}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    // ⬛ Trait du cadre de la question tracé proprement en NOIR (border-gray-950)
                     className="p-5 mb-5 bg-white rounded-xl border-2 border-gray-950 shadow-sm"
                   >
-                    {/* En-tête de groupe sécurisé (sans image brisée s'il n'y en a pas) */}
                     {q.groupId?._id && isNewGroup && (
                       <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
                         {q.groupId?.intro && (
@@ -418,7 +429,6 @@ export default function StudentPage() {
                       </div>
                     )}
 
-                    {/* Contenu textuel de la question */}
                     <h3 className="font-semibold mb-3 text-lg mt-1 flex items-start gap-1">
                       <span className="text-blue-900 font-bold">Q{originalIdx + 1}) </span>
                       <div className="flex-1">
@@ -436,13 +446,11 @@ export default function StudentPage() {
                       />
                     )}
                     
-                    {/* Options (Boutons de réponse) */}
                     <div className="space-y-2 mt-3">
                       {q.options.map((opt, i) => {
                         return (
                           <label
                             key={i}
-                            // 🔲 Traits des cadres des options tracés proprement en GRIS (border-gray-300) par défaut
                             className={`flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer transition-all ${
                               submitted
                                 ? opt === q.reponseCorrecte
@@ -738,6 +746,9 @@ export default function StudentPage() {
           return <p className="text-center mt-10">Aucun exercice trouvé</p>;
         }
 
+        // Calcul du vrai nombre de questions pour l'affichage des stats
+        const totalQuestionsCount = exercises.reduce((acc, ex) => acc + (ex.subQuestions?.length || 0), 0);
+
         const processQuillText = (text?: string) => {
           if (!text) return "";
           return text
@@ -762,10 +773,11 @@ export default function StudentPage() {
             `}</style>
             
             <div className="mb-4 text-center">
-              <p className="font-semibold text-gray-600">Problème {exerciseIndex + 1} / {exercises.length}</p>
+              <p className="font-semibold text-gray-600">
+                Énoncé {exerciseIndex + 1} / {exercises.length} <span className="text-sm font-normal">(Total : {totalQuestionsCount} questions)</span>
+              </p>
             </div>
             
-            {/* 👈 Modification des paddings pour réduire l'espace vide */}
             <div className="bg-white p-4 rounded-xl shadow border-t-4 border-blue-600">
               
               <div className="mb-4 border-b pb-4 bg-gray-50 p-4 rounded-lg">
@@ -783,25 +795,26 @@ export default function StudentPage() {
                 )}
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-6">
                 {currentEx.subQuestions?.map((subQ: any, index: number) => (
                   <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">
                     
                     <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">
                       
                       <div className="flex items-start w-full">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
+                        <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0 font-bold">
+                          Q{index + 1}
+                        </span>
                         <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
                           <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
                         </div>
                       </div>
 
-                      {/* 👈 NOUVEAU : Affichage conditionnel de l'image de la sous-question sans dépendre de getImageUrl backend */}
                       {subQ.image && (
                         <div className="mt-3 w-full">
                           <img 
                             src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image}`} 
-                            alt="Illustration" 
+                            alt="Illustration de question" 
                             className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
                             onError={(e) => { 
                               console.error("Image non trouvée :", e.currentTarget.src);
@@ -812,7 +825,7 @@ export default function StudentPage() {
                       )}
                     </div>
                     
-                    <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-1">
+                    <div className="ml-8 grid grid-cols-1 md:grid-cols-2 gap-2">
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
                         const isCorrect = opt === subQ.correctAnswer;
@@ -828,7 +841,7 @@ export default function StudentPage() {
                     </div>
                     
                     {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
-                      <div className="ml-6 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
+                      <div className="ml-8 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
                         <span className="font-bold flex items-center mb-1">💡 Correction :</span>
                         <div className="prose max-w-none text-gray-800">{renderWithMath(subQ.explanation)}</div>
                       </div>
@@ -839,21 +852,22 @@ export default function StudentPage() {
             </div>
             
             <div className="flex justify-between mt-4">
-              <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">⬅️ Précédent</button>
-              <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, exercises.length - 1)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">➡️ Suivant</button>
+              <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 font-semibold">⬅️ Énoncé Précédent</button>
+              <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, exercises.length - 1)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50 font-semibold">Énoncé Suivant ➡️</button>
             </div>
             
             {!exerciseSubmitted && (
               <button
                 onClick={async () => {
                   let score = 0;
-                  let totalQuestions = 0;
+                  let totalQ = 0;
                   exercises.forEach((ex) => {
                     ex.subQuestions?.forEach((subQ: any) => {
-                      totalQuestions++;
+                      totalQ++;
                       if (exerciseAnswers[subQ._id] === subQ.correctAnswer) { score++; }
                     });
                   });
+                  // Garder dans wrongExercises les énoncés complets si l'étudiant a fait au moins une erreur dessus
                   const wrong = exercises.filter((ex) => ex.subQuestions?.some((subQ: any) => exerciseAnswers[subQ._id] !== subQ.correctAnswer));
                   setExerciseScore(score);
                   try {
@@ -863,32 +877,36 @@ export default function StudentPage() {
                       subject: selectedMatiere,
                       chapter: selectedChapter,
                       score,
-                      totalQuestions: exercises.length,
-                      successRate: totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0,
+                      totalQuestions: totalQ,
+                      successRate: totalQ > 0 ? Math.round((score / totalQ) * 100) : 0,
                     }, { headers: { Authorization: `Bearer ${token}` } });
                   } catch (err) { console.error(err); }
                   setExerciseSubmitted(true); setWrongExercises(wrong);
                 }}
-                className="mt-6 px-6 py-2 bg-green-600 text-white rounded"
+                className="mt-6 px-6 py-2 bg-green-600 text-white rounded font-bold w-full md:w-auto shadow"
               >
-                ✅ Terminer
+                ✅ Valider ce chapitre
               </button>
             )}
 
             {exerciseSubmitted && (
-              <div className="mt-4 text-center font-bold text-blue-700">
-                Score : {exerciseScore} / {exercises.length} ({exerciseAttempt === 1 ? "1er essai" : `${exerciseAttempt}ème essai`})
+              <div className="mt-4 text-center font-bold text-blue-700 bg-blue-50 py-3 rounded-lg border border-blue-200">
+                Score : {exerciseScore} / {totalQuestionsCount} ({exerciseAttempt === 1 ? "1er essai" : `${exerciseAttempt}ème essai`})
               </div>
             )}
             {exerciseSubmitted && wrongExercises.length > 0 && (
               <button
                 onClick={() => {
                   setExerciseAttempt((prev) => prev + 1);
-                  setExercises(wrongExercises); setExerciseIndex(0); setExerciseAnswers({}); setExerciseSubmitted(false); setExerciseScore(null);
+                  setExercises(wrongExercises); 
+                  setExerciseIndex(0); 
+                  setExerciseAnswers({}); 
+                  setExerciseSubmitted(false); 
+                  setExerciseScore(null);
                 }}
-                className="mt-4 px-6 py-2 bg-orange-500 text-white rounded w-full md:w-auto"
+                className="mt-4 px-6 py-2 bg-orange-500 text-white rounded w-full md:w-auto font-bold shadow"
               >
-                🔁 Refaire mes erreurs
+                🔁 Refaire uniquement les énoncés avec erreurs
               </button>
             )}
           </div>
