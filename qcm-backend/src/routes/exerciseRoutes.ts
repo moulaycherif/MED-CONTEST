@@ -103,7 +103,7 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
     }
 
     // Conversion en booléen sécurisée (car req.body envoie souvent des chaînes de caractères "true"/"false")
-    const checkWhiteExam = isWhiteExam === true || isWhiteExam === "true";
+   // const checkWhiteExam = isWhiteExam === true || isWhiteExam === "true";//
 
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
