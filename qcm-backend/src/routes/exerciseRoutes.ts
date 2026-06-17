@@ -26,7 +26,7 @@ const upload = multer({ storage });
 const excelUpload = multer({ storage: multer.memoryStorage() });
 
 // ======================================================
-// 📋 Récupérer tous les exercices
+// 📋 Récupérer tous les exercices (SANS FILTRE RESTRICTIF)
 // ======================================================
 router.get("/", async (req: Request, res: Response) => {
   try {
@@ -86,11 +86,10 @@ router.post("/", authenticateAdmin, verifyAdmin, upload.single("contextImage"), 
 });
 
 // ======================================================
-// 📥 Importation fichier Excel (.xlsx / .xls) - MODIFIÉ POUR EXAMEN BLANC
+// 📥 Importation fichier Excel (.xlsx / .xls)
 // ======================================================
 router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<void> => {
   try {
-    // 🚨 On récupère "isWhiteExam" provenant du corps de la requête
     const { subject, chapter, isWhiteExam } = req.body; 
     
     if (!req.file) {
@@ -102,8 +101,7 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       return;
     }
 
-    // Conversion en booléen sécurisée (car req.body envoie souvent des chaînes de caractères "true"/"false")
-   // const checkWhiteExam = isWhiteExam === true || isWhiteExam === "true";//
+    const checkWhiteExam = isWhiteExam === true || isWhiteExam === "true";
 
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
@@ -154,13 +152,12 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
         correctAnswerText = optionsArray[0];
       }
 
-      // Enregistrement en base de données
       await Exercise.create({
         subject,
         chapter,
         contextText: enonce,
         contextImage: "",
-        isWhiteExam: checkWhiteExam, // 🚨 ON ASSIGNE LA VALEUR ICI
+        isWhiteExam: checkWhiteExam, 
         subQuestions: [{
           questionText,
           qType: typeQuestion === "vrai_faux" ? "vrai_faux" : "qcm",
@@ -180,23 +177,30 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
   }
 });
 
-// Les routes de filtres et suppressions restent inchangées...
+// ======================================================
+// 🔍 Récupération par matière (SANS FILTRE RESTRICTIF)
+// ======================================================
 router.get("/by-subject/:subject", async (req: Request, res: Response) => {
   try {
     const exercises = await Exercise.find({ subject: req.params.subject });
     res.json(exercises);
-  } catch (error) { res.status(500).json({ error: "Erreur" }); }
+  } catch (error) { 
+    res.status(500).json({ error: "Erreur serveur" }); 
+  }
 });
 
+// ======================================================
+// 🔍 Récupération par matière + chapitre (SANS FILTRE RESTRICTIF)
+// ======================================================
 router.get("/:subject/:chapter", async (req: Request, res: Response) => {
   try {
     const { subject, chapter } = req.params;
-    // On extrait le paramètre optionnel ?isWhiteExam=true depuis l'URL
     const { isWhiteExam } = req.query; 
 
-    // Construction dynamique du filtre de recherche Mongoose
+    // On applique le filtre de base strict pour TOUJOURS retourner vos chapitres
     const queryFilter: any = { subject, chapter };
 
+    // Uniquement si l'URL demande explicitement un filtrage (?isWhiteExam=true)
     if (isWhiteExam !== undefined) {
       queryFilter.isWhiteExam = isWhiteExam === "true";
     }
@@ -208,11 +212,16 @@ router.get("/:subject/:chapter", async (req: Request, res: Response) => {
   }
 });
 
+// ======================================================
+// ❌ Supprimer un exercice
+// ======================================================
 router.delete("/:id", authenticateAdmin, verifyAdmin, async (req: Request, res: Response) => {
   try {
     await Exercise.findByIdAndDelete(req.params.id);
     res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: "Erreur" }); }
+  } catch (error) { 
+    res.status(500).json({ error: "Erreur serveur" }); 
+  }
 });
 
 export default router;
