@@ -12,7 +12,7 @@ interface SubQuestion {
   options: string[];
   correctAnswer: string;
   explanation: string;
-  image?: string; // 👈 AJOUT DU CHAMP IMAGE
+  image?: string; 
 }
 
 // 🔹 Interface Exercice
@@ -23,6 +23,7 @@ interface Exercise {
   contextText: string;
   contextImage?: string;
   subQuestions: SubQuestion[];
+  isWhiteExam?: boolean; // 👈 AJOUT DE LA PROPRIÉTÉ DANS L'INTERFACE
 }
 
 const emptySubQuestion: SubQuestion = {
@@ -31,7 +32,7 @@ const emptySubQuestion: SubQuestion = {
   options: ["", "", "", ""],
   correctAnswer: "",
   explanation: "",
-  image: "", // 👈 INITIALISATION DU CHAMP
+  image: "", 
 };
 
 const AdminExercises: React.FC = () => {
@@ -52,6 +53,9 @@ const AdminExercises: React.FC = () => {
   // 📥 États dédiés à l'importation de fichiers Excel
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+
+  // 🚨 1️⃣ NOUVEL ÉTAT : Case à cocher pour l'Examen Blanc (SVT)
+  const [isWhiteExam, setIsWhiteExam] = useState<boolean>(false);
 
   // =====================================================
   // 🔹 CHARGEMENT DES EXERCICES
@@ -83,6 +87,11 @@ const AdminExercises: React.FC = () => {
     const filtered = exercises.filter((q) => q.subject === subject);
     const uniqueChapters = [...new Set(filtered.map((q) => q.chapter))];
     setChapters(uniqueChapters);
+    
+    // Sécurité : Décoche la case automatiquement si on quitte la SVT
+    if (subject !== "SVT") {
+      setIsWhiteExam(false);
+    }
   }, [subject, exercises]);
 
   // =====================================================
@@ -134,10 +143,9 @@ const AdminExercises: React.FC = () => {
   const handleSubQuestionChange = (index: number, field: keyof SubQuestion, value: string) => {
     const updated = [...subQuestions];
 
-    // 🔄 Logique adaptative automatique si le type de question change
     if (field === "qType" && value === "vrai_faux") {
       updated[index].options = ["Vrai", "Faux"];
-      updated[index].correctAnswer = ""; // On réinitialise pour forcer une sélection propre
+      updated[index].correctAnswer = ""; 
     } else if (field === "qType" && value === "qcm") {
       updated[index].options = ["", "", "", ""];
       updated[index].correctAnswer = "";
@@ -156,11 +164,8 @@ const AdminExercises: React.FC = () => {
     setSubQuestions(updated);
   };
 
-  // =====================================================
-  // 🔹 VALIDATION HTML VIDE
-  // =====================================================
   const isEditorEmpty = (html: string) => {
-    if (html.includes('<img')) return false; // 👈 AJOUT: Ignore si contient une image manuelle
+    if (html.includes('<img')) return false; 
     const cleaned = html
       .replace(/<(.|\n)*?>/g, "")
       .replace(/&nbsp;/g, "")
@@ -189,6 +194,9 @@ const AdminExercises: React.FC = () => {
       formData.append("excelFile", excelFile);
       formData.append("subject", subject);
       formData.append("chapter", chapter);
+      
+      // 🚨 2️⃣ TRANSMISSION BACKEND EXCEL : Ajout de la valeur de la checkbox
+      formData.append("isWhiteExam", String(isWhiteExam));
 
       const res = await axios.post(`${API_BASE_URL}/api/exercises/import-excel`, formData, {
         headers: {
@@ -199,7 +207,7 @@ const AdminExercises: React.FC = () => {
 
       alert(`✅ ${res.data.message}`);
       setExcelFile(null);
-      // Actualisation dynamique de la liste
+      setIsWhiteExam(false); // Reset de l'option après succès
       fetchExercises();
     } catch (err: any) {
       console.error("Erreur lors de l'import :", err);
@@ -213,7 +221,6 @@ const AdminExercises: React.FC = () => {
   // 🔹 SOUMISSION MANUELLE
   // =====================================================
   const handleSubmit = async () => {
-    // 🔹 Vérifications principales
     if (!subject || !chapter) {
       alert("⚠️ Veuillez renseigner la matière et le chapitre.");
       return;
@@ -222,15 +229,12 @@ const AdminExercises: React.FC = () => {
       alert("⚠️ Veuillez saisir l'énoncé principal.");
       return;
     }
-    // 🔹 Vérification sous-questions
     for (let i = 0; i < subQuestions.length; i++) {
       const q = subQuestions[i];
-      // ✅ question ou image obligatoire
       if (isEditorEmpty(q.questionText) && !q.image) {
         alert(`⚠️ Le texte ou l'image de la question ${i + 1} est obligatoire.`);
         return;
       }
-      // ✅ Si c'est un QCM, au moins 2 options remplies
       if (q.qType === "qcm") {
         const validOptions = q.options.filter((opt) => opt.trim() !== "");
         if (validOptions.length < 2) {
@@ -238,7 +242,6 @@ const AdminExercises: React.FC = () => {
           return;
         }
       }
-      // ✅ bonne réponse obligatoire
       if (!q.correctAnswer.trim()) {
         alert(`⚠️ Veuillez sélectionner la bonne réponse pour la question ${i + 1}.`);
         return;
@@ -250,15 +253,17 @@ const AdminExercises: React.FC = () => {
       formData.append("subject", subject);
       formData.append("chapter", chapter);
       formData.append("contextText", contextText);
+      
+      // 🚨 3️⃣ TRANSMISSION BACKEND MANUELLE : Prise en charge au cas où l'admin tape l'examen à la main
+      formData.append("isWhiteExam", String(isWhiteExam));
 
-      // 🔹 Nettoyage avant envoi
       const cleanedSubQuestions = subQuestions.map((q) => ({
         questionText: q.questionText.trim(),
         qType: q.qType,
         options: q.qType === "vrai_faux" ? ["Vrai", "Faux"] : q.options.filter((opt) => opt.trim() !== ""),
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
-        image: q.image?.trim() || "", // 👈 AJOUT dans la BD
+        image: q.image?.trim() || "", 
       }));
 
       formData.append("subQuestions", JSON.stringify(cleanedSubQuestions));
@@ -274,12 +279,12 @@ const AdminExercises: React.FC = () => {
       });
       alert("✅ Exercice ajouté avec succès");
       
-      // 🔹 Reset
       setSubject("");
       setChapter("");
       setContextText("");
       setContextImage(null);
       setPreviewUrl(null);
+      setIsWhiteExam(false);
       setSubQuestions([
         {
           questionText: "",
@@ -300,22 +305,18 @@ const AdminExercises: React.FC = () => {
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      {/* ===================================================== */}
       {/* 🔹 TITRE */}
-      {/* ===================================================== */}
       <h1 className="text-3xl font-bold mb-6 text-center">
         📘 Gestion des Exercices du Soutien
       </h1>
 
-      {/* ===================================================== */}
       {/* 🔹 BLOC DE CONFIGURATION COMMUNE (MATIÈRE / CHAPITRE) */}
-      {/* ===================================================== */}
       <div className="p-4 border bg-blue-50/50 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <label className="block font-semibold mb-1 text-gray-700">Matière cible</label>
           <input
             type="text"
-            placeholder="Matière (ex: Anatomie)"
+            placeholder="Matière (ex: SVT)"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             className="border p-3 rounded-lg w-full bg-white"
@@ -333,9 +334,23 @@ const AdminExercises: React.FC = () => {
         </div>
       </div>
 
-      {/* ===================================================== */}
+      {/* 🚨 4️⃣ BLOC VISUEL : CASE À COCHER DYNAMIQUE SVT */}
+      {subject === "SVT" && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 animate-fadeIn">
+          <input
+            type="checkbox"
+            id="isWhiteExamCheckbox"
+            checked={isWhiteExam}
+            onChange={(e) => setIsWhiteExam(e.target.checked)}
+            className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer"
+          />
+          <label htmlFor="isWhiteExamCheckbox" className="text-sm font-semibold text-red-800 cursor-pointer select-none">
+            ⚠️ Marquer ce lot (Saisie ou Excel) comme un <span className="underline font-bold">Examen Blanc</span>. Il sera isolé des exercices classiques et rejoindra l'onglet Examen Blanc de l'étudiant.
+          </label>
+        </div>
+      )}
+
       {/* 🔹 FILTRES DE VISUALISATION DU TABLEAU */}
-      {/* ===================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <select
           value={subject}
@@ -365,16 +380,14 @@ const AdminExercises: React.FC = () => {
         </select>
       </div>
 
-      {/* ===================================================== */}
-      {/* 🔹 FORMULAIRE PRINCIPAL (SAISIE + BUTTON DISCRET D'IMPORT) */}
-      {/* ===================================================== */}
+      {/* 🔹 FORMULAIRE PRINCIPAL */}
       <div className="mb-8 p-6 border rounded-lg shadow bg-white">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b">
           <h2 className="text-xl font-bold text-blue-800 flex items-center gap-2">
-            ➕ Créer un nouvel exercice
+            {isWhiteExam ? "📝 Créer un Examen Blanc (Manuel)" : "➕ Créer un nouvel exercice"}
           </h2>
           
-          {/* 📥 Bouton d'importation discret intégré directement dans la ligne d'en-tête */}
+          {/* 📥 Importation Excel */}
           <form onSubmit={handleExcelImport} className="flex flex-wrap items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">Ou import Excel :</span>
             <input
@@ -393,16 +406,13 @@ const AdminExercises: React.FC = () => {
           </form>
         </div>
 
-        {/* Alerte contextuelle si les informations de liaison communes sont manquantes pour l'import */}
         {excelFile && (!subject || !chapter) && (
           <div className="mb-4 p-2 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded-md font-medium animate-pulse">
             ⚠️ Attention : Veuillez définir une <b>Matière cible</b> et un <b>Chapitre cible</b> dans l'encart bleu tout en haut pour débloquer l'importation de votre fichier.
           </div>
         )}
 
-        {/* ===================================================== */}
         {/* 🔹 ÉNONCÉ GLOBAL */}
-        {/* ===================================================== */}
         <div className="bg-gray-50 p-5 rounded-xl border mb-8">
           <h3 className="font-bold text-lg mb-4">
             📚 Énoncé global du problème
@@ -414,20 +424,16 @@ const AdminExercises: React.FC = () => {
             />
           </div>
 
-          {/* 🔹 Upload image */}
           <label className="font-semibold block mb-2">
             🖼 Image de l'énoncé (optionnelle)
           </label>
           <input
             type="file"
             accept="image/*"
-            onChange={(e) =>
-              setContextImage(e.target.files?.[0] || null)
-            }
+            onChange={(e) => setContextImage(e.target.files?.[0] || null)}
             className="mb-4"
           />
 
-          {/* 🔹 Preview image réduite */}
           {previewUrl && (
             <div className="flex justify-center">
               <img
@@ -439,9 +445,7 @@ const AdminExercises: React.FC = () => {
           )}
         </div>
 
-        {/* ===================================================== */}
         {/* 🔹 SOUS-QUESTIONS */}
-        {/* ===================================================== */}
         <h3 className="font-bold text-lg mb-4 text-gray-800">
           🎯 Sous-questions
         </h3>
@@ -452,7 +456,6 @@ const AdminExercises: React.FC = () => {
               key={qIndex}
               className="bg-white p-5 rounded-xl border border-blue-200 shadow-sm relative"
             >
-              {/* 🔹 Bouton supprimer */}
               {subQuestions.length > 1 && (
                 <button
                   type="button"
@@ -467,7 +470,6 @@ const AdminExercises: React.FC = () => {
                 Question {qIndex + 1}
               </h4>
 
-              {/* 🔄 FORMAT DE QUESTION */}
               <div className="mb-4">
                 <label className="block font-semibold mb-2 text-orange-700">
                   ⚙️ Format de saisie de la question
@@ -482,7 +484,6 @@ const AdminExercises: React.FC = () => {
                 </select>
               </div>
 
-              {/* 🔹 Texte question */}
               <label className="block font-semibold mb-2">
                 🧠 Texte de la question
               </label>
@@ -493,7 +494,6 @@ const AdminExercises: React.FC = () => {
                 />
               </div>
 
-              {/* 👈 AJOUT : Champ pour le nom de l'image pour la sous question */}
               <label className="block font-semibold mb-2 text-purple-700">
                 🖼️ Nom de l'image de la question (optionnel)
               </label>
@@ -505,7 +505,6 @@ const AdminExercises: React.FC = () => {
                 className="border p-3 rounded-lg w-full mb-5 bg-purple-50 focus:ring-2 focus:ring-purple-300"
               />
 
-              {/* 🔹 Explication */}
               <label className="block font-semibold mb-2">
                 💡 Explication pédagogique
               </label>
@@ -516,7 +515,6 @@ const AdminExercises: React.FC = () => {
                 />
               </div>
 
-              {/* 🔹 Options adaptées selon le type choisi */}
               {subQ.qType === "qcm" ? (
                 <>
                   <label className="block font-semibold mb-2">
@@ -541,7 +539,6 @@ const AdminExercises: React.FC = () => {
                 </div>
               )}
 
-              {/* 🔹 Bonne réponse */}
               <label className="block font-semibold mb-2">
                 ✅ Bonne réponse
               </label>
@@ -563,7 +560,6 @@ const AdminExercises: React.FC = () => {
           ))}
         </div>
 
-        {/* 🔹 Ajouter question */}
         <button
           onClick={handleAddSubQuestion}
           className="w-full py-3 mb-6 border-2 border-dashed border-blue-400 text-blue-600 rounded-xl hover:bg-blue-50 font-bold"
@@ -573,22 +569,22 @@ const AdminExercises: React.FC = () => {
 
         <hr className="my-6" />
 
-        {/* 🔹 Submit */}
         <button
           onClick={handleSubmit}
-          className="w-full bg-green-600 hover:bg-green-700 transition text-white font-bold px-4 py-4 rounded-xl text-lg shadow"
+          className={`w-full text-white font-bold px-4 py-4 rounded-xl text-lg shadow transition ${
+            isWhiteExam ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+          }`}
         >
-          ✅ Sauvegarder l'exercice complet
+          {isWhiteExam ? "📝 Sauvegarder l'Examen Blanc complet" : "✅ Sauvegarder l'exercice complet"}
         </button>
       </div>
 
-      {/* ===================================================== */}
       {/* 🔹 TABLEAU DE RESTITUTION */}
-      {/* ===================================================== */}
       <table className="w-full border border-gray-300 shadow bg-white">
         <thead className="bg-gray-100">
           <tr>
             <th className="border p-3 text-left">Énoncé</th>
+            <th className="border p-3">Type</th>
             <th className="border p-3">Questions</th>
             <th className="border p-3">Matière</th>
             <th className="border p-3">Chapitre</th>
@@ -603,6 +599,13 @@ const AdminExercises: React.FC = () => {
                   className="line-clamp-2 text-base text-gray-800"
                 />
               </td>
+              <td className="border p-3 text-center">
+                {q.isWhiteExam ? (
+                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">Exam Blanc</span>
+                ) : (
+                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">Standard</span>
+                )}
+              </td>
               <td className="border p-3 text-center font-bold text-blue-600">
                 {q.subQuestions?.length || 0}
               </td>
@@ -613,7 +616,7 @@ const AdminExercises: React.FC = () => {
 
           {filteredExercises.length === 0 && (
             <tr>
-              <td colSpan={4} className="text-center p-6 text-gray-500">
+              <td colSpan={5} className="text-center p-6 text-gray-500">
                 Aucun exercice trouvé
               </td>
             </tr>
