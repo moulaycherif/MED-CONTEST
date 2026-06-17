@@ -166,7 +166,7 @@ export default function StudentPage() {
     }
   }, [selectedAction, selectedChapter]);
 
-  // 🌟 NOUVEAU : Récupération ET Regroupement par Énoncé
+  // 🌟 LOGIQUE DE RÉCUPÉRATION ET REGROUPEMENT ROBUSTE PAR ÉNONCÉ
   useEffect(() => {
     if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
       const token = localStorage.getItem("token");
@@ -177,24 +177,31 @@ export default function StudentPage() {
         .then((res) => {
           const rawExercises = res.data || [];
           
-          // 🔄 Logique de regroupement des sous-questions partageant le même énoncé
+          // 🧹 Fonction pour nettoyer le texte HTML (retire les balises et les espaces superflus)
+          // Cela garantit que "<p>Texte</p>" et "<div>Texte </div>" seront considérés comme identiques.
+          const normalizeText = (html?: string) => {
+            if (!html) return "";
+            return html.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+          };
+
           const groupedExercises: any[] = [];
           
           rawExercises.forEach((ex: any) => {
+            // 🔍 On cherche un groupe existant ayant le même texte pur et la même image
             const existingGroup = groupedExercises.find(
               (g) => 
-                (g.contextText || "").trim() === (ex.contextText || "").trim() && 
+                normalizeText(g.contextText) === normalizeText(ex.contextText) && 
                 g.contextImage === ex.contextImage
             );
             
             if (existingGroup) {
-              // Si l'énoncé existe déjà, on lui ajoute la(les) sous-question(s)
+              // 🔄 Si l'énoncé existe déjà, on ajoute simplement la/les nouvelle(s) question(s) à la suite
               existingGroup.subQuestions = [
                 ...existingGroup.subQuestions, 
                 ...(ex.subQuestions || [])
               ];
             } else {
-              // Sinon, on crée un nouveau groupe d'énoncé
+              // 🆕 Sinon, on crée une nouvelle "page" d'énoncé
               groupedExercises.push({ 
                 ...ex, 
                 subQuestions: [...(ex.subQuestions || [])] 
@@ -202,13 +209,17 @@ export default function StudentPage() {
             }
           });
 
+          // 💾 Mise à jour de l'état avec les exercices parfaitement regroupés
           setExercises(groupedExercises);
           setExerciseIndex(0);
           setExerciseAnswers({});
           setExerciseSubmitted(false);
           setExerciseScore(null);
         })
-        .catch(() => setExercises([]));
+        .catch((err) => {
+          console.error("❌ Erreur de récupération des exercices", err);
+          setExercises([]);
+        });
     }
   }, [selectedAction, selectedChapter, selectedMatiere]);
 
