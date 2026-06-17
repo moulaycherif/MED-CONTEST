@@ -224,4 +224,20 @@ router.delete("/:id", authenticateAdmin, verifyAdmin, async (req: Request, res: 
   }
 });
 
+// 🧹 ROUTE TEMPORAIRE DE SECOURS POUR NETTOYER LA SVT
+router.get("/clean-svt-fix", async (req: Request, res: Response) => {
+  try {
+    // On réinitialise le champ 'isWhiteExam' pour TOUS les exercices de SVT
+    const result = await Exercise.updateMany(
+      { subject: { $regex: /svt/i } }, 
+      { $unset: { isWhiteExam: "" } }
+    );
+    res.json({ 
+      success: true, 
+      message: `${result.modifiedCount} exercices de SVT ont été nettoyés et réparés !` 
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Erreur lors du nettoyage" });
+  }
+});
 export default router;
