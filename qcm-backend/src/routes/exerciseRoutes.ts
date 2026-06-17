@@ -86,11 +86,13 @@ router.post("/", authenticateAdmin, verifyAdmin, upload.single("contextImage"), 
 });
 
 // ======================================================
-// 📥 Importation fichier Excel (.xlsx / .xls) - STABLE ET SÉCURISÉ
+// 📥 Importation fichier Excel (.xlsx / .xls) - MODIFIÉ POUR EXAMEN BLANC
 // ======================================================
 router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { subject, chapter } = req.body;
+    // 🚨 On récupère "isWhiteExam" provenant du corps de la requête
+    const { subject, chapter, isWhiteExam } = req.body; 
+    
     if (!req.file) {
       res.status(400).json({ error: "Veuillez fournir un fichier Excel." });
       return;
@@ -99,6 +101,9 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       res.status(400).json({ error: "La matière et le chapitre sont obligatoires." });
       return;
     }
+
+    // Conversion en booléen sécurisée (car req.body envoie souvent des chaînes de caractères "true"/"false")
+    const checkWhiteExam = isWhiteExam === true || isWhiteExam === "true";
 
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
@@ -112,14 +117,12 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
     let importedCount = 0;
 
     for (const row of sheetData) {
-      // 🛡️ ÉTAPE ULTRA-SÉCURISÉE : On nettoie toutes les clés y compris les retours à la ligne cachés (\r, \n, \t)
       const cleanRow: any = {};
       Object.keys(row).forEach((key) => {
         const cleanKey = key.trim().toLowerCase().replace(/[\s_\-\r\n\t]/g, "");
         cleanRow[cleanKey] = row[key];
       });
 
-      // 🔍 Mappages tolérants
       const enonce = cleanRow["enonce"] || cleanRow["contexte"] || "Généralités sur la respiration cellulaire";
       const questionText = cleanRow["question"] || cleanRow["text"] || "";
       const typeQuestion = String(cleanRow["type"] || "qcm").toLowerCase().trim();
@@ -127,7 +130,6 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       if (!questionText || questionText.trim() === "") continue;
 
       let optionsArray: string[] = [];
-
       if (typeQuestion === "vrai_faux") {
         optionsArray = ["Vrai", "Faux"];
       } else {
@@ -141,26 +143,24 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
           .filter((o) => o !== "undefined" && o !== "");
       }
 
-      // Si le tableau d'options est vide, on applique un fallback pour éviter la coupure Mongoose
       if (optionsArray.length < 2) {
         optionsArray = ["Option A par défaut", "Option B par défaut"];
       }
 
-      // 🎯 CORRECTION CRITIQUE : Extraction et nettoyage de la bonne réponse
       let bonneReponseRaw = cleanRow["bonnereponse"] || cleanRow["correctanswer"] || cleanRow["reponsecorrecte"] || cleanRow["reponse"] || "";
       let correctAnswerText = String(bonneReponseRaw).trim();
 
-      // 🛡️ SÉCURITÉ DE SAUVEGARDE : Si la chaîne est vide, on prend la première option du tableau
       if (!correctAnswerText && optionsArray.length > 0) {
-        console.warn(`⚠️ Bonne réponse introuvable pour la question : "${questionText}". Assignation automatique de l'Option A.`);
         correctAnswerText = optionsArray[0];
       }
 
+      // Enregistrement en base de données
       await Exercise.create({
         subject,
         chapter,
         contextText: enonce,
         contextImage: "",
+        isWhiteExam: checkWhiteExam, // 🚨 ON ASSIGNE LA VALEUR ICI
         subQuestions: [{
           questionText,
           qType: typeQuestion === "vrai_faux" ? "vrai_faux" : "qcm",
@@ -173,7 +173,7 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       importedCount++;
     }
 
-    res.status(200).json({ success: true, message: `Importation réussie de ${importedCount} exercices.` });
+    res.status(200).json({ success: true, message: `Importation réussie de ${importedCount} éléments.` });
   } catch (error) {
     console.error("Erreur import Excel :", error);
     res.status(500).json({ error: "Erreur interne lors du traitement du fichier Excel." });
@@ -190,9 +190,22 @@ router.get("/by-subject/:subject", async (req: Request, res: Response) => {
 
 router.get("/:subject/:chapter", async (req: Request, res: Response) => {
   try {
-    const exercises = await Exercise.find({ subject: req.params.subject, chapter: req.params.chapter });
+    const { subject, chapter } = req.params;
+    // On extrait le paramètre optionnel ?isWhiteExam=true depuis l'URL
+    const { isWhiteExam } = req.query; 
+
+    // Construction dynamique du filtre de recherche Mongoose
+    const queryFilter: any = { subject, chapter };
+
+    if (isWhiteExam !== undefined) {
+      queryFilter.isWhiteExam = isWhiteExam === "true";
+    }
+
+    const exercises = await Exercise.find(queryFilter);
     res.json(exercises);
-  } catch (error) { res.status(500).json({ error: "Erreur" }); }
+  } catch (error) { 
+    res.status(500).json({ error: "Erreur lors de la récupération des données" }); 
+  }
 });
 
 router.delete("/:id", authenticateAdmin, verifyAdmin, async (req: Request, res: Response) => {

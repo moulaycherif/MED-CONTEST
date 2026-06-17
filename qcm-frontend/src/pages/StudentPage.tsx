@@ -79,6 +79,8 @@ export default function StudentPage() {
   const [exerciseScore, setExerciseScore] = useState<number | null>(null);
   const [wrongExercises, setWrongExercises] = useState<any[]>([]);
   const [exerciseAttempt, setExerciseAttempt] = useState(1);
+  // 🚨 AJOUTEZ CE STATE POUR L'EXAMEN BLANC SVT
+const [whiteExams, setWhiteExams] = useState<any[]>([]);
   
   const [astuces, setAstuces] = useState<Astuce[]>([]);
   const [resumes, setResumes] = useState<any[]>([]);
@@ -166,19 +168,26 @@ export default function StudentPage() {
     }
   }, [selectedAction, selectedChapter]);
 
-  // 🌟 LOGIQUE DE RÉCUPÉRATION ET REGROUPEMENT ULTRA-ROBUSTE PAR ÉNONCÉ
+  // 🌟 LOGIQUE DE RÉCUPÉRATION ET REGROUPEMENT ULTRA-ROBUSTE (Exercices & Examen Blanc SVT)
   useEffect(() => {
-    if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
+    // On déclenche la fonction si on est sur "Exercises" OU si on est sur "Astuces" (pour l'Examen Blanc SVT)
+    const isExerciseAction = selectedAction === "Exercises";
+    const isWhiteExamAction = selectedAction === "Astuces" && selectedMatiere === "SVT";
+
+    if ((isExerciseAction || isWhiteExamAction) && selectedChapter && selectedMatiere) {
       const token = localStorage.getItem("token");
+      
+      // On ajoute dynamiquement le paramètre de requête au backend (?isWhiteExam=true ou false)
+      const isWhiteExamParam = isWhiteExamAction ? "true" : "false";
+
       axios
-        .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}`, {
+        .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}?isWhiteExam=${isWhiteExamParam}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         .then((res) => {
           const rawExercises = res.data || [];
           
           // 🧹 Nettoyage extrême pour la comparaison
-          // " TEST : L'immunité " et "<p>Test: L'immunité&nbsp;</p>" deviendront tous les deux "test:l'immunité"
           const normalizeForCompare = (val?: string) => {
             if (!val) return "";
             return val
@@ -193,7 +202,7 @@ export default function StudentPage() {
           
           rawExercises.forEach((ex: any) => {
             const exText = normalizeForCompare(ex.contextText);
-            const exImg = (ex.contextImage || "").trim(); // Gère le null/undefined
+            const exImg = (ex.contextImage || "").trim();
 
             // 🔍 Recherche stricte d'un groupe existant
             const existingGroup = groupedExercises.find((g) => {
@@ -203,29 +212,41 @@ export default function StudentPage() {
             });
             
             if (existingGroup) {
-              // 🔄 Si on trouve un énoncé identique, on ajoute la question à la liste existante
               existingGroup.subQuestions = [
                 ...existingGroup.subQuestions, 
                 ...(ex.subQuestions || [])
               ];
             } else {
-              // 🆕 Sinon, on crée la première page pour ce nouvel énoncé
               groupedExercises.push({ 
+                ...ex, 
                 ...ex, 
                 subQuestions: [...(ex.subQuestions || [])] 
               });
             }
           });
 
-          setExercises(groupedExercises);
+          // 🎯 ATTRIBUTION INTELLIGENTE DES STATES
+          if (isWhiteExamAction) {
+            // Si c'est l'examen blanc de SVT, on stocke dans le state dédié
+            setWhiteExams(groupedExercises);
+          } else {
+            // Sinon, on remplit le flux d'exercices standard
+            setExercises(groupedExercises);
+          }
+
+          // 🔄 Réinitialisation commune des index et formulaires
           setExerciseIndex(0);
           setExerciseAnswers({});
           setExerciseSubmitted(false);
           setExerciseScore(null);
         })
         .catch((err) => {
-          console.error("❌ Erreur de récupération des exercices", err);
-          setExercises([]);
+          console.error("❌ Erreur de récupération des données d'évaluation", err);
+          if (isWhiteExamAction) {
+            setWhiteExams([]);
+          } else {
+            setExercises([]);
+          }
         });
     }
   }, [selectedAction, selectedChapter, selectedMatiere]);
@@ -599,17 +620,17 @@ export default function StudentPage() {
           "Chapitre VII : Probabilité",
         ],
         Physique: [
-          "Chapitre I : Cinématique",
-          "Chapitre II : Dynamique",
-          "Chapitre III : Travail & Énergie",
-          "Chapitre IV : Électricité",
-          "Chapitre V : Optique",
+          "Chapitre I : Les ondes",
+          "Chapitre II : Nucléaire",
+          "Chapitre III : Electricité",
+          "Chapitre IV : Lois de Newton & Théorème d'énergie cinétique",
+          "Chapitre V : Système oscillant & Pendule élastique",
         ],
         Chimie: [
-          "Chapitre I : Combustion",
-          "Chapitre II : Oxydoréduction",
-          "Chapitre III : Acides & Bases",
-          "Chapitre IV : Solutions",
+          "Chapitre I : Chimie des solutions",
+          "Chapitre II : Cinétique chimique",
+          "Chapitre III : Les piles",
+          "Chapitre IV : Chimie organique",
         ],
         SVT: [
           "Chapitre 1 : Les réactions responsables de la libération de l'énergie emmagasinée dans la matière organique",
@@ -624,8 +645,171 @@ export default function StudentPage() {
 
       const chapters = chaptersBySubject[selectedMatiere] || [];
 
-      // 👉 1) ASTUCES
+     // 👉 1) ASTUCES / EXAMEN BLANC (SVT uniquement)
       if (selectedChapter && selectedAction === "Astuces") {
+        
+        // 🚨 CAS SPÉCIAL SVT : Transformation en Examen Blanc type Excel / QCM
+        if (selectedMatiere === "SVT") {
+          // 🎯 Utilisation exclusive du state 'whiteExams' pour cloisonner les données
+          const currentEx = whiteExams[exerciseIndex];
+
+          if (!whiteExams || whiteExams.length === 0) {
+            return (
+              <div className="p-6 text-center">
+                <h2 className="text-3xl font-bold text-center mb-8 text-red-600">📝 {selectedChapter} — Examen blanc</h2>
+                <p className="text-gray-500 bg-white p-6 rounded-xl shadow inline-block">
+                  Aucun examen blanc trouvé pour ce chapitre…
+                </p>
+              </div>
+            );
+          }
+
+          const processQuillText = (text?: string) => {
+            if (!text) return "";
+            return text
+              .replace(/\\?below\s*\{/g, "_{")
+              .replace(/\\?below/g, "_")
+              .replace(/lim\s*n\s*(?:--&gt;|-->|→)\s*(?:infini|∞)/gi, '<span class="ql-formula" data-value="\\displaystyle \\lim_{n \\to \\infty}"></span>')
+              .replace(/data-value="\\lim_/g, 'data-value="\\displaystyle \\lim_');
+          };
+
+          return (
+            <div className="p-6 exercice-view-container">
+              <style>{`
+                .exercice-view-container img, .ql-editor img {
+                  max-height: 260px !important;
+                  width: auto !important;
+                  max-width: 100% !important;
+                  margin: 0 auto;
+                  display: block;
+                  object-fit: contain;
+                  border-radius: 8px;
+                }
+              `}</style>
+
+              <div className="mb-4 text-center">
+                <h2 className="text-3xl font-bold mb-2 text-red-600">📝 Examen Blanc</h2>
+                <p className="font-semibold text-gray-600">Question {exerciseIndex + 1} / {whiteExams.length}</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow border-t-4 border-red-500">
+                {/* Énoncé importé de l'Excel */}
+                <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">Énoncé</h3>
+                  <div className="text-lg [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:mb-2">
+                    <ReactQuill value={processQuillText(currentEx?.contextText)} readOnly={true} theme="bubble" />
+                  </div>
+                  {currentEx?.contextImage && (
+                    <img 
+                      src={getImageUrl(currentEx.contextImage)} 
+                      alt="Contexte Examen" 
+                      className="mt-4 mx-auto block object-contain max-h-[260px]" 
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
+                </div>
+
+                {/* Choix multiples */}
+                <div className="space-y-3">
+                  {currentEx?.subQuestions?.map((subQ: any, index: number) => (
+                    <div key={subQ._id} className="pl-2 border-l-2 border-red-200 py-1">
+                      <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
+                        <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
+                        <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
+                          <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
+                        </div>
+                      </div>
+
+                      <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {subQ.options.map((opt: string, i: number) => {
+                          const isSelected = exerciseAnswers[subQ._id] === opt;
+                          const isCorrect = opt === subQ.correctAnswer;
+                          return (
+                            <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-red-50 border-gray-200"}`}>
+                              <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
+                              <div className="flex-1 w-full">
+                                <MixedContentRenderer text={opt} />
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      {/* Affichage de la correction après validation */}
+                      {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
+                        <div className="ml-6 mt-2 px-3 py-2 bg-red-50 text-red-900 rounded-md border border-red-100 text-sm">  
+                          <span className="font-bold flex items-center mb-1">💡 Correction :</span>
+                          <div className="prose max-w-none text-gray-800">{renderWithMath(subQ.explanation)}</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Barre de navigation basculée sur la longueur de whiteExams */}
+              <div className="flex justify-between mt-4">
+                <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">⬅️ Précédent</button>
+                <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, whiteExams.length - 1)} className="px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50">➡️ Suivant</button>
+              </div>
+
+              {/* Bouton de validation de l'examen */}
+              {!exerciseSubmitted && (
+                <button
+                  onClick={async () => {
+                    let score = 0;
+                    let totalQuestions = 0;
+                    whiteExams.forEach((ex) => {
+                      ex.subQuestions?.forEach((subQ: any) => {
+                        totalQuestions++;
+                        if (exerciseAnswers[subQ._id] === subQ.correctAnswer) { score++; }
+                      });
+                    });
+                    const wrong = whiteExams.filter((ex) => ex.subQuestions?.some((subQ: any) => exerciseAnswers[subQ._id] !== subQ.correctAnswer));
+                    setExerciseScore(score);
+                    try {
+                      const token = localStorage.getItem("token");
+                      await axios.post(`${API_BASE_URL}/api/student-activity`, {
+                        type: "EXERCISE", 
+                        subject: selectedMatiere,
+                        chapter: selectedChapter,
+                        score,
+                        totalQuestions: whiteExams.length,
+                        successRate: totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0,
+                      }, { headers: { Authorization: `Bearer ${token}` } });
+                    } catch (err) { console.error(err); }
+                    setExerciseSubmitted(true); setWrongExercises(wrong);
+                  }}
+                  className="mt-6 px-6 py-2 bg-green-600 text-white rounded font-semibold shadow hover:bg-green-700 transition"
+                >
+                  ✅ Soumettre mes réponses
+                </button>
+              )}
+
+              {/* Score final */}
+              {exerciseSubmitted && (
+                <div className="mt-4 text-center font-bold text-red-600 bg-red-50 py-2 rounded-xl border border-red-100">
+                  Note finale de l'examen : {exerciseScore} / {whiteExams.length}
+                </div>
+              )}
+              
+              {/* Possibilité de recommencer en cas d'erreurs en écrasant temporairement whiteExams */}
+              {exerciseSubmitted && wrongExercises.length > 0 && (
+                <button
+                  onClick={() => {
+                    setExerciseAttempt((prev) => prev + 1);
+                    setWhiteExams(wrongExercises); setExerciseIndex(0); setExerciseAnswers({}); setExerciseSubmitted(false); setExerciseScore(null);
+                  }}
+                  className="mt-4 px-6 py-2 bg-orange-500 text-white rounded w-full md:w-auto shadow hover:bg-orange-600 transition"
+                >
+                  🔁 Corriger mes erreurs
+                </button>
+              )}
+            </div>
+          );
+        }
+
+        // 💡 CAS CLASSIQUE AUTRES MATIÈRES : Le code original des astuces reste inchangé
         return (
           <div className="p-6 relative">
             <h2 className="text-3xl font-bold text-center mb-8">💡 {selectedChapter} — Astuces</h2>
@@ -931,32 +1115,39 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 4) Boutons d’actions par chapitre
-      if (selectedChapter) {
-        const actions = [
-          { label: "💡 Astuces", color: "bg-yellow-400" },
-          { label: "📘 Résumé", color: "bg-blue-400" },
-          { label: "🧩 Exercises", color: "bg-green-400" },
-        ];
-        return (
-          <div className="flex flex-col items-center justify-center gap-8 mt-20">
-            <h2 className="text-2xl font-bold text-gray-800 text-center max-w-2xl px-4">{selectedChapter}</h2>
-            <div className="flex gap-8">
-              {actions.map((action, index) => (
-                <motion.button
-                  key={index}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedAction(action.label.replace(/[💡📘🧩]/g, "").trim())}
-                  className={`${action.color} text-black font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
-                >
-                  {action.label}
-                </motion.button>
-               ))}
-            </div>
-          </div>
-        );
-      }
+      // 👉 4) Boutons d’actions par chapitre (Adapté pour l'Examen Blanc en SVT)
+if (selectedChapter) {
+  const actions = [
+    // Si c'est de la SVT, on affiche "Examen blanc", sinon on affiche "Astuces"
+    { 
+      label: selectedMatiere === "SVT" ? "📝 Examen blanc" : "💡 Astuces", 
+      value: "Astuces", // On garde la valeur interne "Astuces" pour ne pas casser vos states existants
+      color: selectedMatiere === "SVT" ? "bg-red-400 text-white" : "bg-yellow-400 text-black" 
+    },
+    { label: "📘 Résumé", value: "Résumé", color: "bg-blue-400 text-black" },
+    { label: "🧩 Exercises", value: "Exercises", color: "bg-green-400 text-black" },
+  ];
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-8 mt-20">
+      <h2 className="text-2xl font-bold text-gray-800 text-center max-w-2xl px-4">{selectedChapter}</h2>
+      <div className="flex gap-8">
+        {actions.map((action, index) => (
+          <motion.button
+            key={index}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            // On utilise action.value pour définir le state selectedAction
+            onClick={() => setSelectedAction(action.value)}
+            className={`${action.color} font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
+          >
+            {action.label}
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
       // 👉 5) Liste des chapitres
       return (
