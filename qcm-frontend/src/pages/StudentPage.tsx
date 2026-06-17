@@ -166,7 +166,7 @@ export default function StudentPage() {
     }
   }, [selectedAction, selectedChapter]);
 
-  // 🌟 LOGIQUE DE RÉCUPÉRATION ET REGROUPEMENT ROBUSTE PAR ÉNONCÉ
+  // 🌟 LOGIQUE DE RÉCUPÉRATION ET REGROUPEMENT ULTRA-ROBUSTE PAR ÉNONCÉ
   useEffect(() => {
     if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
       const token = localStorage.getItem("token");
@@ -177,31 +177,39 @@ export default function StudentPage() {
         .then((res) => {
           const rawExercises = res.data || [];
           
-          // 🧹 Fonction pour nettoyer le texte HTML (retire les balises et les espaces superflus)
-          // Cela garantit que "<p>Texte</p>" et "<div>Texte </div>" seront considérés comme identiques.
-          const normalizeText = (html?: string) => {
-            if (!html) return "";
-            return html.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+          // 🧹 Nettoyage extrême pour la comparaison
+          // " TEST : L'immunité " et "<p>Test: L'immunité&nbsp;</p>" deviendront tous les deux "test:l'immunité"
+          const normalizeForCompare = (val?: string) => {
+            if (!val) return "";
+            return val
+              .replace(/<[^>]*>?/gm, '') // 1. Retire toutes les balises HTML (<p>, <br>, etc.)
+              .replace(/&nbsp;/gi, '')   // 2. Retire les espaces insécables HTML
+              .replace(/\s+/g, '')       // 3. Retire TOUS les espaces normaux et sauts de ligne
+              .toLowerCase()             // 4. Transforme tout en minuscules
+              .trim();
           };
 
           const groupedExercises: any[] = [];
           
           rawExercises.forEach((ex: any) => {
-            // 🔍 On cherche un groupe existant ayant le même texte pur et la même image
-            const existingGroup = groupedExercises.find(
-              (g) => 
-                normalizeText(g.contextText) === normalizeText(ex.contextText) && 
-                g.contextImage === ex.contextImage
-            );
+            const exText = normalizeForCompare(ex.contextText);
+            const exImg = (ex.contextImage || "").trim(); // Gère le null/undefined
+
+            // 🔍 Recherche stricte d'un groupe existant
+            const existingGroup = groupedExercises.find((g) => {
+              const gText = normalizeForCompare(g.contextText);
+              const gImg = (g.contextImage || "").trim();
+              return gText === exText && gImg === exImg;
+            });
             
             if (existingGroup) {
-              // 🔄 Si l'énoncé existe déjà, on ajoute simplement la/les nouvelle(s) question(s) à la suite
+              // 🔄 Si on trouve un énoncé identique, on ajoute la question à la liste existante
               existingGroup.subQuestions = [
                 ...existingGroup.subQuestions, 
                 ...(ex.subQuestions || [])
               ];
             } else {
-              // 🆕 Sinon, on crée une nouvelle "page" d'énoncé
+              // 🆕 Sinon, on crée la première page pour ce nouvel énoncé
               groupedExercises.push({ 
                 ...ex, 
                 subQuestions: [...(ex.subQuestions || [])] 
@@ -209,7 +217,9 @@ export default function StudentPage() {
             }
           });
 
-          // 💾 Mise à jour de l'état avec les exercices parfaitement regroupés
+          // 🐛 Ligne de debug (vous pourrez regarder F12 > Console pour vérifier que ça groupe bien)
+          console.log(`Exercices bruts: ${rawExercises.length} -> Exercices regroupés: ${groupedExercises.length}`);
+
           setExercises(groupedExercises);
           setExerciseIndex(0);
           setExerciseAnswers({});
