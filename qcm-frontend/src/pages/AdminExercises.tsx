@@ -335,20 +335,21 @@ const AdminExercises: React.FC = () => {
       </div>
 
       {/* 🚨 4️⃣ BLOC VISUEL : CASE À COCHER DYNAMIQUE SVT */}
-      {subject === "SVT" && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 animate-fadeIn">
-          <input
-            type="checkbox"
-            id="isWhiteExamCheckbox"
-            checked={isWhiteExam}
-            onChange={(e) => setIsWhiteExam(e.target.checked)}
-            className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer"
-          />
-          <label htmlFor="isWhiteExamCheckbox" className="text-sm font-semibold text-red-800 cursor-pointer select-none">
-            ⚠️ Marquer ce lot (Saisie ou Excel) comme un <span className="underline font-bold">Examen Blanc</span>. Il sera isolé des exercices classiques et rejoindra l'onglet Examen Blanc de l'étudiant.
-          </label>
-        </div>
-      )}
+      {/* 🚨 REMPLACEZ L'ANCIENNE CONDITION PAR CELLE-CI : */}
+{subject.trim().toUpperCase() === "SVT" && (
+  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 animate-fadeIn">
+    <input
+      type="checkbox"
+      id="isWhiteExamCheckbox"
+      checked={isWhiteExam}
+      onChange={(e) => setIsWhiteExam(e.target.checked)}
+      className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer"
+    />
+    <label htmlFor="isWhiteExamCheckbox" className="text-sm font-semibold text-red-800 cursor-pointer select-none">
+      ⚠️ Marquer ce lot (Saisie ou Excel) comme un <span className="underline font-bold">Examen Blanc</span>. Il sera isolé des exercices classiques et rejoindra l'onglet Examen Blanc de l'étudiant.
+    </label>
+  </div>
+)}
 
       {/* 🔹 FILTRES DE VISUALISATION DU TABLEAU */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

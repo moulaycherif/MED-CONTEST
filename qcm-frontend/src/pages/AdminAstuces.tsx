@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "../api/axios"; // Ajustez le chemin relatif vers votre fichier axios.ts
+import axios from "../api/axios"; 
 import { API_BASE_URL } from "../config";
-// 🔥 Remplacement de TipTapEditor par RichMathEditor
 import RichMathEditor from "../components/RichMathEditor";
 import "react-quill/dist/quill.snow.css";
 
@@ -185,7 +184,6 @@ const AdminAstuces: React.FC = () => {
   const createTip = async () => {
     const casesCopy = [...cases]; 
 
-    // 🔥 Filtrage strict pour éviter de garder des éditeurs vides (contenant juste <p><br></p>)
     const cleanCases = casesCopy.filter(
       (c) =>
         !isEditorEmpty(c.content) ||
@@ -201,7 +199,6 @@ const AdminAstuces: React.FC = () => {
       pdfUrl,
     });
 
-    // 👉 RESET APRÈS
     setSubject("");
     setChapter("");
     setTitle("");
@@ -210,7 +207,7 @@ const AdminAstuces: React.FC = () => {
     setCases([{ title: "", content: "", image: "" }]);
     
     alert("✅ Astuce enregistrée avec succès !");
-    fetchTips(); // Rafraîchir la liste après création
+    fetchTips(); 
   };
 
   /* ===================== RENDER ===================== */
@@ -220,6 +217,18 @@ const AdminAstuces: React.FC = () => {
       <h1 className="text-3xl font-bold mb-8 text-center">
         💡 Gestion des Astuces du Soutien
       </h1>
+
+      {/* 🚨 NOUVEAU BANDEAU D'INFORMATION DYNAMIQUE POUR L'ADMINISTRATEUR */}
+      {subject.trim().toUpperCase() === "SVT" && (
+        <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-xl flex flex-col gap-1 shadow-sm">
+          <span className="text-sm font-bold text-orange-800 flex items-center gap-2">
+            💡 Info Importation SVT :
+          </span>
+          <p className="text-xs text-orange-700 leading-relaxed">
+            Pour ajouter un cours classique (Manuel ou PDF), utilisez cette page. Cependant, si vous souhaitez importer un <b>fichier Excel d'Examen Blanc QCM</b>, vous devez aller sur l'onglet <b>📘 Gestion des Exercices</b>, y taper SVT et cocher la case d'examen blanc. Les deux apparaîtront ensemble dans l'espace Astuces de l'étudiant.
+          </p>
+        </div>
+      )}
 
       <div className="bg-white shadow-xl rounded-2xl p-6 mb-12">
 
@@ -334,7 +343,6 @@ const AdminAstuces: React.FC = () => {
                 )}
 
                 <label className="block font-semibold mb-2">Contenu textuel (Reconnaît Word et LaTeX)</label>
-                {/* 🔥 L'éditeur riche est intégré ici */}
                 <div className="bg-white rounded-lg mb-2">
                   <RichMathEditor
                     value={c.content || ""}
@@ -396,7 +404,6 @@ const AdminAstuces: React.FC = () => {
 
               <h3 className="font-bold text-lg mt-1">{tip.title}</h3>
 
-              {/* 🔥 TYPE BADGE */}
               <div className="mt-3 flex gap-2">
                 {hasPDF && (
                   <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
@@ -417,7 +424,6 @@ const AdminAstuces: React.FC = () => {
                 )}
               </div>
 
-              {/* 🔥 PREVIEW TEXTE (avec prise en charge du HTML de Quill) */}
               {!hasPDF && !hasImage && hasText && (
                 <div
                   className="mt-4 text-gray-700 text-sm line-clamp-3 bg-gray-50 p-2 rounded border"
