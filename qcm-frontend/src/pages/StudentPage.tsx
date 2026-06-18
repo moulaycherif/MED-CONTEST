@@ -700,9 +700,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                 {/* Énoncé importé de l'Excel */}
                 <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">Énoncé</h3>
-                  <div className="text-lg [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:mb-2">
-                    <ReactQuill value={processQuillText(currentEx?.contextText)} readOnly={true} theme="bubble" />
-                  </div>
+                  <div className="text-lg font-medium text-gray-900">
+  <MixedContentRenderer text={currentEx?.contextText || ""} />
+</div>
                   {currentEx?.contextImage && (
                     <img 
                       src={getImageUrl(currentEx.contextImage)} 
@@ -719,9 +719,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                     <div key={subQ._id} className="pl-2 border-l-2 border-red-200 py-1">
                       <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
                         <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
-                        <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
-                          <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
-                        </div>
+                        <div className="flex-1 text-lg font-medium text-gray-900">
+  <MixedContentRenderer text={subQ.questionText || ""} />
+</div>
                       </div>
 
                       <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -988,9 +988,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
               
               <div className="mb-4 border-b pb-4 bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wide">Énoncé</h3>
-                <div className="text-base [&_.ql-editor]:p-0 [&_.ql-editor]:text-base [&_.ql-editor]:leading-snug [&_.ql-editor_p]:mb-1">
-                  <ReactQuill value={processQuillText(currentEx.contextText)} readOnly={true} theme="bubble" />
-                </div>
+                <div className="text-base font-medium text-gray-800">
+  <MixedContentRenderer text={currentEx.contextText || ""} />
+</div>
                 {currentEx.contextImage && (
                   <img 
                     src={getImageUrl(currentEx.contextImage)} 
@@ -1011,9 +1011,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                         <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0 font-bold">
                           Q{index + 1}
                         </span>
-                        <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-lg [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
-                          <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
-                        </div>
+                        <div className="flex-1 text-lg font-medium text-gray-900">
+  <MixedContentRenderer text={subQ.questionText || ""} />
+</div>
                       </div>
 
                       {subQ.image && (
