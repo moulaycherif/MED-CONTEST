@@ -260,43 +260,66 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
     setScore(null);
   };
 
+  // 🧹 1. NOUVEAU CLEAN LATEX (Totalement sécurisé pour les mathématiques)
   function cleanLatex(content?: string) {
     if (!content) return "";
     return content
       .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
       .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
       .replace(/\\captionsetup\{[^}]*\}/g, "")
-      .replace(/<\/?p>/g, "")
+      // Gère les paragraphes de l'éditeur manuel sans écraser le texte
+      .replace(/<\/p>/gi, " \n ") 
+      .replace(/<p[^>]*>/gi, "")
+      .replace(/<br\s*\/?>/gi, " \n ")
+      .replace(/<\/div>/gi, " \n ")
+      .replace(/<div[^>]*>/gi, "")
+      // Convertit les formules manuelles de Quill en format LaTeX natif
+      .replace(/<span class="ql-formula"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi, function(match, p1) {
+          const decoded = p1.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+          return ` $${decoded}$ `;
+      })
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
       .replace(/&amp;/g, "&")
-      .replace(/\\\(/g, "$")
-      .replace(/\\\)/g, "$")
+      .replace(/&nbsp;/gi, " ") // Évite que les espaces Excel ne fassent planter l'équation
       .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
       .replace(/\\?below/g, "_")
       .replace(/\\aleph/g, "\\mathbb{N}")
       .replace(/\\rightarrow/g, "\\to")
       .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
-      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
-      .replace(/\\ /g, " ")
-      .replace(/\\\s+/g, " ")
-      .replace(/\s+/g, " ");   
+      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{")
+      .replace(/ {2,}/g, " ") // Nettoie les espaces multiples sans détruire le code LaTeX
+      .trim();
   }
+
+  // 📝 2. NOUVEAU MOTEUR DE RENDU (Force la lecture des symboles $ et $$)
+  const LATEX_DELIMITERS = [
+    { left: "$$", right: "$$", display: true },
+    { left: "\\(", right: "\\)", display: false },
+    { left: "$", right: "$", display: false },
+    { left: "\\[", right: "\\]", display: true }
+  ];
 
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
     let processedText = text;
+    
     if (processedText.includes("<smiles>")) {
       processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
     }
+    
+    // S'il n'y a pas d'image, on rend directement avec les délimiteurs forcés
     if (!processedText.includes("<img")) {
-      return <Latex>{cleanLatex(processedText)}</Latex>;
+      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(processedText)}</Latex>;
     }
+    
     const imgStart = processedText.indexOf("<img");
     const imgEnd = processedText.indexOf("/>", imgStart);
+    
     if (imgStart === -1 || imgEnd === -1) {
-      return <Latex>{cleanLatex(processedText)}</Latex>;
+      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(processedText)}</Latex>;
     }
+    
     const textBefore = processedText.substring(0, imgStart);
     const rawImgTag = processedText.substring(imgStart, imgEnd + 2);
     const textAfter = processedText.substring(imgEnd + 2);
@@ -309,7 +332,7 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
       <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap text-justify">
         {textBefore.trim().length > 0 && (
           <span className="text-gray-800 font-medium text-justify block w-full">
-            <Latex>{cleanLatex(textBefore)}</Latex>
+            <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(textBefore)}</Latex>
           </span>
         )}
         {imgSrc && (
@@ -319,7 +342,7 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
         )}
         {textAfter.trim().length > 0 && (
           <span className="text-gray-600 text-sm text-justify block w-full">
-            <Latex>{cleanLatex(textAfter)}</Latex>
+            <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(textAfter)}</Latex>
           </span>
         )}
       </div>
