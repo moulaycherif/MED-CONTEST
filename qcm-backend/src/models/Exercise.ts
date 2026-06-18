@@ -19,6 +19,7 @@ export interface IExercise extends Document {
   contextImage: string;
   subQuestions: ISubQuestion[];
   difficulty: 'facile' | 'moyen' | 'difficile';
+  isWhiteExam: boolean; // 👈 AJOUT ICI
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,6 +97,11 @@ const exerciseSchema = new Schema<IExercise>(
       type: String,
       enum: ['facile', 'moyen', 'difficile'],
       default: 'moyen',
+    },
+    // 🚨 AJOUT DU CHAMP ICI :
+    isWhiteExam: {
+      type: Boolean,
+      default: false, // Par défaut, c'est un exercice normal
     },
   },
   {
