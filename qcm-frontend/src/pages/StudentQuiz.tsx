@@ -126,7 +126,7 @@ export default function StudentQuiz() {
             
             {/* Contenu textuel de l'énoncé riche (Quill/Maths) */}
             <div 
-              className="text-gray-800 font-medium text-base md:text-lg leading-relaxed max-h-56 overflow-y-auto pr-2"
+              className="text-gray-800 font-bold text-base md:text-lg leading-relaxed max-h-56 overflow-y-auto pr-2 justify-center"
               dangerouslySetInnerHTML={{ __html: exercise.contextText }}
             />
 

@@ -563,7 +563,6 @@ const AdminExercises: React.FC = () => {
           ))}
         </div>
 
-<<<<<<< HEAD
         {/* 🔹 Ajouter question */}
         <button
           onClick={handleAddSubQuestion}
@@ -580,12 +579,6 @@ const AdminExercises: React.FC = () => {
           className="w-full bg-green-600 hover:bg-green-700 transition text-white font-bold px-4 py-4 rounded-xl text-lg shadow"
         >
           ✅ Sauvegarder l'exercice complet
-=======
-        <button onClick={handleAddSubQuestion} className="w-full py-3 mb-6 border-2 border-dashed border-blue-400 text-blue-600 rounded-xl hover:bg-blue-50 font-bold">➕ Ajouter une sous-question</button>
-        <button onClick={handleSubmit} className={`w-full text-white font-bold px-4 py-4 rounded-xl text-lg shadow ${isWhiteExam ? "bg-red-600" : "bg-green-600"}`}>
-          {isWhiteExam ? "📝 Sauvegarder l'Examen Blanc" : "✅ Sauvegarder l'exercice"}
-          console.log("WHAO    WHAO");
->>>>>>> 3a1abfedeb866e3ca023f7c846ca130d473e7b82
         </button>
       </div>
 
