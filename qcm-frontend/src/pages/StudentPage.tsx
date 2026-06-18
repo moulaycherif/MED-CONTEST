@@ -245,10 +245,10 @@ export default function StudentPage() {
     setScore(null);
   };
 
-  // 🧹 1. NOUVEAU CLEAN LATEX (Convertit les $ d'Excel pour forcer le rendu LaTeX)
+ // 🧹 1. CLEAN LATEX (Nettoyé des regex buguées)
   function cleanLatex(content?: string) {
     if (!content) return "";
-    let text = content
+    return content
       .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
       .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
       .replace(/\\captionsetup\{[^}]*\}/g, "")
@@ -259,7 +259,7 @@ export default function StudentPage() {
       .replace(/<div[^>]*>/gi, "")
       .replace(/<span class="ql-formula"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi, function(match, p1) {
           const decoded = p1.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
-          return ` \\(${decoded}\\) `;
+          return ` $${decoded}$ `;
       })
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
@@ -271,20 +271,14 @@ export default function StudentPage() {
       .replace(/\\rightarrow/g, "\\to")
       .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
       .replace(/\\lim_\{/g, "\\displaystyle \\lim_{")
-      .replace(/ {2,}/g, " ") 
       .trim();
-
-    // 🚨 TRANSFORMATION MAGIQUE DES SYMBOLES $ : 
-    // Convertit les variables Excel de $...$ vers \(...\) que KaTeX comprend à 100%
-    text = text.replace(/\$\$(.*?)\$\$/g, "\\[$1\\]");
-    text = text.replace(/\$((?:\\.|[^$])+?)\$/g, "\\($1\\)");
-
-    return text;
   }
 
   // 📝 2. MOTEUR DE RENDU UNIVERSEL
+  // 🚨 C'EST ICI LA CLÉ : On ajoute le "$" dans les délimiteurs obligatoires
   const LATEX_DELIMITERS = [
     { left: "$$", right: "$$", display: true },
+    { left: "$", right: "$", display: false }, // <-- CETTE LIGNE DÉBLOQUE TOUT
     { left: "\\(", right: "\\)", display: false },
     { left: "\\[", right: "\\]", display: true }
   ];
