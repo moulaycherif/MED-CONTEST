@@ -217,9 +217,6 @@ export default function StudentPage() {
             }
           });
 
-          // 🐛 Ligne de debug (vous pourrez regarder F12 > Console pour vérifier que ça groupe bien)
-          console.log(`Exercices bruts: ${rawExercises.length} -> Exercices regroupés: ${groupedExercises.length}`);
-
           setExercises(groupedExercises);
           setExerciseIndex(0);
           setExerciseAnswers({});
@@ -720,7 +717,7 @@ export default function StudentPage() {
           <div className="p-6 relative">
             <h2 className="text-3xl font-bold text-center mb-8">📘 {selectedChapter} — Résumés</h2>
             {resumes.length === 0 ? (
-              <p className="text-center text-gray-500">Aucun résumé trouvé…</p>
+              <p className="text-center text-gray-500 font-bold">En option (sur demande)…</p>
             ) : (
               <div className="flex flex-wrap gap-3 justify-center">
                 {resumes.map((sum) => (
