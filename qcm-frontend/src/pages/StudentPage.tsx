@@ -225,6 +225,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
             }
           });
 
+<<<<<<< HEAD
+          setExercises(groupedExercises);
+=======
           // 🎯 ATTRIBUTION INTELLIGENTE DES STATES
           if (isWhiteExamAction) {
             // Si c'est l'examen blanc de SVT, on stocke dans le state dédié
@@ -235,6 +238,7 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
           }
 
           // 🔄 Réinitialisation commune des index et formulaires
+>>>>>>> e31d2f1895ae6ff8de3bf353a7ecc4da07220816
           setExerciseIndex(0);
           setExerciseAnswers({});
           setExerciseSubmitted(false);
