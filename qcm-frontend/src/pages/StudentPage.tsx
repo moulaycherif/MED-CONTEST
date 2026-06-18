@@ -1008,7 +1008,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
               <div className="mb-4 border-b pb-4 bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wide">Énoncé</h3>
                 <div className="text-base font-medium text-gray-800">
-  <MixedContentRenderer text={currentEx.contextText || ""} />
+  <div>
+  {renderWithMath(currentEx.contextText || "")}
+</div>
 </div>
                 {currentEx.contextImage && (
                   <img 
@@ -1031,7 +1033,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                           Q{index + 1}
                         </span>
                         <div className="flex-1 text-lg font-medium text-gray-900">
-  <MixedContentRenderer text={subQ.questionText || ""} />
+  <div>
+  {renderWithMath(subQ.questionText || "")}
+</div>
 </div>
                       </div>
 
