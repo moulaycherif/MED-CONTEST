@@ -19,7 +19,6 @@ import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
 import ChemStructure from "../components/ChemStructure";
-import { renderWithMath } from "../utils/mathUtils";
 
 // Indispensable pour que React-Quill puisse interpréter les formules
 (window as any).katex = katex;
@@ -79,8 +78,7 @@ export default function StudentPage() {
   const [exerciseScore, setExerciseScore] = useState<number | null>(null);
   const [wrongExercises, setWrongExercises] = useState<any[]>([]);
   const [exerciseAttempt, setExerciseAttempt] = useState(1);
-  // 🚨 AJOUTEZ CE STATE POUR L'EXAMEN BLANC SVT
-const [whiteExams, setWhiteExams] = useState<any[]>([]);
+  const [whiteExams, setWhiteExams] = useState<any[]>([]);
   
   const [astuces, setAstuces] = useState<Astuce[]>([]);
   const [resumes, setResumes] = useState<any[]>([]);
@@ -168,16 +166,13 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
     }
   }, [selectedAction, selectedChapter]);
 
-  // 🌟 LOGIQUE DE RÉCUPÉRATION ET REGROUPEMENT ULTRA-ROBUSTE (Exercices & Examen Blanc SVT)
+  // 🌟 LOGIQUE DE RÉCUPÉRATION ET REGROUPEMENT ULTRA-ROBUSTE
   useEffect(() => {
-    // On déclenche la fonction si on est sur "Exercises" OU si on est sur "Astuces" (pour l'Examen Blanc SVT)
     const isExerciseAction = selectedAction === "Exercises";
     const isWhiteExamAction = selectedAction === "Astuces" && selectedMatiere === "SVT";
 
     if ((isExerciseAction || isWhiteExamAction) && selectedChapter && selectedMatiere) {
       const token = localStorage.getItem("token");
-      
-      // On ajoute dynamiquement le paramètre de requête au backend (?isWhiteExam=true ou false)
       const isWhiteExamParam = isWhiteExamAction ? "true" : "false";
 
       axios
@@ -187,14 +182,13 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
         .then((res) => {
           const rawExercises = res.data || [];
           
-          // 🧹 Nettoyage extrême pour la comparaison
           const normalizeForCompare = (val?: string) => {
             if (!val) return "";
             return val
-              .replace(/<[^>]*>?/gm, '') // 1. Retire toutes les balises HTML (<p>, <br>, etc.)
-              .replace(/&nbsp;/gi, '')   // 2. Retire les espaces insécables HTML
-              .replace(/\s+/g, '')       // 3. Retire TOUS les espaces normaux et sauts de ligne
-              .toLowerCase()             // 4. Transforme tout en minuscules
+              .replace(/<[^>]*>?/gm, '') 
+              .replace(/&nbsp;/gi, '')   
+              .replace(/\s+/g, '')       
+              .toLowerCase()             
               .trim();
           };
 
@@ -204,7 +198,6 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
             const exText = normalizeForCompare(ex.contextText);
             const exImg = (ex.contextImage || "").trim();
 
-            // 🔍 Recherche stricte d'un groupe existant
             const existingGroup = groupedExercises.find((g) => {
               const gText = normalizeForCompare(g.contextText);
               const gImg = (g.contextImage || "").trim();
@@ -219,22 +212,17 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
             } else {
               groupedExercises.push({ 
                 ...ex, 
-                ...ex, 
                 subQuestions: [...(ex.subQuestions || [])] 
               });
             }
           });
 
-          // 🎯 ATTRIBUTION INTELLIGENTE DES STATES
           if (isWhiteExamAction) {
-            // Si c'est l'examen blanc de SVT, on stocke dans le state dédié
             setWhiteExams(groupedExercises);
           } else {
-            // Sinon, on remplit le flux d'exercices standard
             setExercises(groupedExercises);
           }
 
-          // 🔄 Réinitialisation commune des index et formulaires
           setExerciseIndex(0);
           setExerciseAnswers({});
           setExerciseSubmitted(false);
@@ -242,11 +230,8 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
         })
         .catch((err) => {
           console.error("❌ Erreur de récupération des données d'évaluation", err);
-          if (isWhiteExamAction) {
-            setWhiteExams([]);
-          } else {
-            setExercises([]);
-          }
+          if (isWhiteExamAction) setWhiteExams([]);
+          else setExercises([]);
         });
     }
   }, [selectedAction, selectedChapter, selectedMatiere]);
@@ -260,43 +245,47 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
     setScore(null);
   };
 
-  // 🧹 1. NOUVEAU CLEAN LATEX (Totalement sécurisé pour les mathématiques)
+  // 🧹 1. NOUVEAU CLEAN LATEX (Convertit les $ d'Excel pour forcer le rendu LaTeX)
   function cleanLatex(content?: string) {
     if (!content) return "";
-    return content
+    let text = content
       .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
       .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
       .replace(/\\captionsetup\{[^}]*\}/g, "")
-      // Gère les paragraphes de l'éditeur manuel sans écraser le texte
       .replace(/<\/p>/gi, " \n ") 
       .replace(/<p[^>]*>/gi, "")
       .replace(/<br\s*\/?>/gi, " \n ")
       .replace(/<\/div>/gi, " \n ")
       .replace(/<div[^>]*>/gi, "")
-      // Convertit les formules manuelles de Quill en format LaTeX natif
       .replace(/<span class="ql-formula"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi, function(match, p1) {
           const decoded = p1.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
-          return ` $${decoded}$ `;
+          return ` \\(${decoded}\\) `;
       })
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
       .replace(/&amp;/g, "&")
-      .replace(/&nbsp;/gi, " ") // Évite que les espaces Excel ne fassent planter l'équation
+      .replace(/&nbsp;/gi, " ") 
       .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
       .replace(/\\?below/g, "_")
       .replace(/\\aleph/g, "\\mathbb{N}")
       .replace(/\\rightarrow/g, "\\to")
       .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
       .replace(/\\lim_\{/g, "\\displaystyle \\lim_{")
-      .replace(/ {2,}/g, " ") // Nettoie les espaces multiples sans détruire le code LaTeX
+      .replace(/ {2,}/g, " ") 
       .trim();
+
+    // 🚨 TRANSFORMATION MAGIQUE DES SYMBOLES $ : 
+    // Convertit les variables Excel de $...$ vers \(...\) que KaTeX comprend à 100%
+    text = text.replace(/\$\$(.*?)\$\$/g, "\\[$1\\]");
+    text = text.replace(/\$((?:\\.|[^$])+?)\$/g, "\\($1\\)");
+
+    return text;
   }
 
-  // 📝 2. NOUVEAU MOTEUR DE RENDU (Force la lecture des symboles $ et $$)
+  // 📝 2. MOTEUR DE RENDU UNIVERSEL
   const LATEX_DELIMITERS = [
     { left: "$$", right: "$$", display: true },
     { left: "\\(", right: "\\)", display: false },
-    { left: "$", right: "$", display: false },
     { left: "\\[", right: "\\]", display: true }
   ];
 
@@ -308,7 +297,6 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
       processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
     }
     
-    // S'il n'y a pas d'image, on rend directement avec les délimiteurs forcés
     if (!processedText.includes("<img")) {
       return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(processedText)}</Latex>;
     }
@@ -352,12 +340,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
   function renderContent(content?: string) {
     if (!content) return null;
     return (
-      <div
-        className="prose max-w-none"
-        dangerouslySetInnerHTML={{
-          __html: cleanLatex(content),
-        }}
-      />
+      <div className="prose max-w-none text-gray-800">
+        <MixedContentRenderer text={content} />
+      </div>
     );
   }
 
@@ -671,9 +656,7 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
      // 👉 1) ASTUCES / EXAMEN BLANC (SVT uniquement)
       if (selectedChapter && selectedAction === "Astuces") {
         
-        // 🚨 CAS SPÉCIAL SVT : Transformation en Examen Blanc type Excel / QCM
         if (selectedMatiere === "SVT") {
-          // 🎯 Utilisation exclusive du state 'whiteExams' pour cloisonner les données
           const currentEx = whiteExams[exerciseIndex];
 
           if (!whiteExams || whiteExams.length === 0) {
@@ -686,15 +669,6 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
               </div>
             );
           }
-
-          const processQuillText = (text?: string) => {
-            if (!text) return "";
-            return text
-              .replace(/\\?below\s*\{/g, "_{")
-              .replace(/\\?below/g, "_")
-              .replace(/lim\s*n\s*(?:--&gt;|-->|→)\s*(?:infini|∞)/gi, '<span class="ql-formula" data-value="\\displaystyle \\lim_{n \\to \\infty}"></span>')
-              .replace(/data-value="\\lim_/g, 'data-value="\\displaystyle \\lim_');
-          };
 
           return (
             <div className="p-6 exercice-view-container">
@@ -716,12 +690,11 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
               </div>
 
               <div className="bg-white p-6 rounded-xl shadow border-t-4 border-red-500">
-                {/* Énoncé importé de l'Excel */}
                 <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">Énoncé</h3>
                   <div className="text-lg font-medium text-gray-900">
-  <MixedContentRenderer text={currentEx?.contextText || ""} />
-</div>
+                    <MixedContentRenderer text={currentEx?.contextText || ""} />
+                  </div>
                   {currentEx?.contextImage && (
                     <img 
                       src={getImageUrl(currentEx.contextImage)} 
@@ -732,15 +705,14 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                   )}
                 </div>
 
-                {/* Choix multiples */}
                 <div className="space-y-3">
                   {currentEx?.subQuestions?.map((subQ: any, index: number) => (
                     <div key={subQ._id} className="pl-2 border-l-2 border-red-200 py-1">
                       <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
                         <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
                         <div className="flex-1 text-lg font-medium text-gray-900">
-  <MixedContentRenderer text={subQ.questionText || ""} />
-</div>
+                          <MixedContentRenderer text={subQ.questionText || ""} />
+                        </div>
                       </div>
 
                       <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -758,11 +730,12 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                         })}
                       </div>
 
-                      {/* Affichage de la correction après validation */}
                       {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
                         <div className="ml-6 mt-2 px-3 py-2 bg-red-50 text-red-900 rounded-md border border-red-100 text-sm">  
                           <span className="font-bold flex items-center mb-1">💡 Correction :</span>
-                          <div className="prose max-w-none text-gray-800">{renderWithMath(subQ.explanation)}</div>
+                          <div className="prose max-w-none text-gray-800">
+                            <MixedContentRenderer text={subQ.explanation || ""} />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -770,13 +743,11 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                 </div>
               </div>
 
-              {/* Barre de navigation basculée sur la longueur de whiteExams */}
               <div className="flex justify-between mt-4">
                 <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">⬅️ Précédent</button>
                 <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, whiteExams.length - 1)} className="px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50">➡️ Suivant</button>
               </div>
 
-              {/* Bouton de validation de l'examen */}
               {!exerciseSubmitted && (
                 <button
                   onClick={async () => {
@@ -809,14 +780,12 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                 </button>
               )}
 
-              {/* Score final */}
               {exerciseSubmitted && (
                 <div className="mt-4 text-center font-bold text-red-600 bg-red-50 py-2 rounded-xl border border-red-100">
                   Note finale de l'examen : {exerciseScore} / {whiteExams.length}
                 </div>
               )}
               
-              {/* Possibilité de recommencer en cas d'erreurs en écrasant temporairement whiteExams */}
               {exerciseSubmitted && wrongExercises.length > 0 && (
                 <button
                   onClick={() => {
@@ -832,7 +801,6 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
           );
         }
 
-        // 💡 CAS CLASSIQUE AUTRES MATIÈRES : Le code original des astuces reste inchangé
         return (
           <div className="p-6 relative">
             <h2 className="text-3xl font-bold text-center mb-8">💡 {selectedChapter} — Astuces</h2>
@@ -905,7 +873,7 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                           </div>
                         )}
                         {c.content && (
-                          <div className="prose prose-lg max-w-none bg-white p-6 rounded-xl shadow">
+                          <div className="bg-white p-6 rounded-xl shadow">
                             {renderContent(c.content || "")}
                           </div>
                         )}
@@ -971,17 +939,7 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
           return <p className="text-center mt-10">Aucun exercice trouvé</p>;
         }
 
-        // Calcul du vrai nombre de questions pour l'affichage des stats
         const totalQuestionsCount = exercises.reduce((acc, ex) => acc + (ex.subQuestions?.length || 0), 0);
-
-        const processQuillText = (text?: string) => {
-          if (!text) return "";
-          return text
-            .replace(/\\?below\s*\{/g, "_{")
-            .replace(/\\?below/g, "_")
-            .replace(/lim\s*n\s*(?:--&gt;|-->|→)\s*(?:infini|∞)/gi, '<span class="ql-formula" data-value="\\displaystyle \\lim_{n \\to \\infty}"></span>')
-            .replace(/data-value="\\lim_/g, 'data-value="\\displaystyle \\lim_');
-        };
 
         return (
           <div className="p-6 exercice-view-container">
@@ -1008,10 +966,8 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
               <div className="mb-4 border-b pb-4 bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wide">Énoncé</h3>
                 <div className="text-base font-medium text-gray-800">
-  <div>
-  {renderWithMath(currentEx.contextText || "")}
-</div>
-</div>
+                  <MixedContentRenderer text={currentEx.contextText || ""} />
+                </div>
                 {currentEx.contextImage && (
                   <img 
                     src={getImageUrl(currentEx.contextImage)} 
@@ -1033,10 +989,8 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                           Q{index + 1}
                         </span>
                         <div className="flex-1 text-lg font-medium text-gray-900">
-  <div>
-  {renderWithMath(subQ.questionText || "")}
-</div>
-</div>
+                          <MixedContentRenderer text={subQ.questionText || ""} />
+                        </div>
                       </div>
 
                       {subQ.image && (
@@ -1072,7 +1026,9 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                     {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
                       <div className="ml-8 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
                         <span className="font-bold flex items-center mb-1">💡 Correction :</span>
-                        <div className="prose max-w-none text-gray-800">{renderWithMath(subQ.explanation)}</div>
+                        <div className="prose max-w-none text-gray-800">
+                          <MixedContentRenderer text={subQ.explanation || ""} />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1096,7 +1052,6 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
                       if (exerciseAnswers[subQ._id] === subQ.correctAnswer) { score++; }
                     });
                   });
-                  // Garder dans wrongExercises les énoncés complets si l'étudiant a fait au moins une erreur dessus
                   const wrong = exercises.filter((ex) => ex.subQuestions?.some((subQ: any) => exerciseAnswers[subQ._id] !== subQ.correctAnswer));
                   setExerciseScore(score);
                   try {
@@ -1142,39 +1097,37 @@ const [whiteExams, setWhiteExams] = useState<any[]>([]);
         );
       }
 
-      // 👉 4) Boutons d’actions par chapitre (Adapté pour l'Examen Blanc en SVT)
-if (selectedChapter) {
-  const actions = [
-    // Si c'est de la SVT, on affiche "Examen blanc", sinon on affiche "Astuces"
-    { 
-      label: selectedMatiere === "SVT" ? "📝 Examen blanc" : "💡 Astuces", 
-      value: "Astuces", // On garde la valeur interne "Astuces" pour ne pas casser vos states existants
-      color: selectedMatiere === "SVT" ? "bg-red-400 text-white" : "bg-yellow-400 text-black" 
-    },
-    { label: "📘 Résumé", value: "Résumé", color: "bg-blue-400 text-black" },
-    { label: "🧩 Exercises", value: "Exercises", color: "bg-green-400 text-black" },
-  ];
+      // 👉 4) Boutons d’actions par chapitre
+      if (selectedChapter) {
+        const actions = [
+          { 
+            label: selectedMatiere === "SVT" ? "📝 Examen blanc" : "💡 Astuces", 
+            value: "Astuces",
+            color: selectedMatiere === "SVT" ? "bg-red-400 text-white" : "bg-yellow-400 text-black" 
+          },
+          { label: "📘 Résumé", value: "Résumé", color: "bg-blue-400 text-black" },
+          { label: "🧩 Exercises", value: "Exercises", color: "bg-green-400 text-black" },
+        ];
 
-  return (
-    <div className="flex flex-col items-center justify-center gap-8 mt-20">
-      <h2 className="text-2xl font-bold text-gray-800 text-center max-w-2xl px-4">{selectedChapter}</h2>
-      <div className="flex gap-8">
-        {actions.map((action, index) => (
-          <motion.button
-            key={index}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            // On utilise action.value pour définir le state selectedAction
-            onClick={() => setSelectedAction(action.value)}
-            className={`${action.color} font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
-          >
-            {action.label}
-          </motion.button>
-        ))}
-      </div>
-    </div>
-  );
-}
+        return (
+          <div className="flex flex-col items-center justify-center gap-8 mt-20">
+            <h2 className="text-2xl font-bold text-gray-800 text-center max-w-2xl px-4">{selectedChapter}</h2>
+            <div className="flex gap-8">
+              {actions.map((action, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedAction(action.value)}
+                  className={`${action.color} font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
+                >
+                  {action.label}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        );
+      }
 
       // 👉 5) Liste des chapitres
       return (
