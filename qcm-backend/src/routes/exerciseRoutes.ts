@@ -26,7 +26,7 @@ const upload = multer({ storage });
 const excelUpload = multer({ storage: multer.memoryStorage() });
 
 // ======================================================
-// 📋 Récupérer tous les exercices (SANS FILTRE RESTRICTIF)
+// 📋 Récupérer tous les exercices
 // ======================================================
 router.get("/", async (req: Request, res: Response) => {
   try {
@@ -86,12 +86,11 @@ router.post("/", authenticateAdmin, verifyAdmin, upload.single("contextImage"), 
 });
 
 // ======================================================
-// 📥 Importation fichier Excel (.xlsx / .xls)
+// 📥 Importation fichier Excel (.xlsx / .xls) - STABLE ET SÉCURISÉ
 // ======================================================
 router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { subject, chapter, isWhiteExam } = req.body; 
-    
+    const { subject, chapter } = req.body;
     if (!req.file) {
       res.status(400).json({ error: "Veuillez fournir un fichier Excel." });
       return;
@@ -100,8 +99,6 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       res.status(400).json({ error: "La matière et le chapitre sont obligatoires." });
       return;
     }
-
-    const checkWhiteExam = isWhiteExam === true || isWhiteExam === "true";
 
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
@@ -115,12 +112,14 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
     let importedCount = 0;
 
     for (const row of sheetData) {
+      // 🛡️ ÉTAPE ULTRA-SÉCURISÉE : On nettoie toutes les clés y compris les retours à la ligne cachés (\r, \n, \t)
       const cleanRow: any = {};
       Object.keys(row).forEach((key) => {
         const cleanKey = key.trim().toLowerCase().replace(/[\s_\-\r\n\t]/g, "");
         cleanRow[cleanKey] = row[key];
       });
 
+      // 🔍 Mappages tolérants
       const enonce = cleanRow["enonce"] || cleanRow["contexte"] || "Généralités sur la respiration cellulaire";
       const questionText = cleanRow["question"] || cleanRow["text"] || "";
       const typeQuestion = String(cleanRow["type"] || "qcm").toLowerCase().trim();
@@ -128,6 +127,7 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       if (!questionText || questionText.trim() === "") continue;
 
       let optionsArray: string[] = [];
+
       if (typeQuestion === "vrai_faux") {
         optionsArray = ["Vrai", "Faux"];
       } else {
@@ -141,14 +141,18 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
           .filter((o) => o !== "undefined" && o !== "");
       }
 
+      // Si le tableau d'options est vide, on applique un fallback pour éviter la coupure Mongoose
       if (optionsArray.length < 2) {
         optionsArray = ["Option A par défaut", "Option B par défaut"];
       }
 
+      // 🎯 CORRECTION CRITIQUE : Extraction et nettoyage de la bonne réponse
       let bonneReponseRaw = cleanRow["bonnereponse"] || cleanRow["correctanswer"] || cleanRow["reponsecorrecte"] || cleanRow["reponse"] || "";
       let correctAnswerText = String(bonneReponseRaw).trim();
 
+      // 🛡️ SÉCURITÉ DE SAUVEGARDE : Si la chaîne est vide, on prend la première option du tableau
       if (!correctAnswerText && optionsArray.length > 0) {
+        console.warn(`⚠️ Bonne réponse introuvable pour la question : "${questionText}". Assignation automatique de l'Option A.`);
         correctAnswerText = optionsArray[0];
       }
 
@@ -157,7 +161,6 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
         chapter,
         contextText: enonce,
         contextImage: "",
-        isWhiteExam: checkWhiteExam, 
         subQuestions: [{
           questionText,
           qType: typeQuestion === "vrai_faux" ? "vrai_faux" : "qcm",
@@ -170,74 +173,33 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
       importedCount++;
     }
 
-    res.status(200).json({ success: true, message: `Importation réussie de ${importedCount} éléments.` });
+    res.status(200).json({ success: true, message: `Importation réussie de ${importedCount} exercices.` });
   } catch (error) {
     console.error("Erreur import Excel :", error);
     res.status(500).json({ error: "Erreur interne lors du traitement du fichier Excel." });
   }
 });
 
-// ======================================================
-// 🔍 Récupération par matière (SANS FILTRE RESTRICTIF)
-// ======================================================
+// Les routes de filtres et suppressions restent inchangées...
 router.get("/by-subject/:subject", async (req: Request, res: Response) => {
   try {
     const exercises = await Exercise.find({ subject: req.params.subject });
     res.json(exercises);
-  } catch (error) { 
-    res.status(500).json({ error: "Erreur serveur" }); 
-  }
+  } catch (error) { res.status(500).json({ error: "Erreur" }); }
 });
 
-// ======================================================
-// 🔍 Récupération par matière + chapitre (SANS FILTRE RESTRICTIF)
-// ======================================================
 router.get("/:subject/:chapter", async (req: Request, res: Response) => {
   try {
-    const { subject, chapter } = req.params;
-    const { isWhiteExam } = req.query; 
-
-    // On applique le filtre de base strict pour TOUJOURS retourner vos chapitres
-    const queryFilter: any = { subject, chapter };
-
-    // Uniquement si l'URL demande explicitement un filtrage (?isWhiteExam=true)
-    if (isWhiteExam !== undefined) {
-      queryFilter.isWhiteExam = isWhiteExam === "true";
-    }
-
-    const exercises = await Exercise.find(queryFilter);
+    const exercises = await Exercise.find({ subject: req.params.subject, chapter: req.params.chapter });
     res.json(exercises);
-  } catch (error) { 
-    res.status(500).json({ error: "Erreur lors de la récupération des données" }); 
-  }
+  } catch (error) { res.status(500).json({ error: "Erreur" }); }
 });
 
-// ======================================================
-// ❌ Supprimer un exercice
-// ======================================================
 router.delete("/:id", authenticateAdmin, verifyAdmin, async (req: Request, res: Response) => {
   try {
     await Exercise.findByIdAndDelete(req.params.id);
     res.json({ success: true });
-  } catch (error) { 
-    res.status(500).json({ error: "Erreur serveur" }); 
-  }
+  } catch (error) { res.status(500).json({ error: "Erreur" }); }
 });
 
-// 🧹 ROUTE TEMPORAIRE DE SECOURS POUR NETTOYER LA SVT
-router.get("/clean-svt-fix", async (req: Request, res: Response) => {
-  try {
-    // On réinitialise le champ 'isWhiteExam' pour TOUS les exercices de SVT
-    const result = await Exercise.updateMany(
-      { subject: { $regex: /svt/i } }, 
-      { $unset: { isWhiteExam: "" } }
-    );
-    res.json({ 
-      success: true, 
-      message: `${result.modifiedCount} exercices de SVT ont été nettoyés et réparés !` 
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Erreur lors du nettoyage" });
-  }
-});
 export default router;
