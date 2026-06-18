@@ -70,11 +70,14 @@ const AdminExercises: React.FC = () => {
   const fetchExercises = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/exercises`);
-      const data: Exercise[] = res.data;
+      const data: Exercise[] = Array.isArray(res.data) ? res.data : [];
       setExercises(data);
       
-      // Extraction des matières uniques nettoyées de tout espace parasite
-      const uniqueSubjects = Array.from(new Set(data.map((q) => q.subject ? q.subject.trim() : ""))).filter(Boolean);
+      // Extraction sécurisée (si q.subject est manquant, on met une chaîne vide pour éviter le crash)
+      const uniqueSubjects = Array.from(
+        new Set(data.map((q) => (q && q.subject ? q.subject.toString().trim() : "")))
+      ).filter(Boolean);
+      
       setSubjects(uniqueSubjects);
     } catch (err) {
       console.error("❌ Erreur chargement exercices :", err);
@@ -90,16 +93,23 @@ const AdminExercises: React.FC = () => {
       setFilterChapter("");
       return;
     }
-    const filtered = exercises.filter((q) => 
-      q.subject && q.subject.trim().toUpperCase() === filterSubject.trim().toUpperCase()
-    );
-    const uniqueChapters = [...new Set(filtered.map((q) => q.chapter ? q.chapter.trim() : ""))].filter(Boolean);
+    
+    // Filtrage sécurisé anti-crash
+    const filtered = exercises.filter((q) => {
+      if (!q || !q.subject) return false;
+      return q.subject.toString().trim().toUpperCase() === filterSubject.trim().toUpperCase();
+    });
+    
+    const uniqueChapters = Array.from(
+      new Set(filtered.map((q) => (q && q.chapter ? q.chapter.toString().trim() : "")))
+    ).filter(Boolean);
+    
     setChapters(uniqueChapters);
   }, [filterSubject, exercises]);
 
   // Désactivation sécurité de la case si le formulaire quitte la SVT
   useEffect(() => {
-    if (subject.trim().toUpperCase() !== "SVT") {
+    if (subject && subject.trim().toUpperCase() !== "SVT") {
       setIsWhiteExam(false);
     }
   }, [subject]);
@@ -116,15 +126,19 @@ const AdminExercises: React.FC = () => {
   }, [contextImage]);
 
   // =====================================================
-  // 🔹 FILTRAGE TOTALEMENT TOLÉRANT (Insensible à la casse et espaces de fin)
+  // 🔹 FILTRAGE ANTI-CRASH (Ignore les données corrompues de la BDD)
   // =====================================================
   const filteredExercises = exercises.filter((q) => {
-    const currentSubject = q.subject ? q.subject.trim().toUpperCase() : "";
-    const currentChapter = q.chapter ? q.chapter.trim().toUpperCase() : "";
+    if (!q) return false;
+
+    // Normalisation sécurisée des données de la ligne
+    const currentSubject = q.subject ? q.subject.toString().trim().toUpperCase() : "";
+    const currentChapter = q.chapter ? q.chapter.toString().trim().toUpperCase() : "";
 
     const matchSubject = filterSubject 
       ? currentSubject === filterSubject.trim().toUpperCase() 
       : true;
+      
     const matchChapter = filterChapter 
       ? currentChapter === filterChapter.trim().toUpperCase() 
       : true;
@@ -168,6 +182,7 @@ const AdminExercises: React.FC = () => {
   };
 
   const isEditorEmpty = (html: string) => {
+    if (!html) return true;
     if (html.includes('<img')) return false; 
     const cleaned = html.replace(/<(.|\n)*?>/g, "").replace(/&nbsp;/g, "").trim();
     return cleaned.length === 0;
@@ -237,9 +252,9 @@ const AdminExercises: React.FC = () => {
       formData.append("isWhiteExam", String(isWhiteExam));
 
       const cleanedSubQuestions = subQuestions.map((q) => ({
-        questionText: q.questionText.trim(),
+        questionText: (q.questionText || "").trim(),
         qType: q.qType,
-        options: q.qType === "vrai_faux" ? ["Vrai", "Faux"] : q.options.filter((opt) => opt.trim() !== ""),
+        options: q.qType === "vrai_faux" ? ["Vrai", "Faux"] : q.options.filter((opt) => opt && opt.trim() !== ""),
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
         image: q.image?.trim() || "", 
@@ -301,7 +316,7 @@ const AdminExercises: React.FC = () => {
       </div>
 
       {/* 🚨 CONDITION SÉCURISÉE SUR LE FORMULAIRE HAUT */}
-      {subject.trim().toUpperCase() === "SVT" && (
+      {subject && subject.trim().toUpperCase() === "SVT" && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
           <input
             type="checkbox"
@@ -325,7 +340,7 @@ const AdminExercises: React.FC = () => {
             onChange={(e) => setFilterSubject(e.target.value)}
             className="border p-3 rounded-lg w-full bg-white"
           >
-            <option value="">Toutes les matières</option>
+            <option value="">Toutes les matières ({exercises.length} exercices en BDD)</option>
             {subjects.map((subj) => (
               <option key={subj} value={subj}>{subj}</option>
             ))}
@@ -435,7 +450,7 @@ const AdminExercises: React.FC = () => {
         </button>
       </div>
 
-      {/* 🔹 TABLEAU DE RESTITUTION SECURISE */}
+      {/* 🔹 TABLEAU DE RESTITUTION REPARÉ */}
       <table className="w-full border border-gray-300 shadow bg-white">
         <thead className="bg-gray-100">
           <tr>
@@ -447,23 +462,26 @@ const AdminExercises: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredExercises.map((q) => (
-            <tr key={q._id} className="hover:bg-gray-50">
-              <td className="border p-3">
-                <div dangerouslySetInnerHTML={{ __html: q.contextText }} className="line-clamp-2 text-base text-gray-800" />
-              </td>
-              <td className="border p-3 text-center">
-                {q.isWhiteExam ? (
-                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">Exam Blanc</span>
-                ) : (
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">Standard</span>
-                )}
-              </td>
-              <td className="border p-3 text-center font-bold text-blue-600">{q.subQuestions?.length || 0}</td>
-              <td className="border p-3 text-center font-semibold text-slate-700">{q.subject}</td>
-              <td className="border p-3 text-center">{q.chapter}</td>
-            </tr>
-          ))}
+          {filteredExercises.map((q) => {
+            if (!q || !q._id) return null;
+            return (
+              <tr key={q._id} className="hover:bg-gray-50">
+                <td className="border p-3">
+                  <div dangerouslySetInnerHTML={{ __html: q.contextText || "" }} className="line-clamp-2 text-base text-gray-800" />
+                </td>
+                <td className="border p-3 text-center">
+                  {q.isWhiteExam ? (
+                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">Exam Blanc</span>
+                  ) : (
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">Standard</span>
+                  )}
+                </td>
+                <td className="border p-3 text-center font-bold text-blue-600">{q.subQuestions?.length || 0}</td>
+                <td className="border p-3 text-center font-semibold text-slate-700">{q.subject || "Inconnue"}</td>
+                <td className="border p-3 text-center">{q.chapter || "Sans chapitre"}</td>
+              </tr>
+            );
+          })}
 
           {filteredExercises.length === 0 && (
             <tr>
