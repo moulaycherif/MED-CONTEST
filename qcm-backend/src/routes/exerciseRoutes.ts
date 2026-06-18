@@ -25,6 +25,18 @@ const upload = multer({ storage });
 // Configuration Multer pour l'import en mémoire temporaire
 const excelUpload = multer({ storage: multer.memoryStorage() });
 
+// 🛠️ FONCTION MAGIQUE DE CONVERSION LATEX POUR EXCEL
+// Transforme automatiquement les $...$ d'Excel en \(...\) lisibles par le site Étudiant
+const formatExcelMath = (text: any) => {
+  if (!text) return "";
+  let str = String(text);
+  // 1. Convertit les blocs mathématiques $$...$$ en \[...\]
+  str = str.replace(/\$\$(.*?)\$\$/g, "\\[$1\\]");
+  // 2. Convertit les mathématiques en ligne $...$ en \(...\)
+  str = str.replace(/\$([^$]+)\$/g, "\\($1\\)");
+  return str;
+};
+
 // ======================================================
 // 📋 Récupérer tous les exercices
 // ======================================================
@@ -86,7 +98,7 @@ router.post("/", authenticateAdmin, verifyAdmin, upload.single("contextImage"), 
 });
 
 // ======================================================
-// 📥 Importation fichier Excel (.xlsx / .xls) - STABLE ET SÉCURISÉ
+// 📥 Importation fichier Excel (.xlsx / .xls) - STABLE ET SÉCURISÉ (AVEC MATHS)
 // ======================================================
 router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<void> => {
   try {
@@ -112,16 +124,15 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
     let importedCount = 0;
 
     for (const row of sheetData) {
-      // 🛡️ ÉTAPE ULTRA-SÉCURISÉE : On nettoie toutes les clés y compris les retours à la ligne cachés (\r, \n, \t)
       const cleanRow: any = {};
       Object.keys(row).forEach((key) => {
         const cleanKey = key.trim().toLowerCase().replace(/[\s_\-\r\n\t]/g, "");
         cleanRow[cleanKey] = row[key];
       });
 
-      // 🔍 Mappages tolérants
-      const enonce = cleanRow["enonce"] || cleanRow["contexte"] || "Généralités sur la respiration cellulaire";
-      const questionText = cleanRow["question"] || cleanRow["text"] || "";
+      // 🎯 APPLICATION DU TRADUCTEUR LATEX SUR TOUS LES TEXTES
+      const enonce = formatExcelMath(cleanRow["enonce"] || cleanRow["contexte"] || "Généralités");
+      const questionText = formatExcelMath(cleanRow["question"] || cleanRow["text"] || "");
       const typeQuestion = String(cleanRow["type"] || "qcm").toLowerCase().trim();
 
       if (!questionText || questionText.trim() === "") continue;
@@ -137,24 +148,22 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
         const optD = cleanRow["optiond"] || cleanRow["optd"] || "";
 
         optionsArray = [optA, optB, optC, optD]
-          .map((o) => String(o).trim())
+          .map((o) => formatExcelMath(String(o).trim())) // Conversion des options
           .filter((o) => o !== "undefined" && o !== "");
       }
 
-      // Si le tableau d'options est vide, on applique un fallback pour éviter la coupure Mongoose
       if (optionsArray.length < 2) {
         optionsArray = ["Option A par défaut", "Option B par défaut"];
       }
 
-      // 🎯 CORRECTION CRITIQUE : Extraction et nettoyage de la bonne réponse
       let bonneReponseRaw = cleanRow["bonnereponse"] || cleanRow["correctanswer"] || cleanRow["reponsecorrecte"] || cleanRow["reponse"] || "";
-      let correctAnswerText = String(bonneReponseRaw).trim();
+      let correctAnswerText = formatExcelMath(String(bonneReponseRaw).trim()); // Conversion de la réponse correcte
 
-      // 🛡️ SÉCURITÉ DE SAUVEGARDE : Si la chaîne est vide, on prend la première option du tableau
       if (!correctAnswerText && optionsArray.length > 0) {
-        console.warn(`⚠️ Bonne réponse introuvable pour la question : "${questionText}". Assignation automatique de l'Option A.`);
         correctAnswerText = optionsArray[0];
       }
+
+      const explanationText = formatExcelMath(cleanRow["explication"] || cleanRow["explanation"] || "Valable"); // Conversion de l'explication
 
       await Exercise.create({
         subject,
@@ -166,7 +175,7 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
           qType: typeQuestion === "vrai_faux" ? "vrai_faux" : "qcm",
           options: optionsArray,
           correctAnswer: correctAnswerText,
-          explanation: cleanRow["explication"] || cleanRow["explanation"] || "Valable"
+          explanation: explanationText
         }]
       });
 
