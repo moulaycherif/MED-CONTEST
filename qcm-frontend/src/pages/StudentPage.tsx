@@ -6,7 +6,6 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import Latex from "react-latex-next";
 import { API_BASE_URL } from "../config";
 import { fetchAstucesByChapter } from "../api/astuces.api";
 import concoursImg from "../assets/CONCOURS.jfif";
@@ -19,6 +18,7 @@ import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
 import ChemStructure from "../components/ChemStructure";
+import { renderWithMath } from "../utils/mathUtils";
 
 // Indispensable pour que React-Quill puisse interpréter les formules
 (window as any).katex = katex;
@@ -166,7 +166,6 @@ export default function StudentPage() {
     }
   }, [selectedAction, selectedChapter]);
 
-  // 🌟 LOGIQUE DE RÉCUPÉRATION ET REGROUPEMENT ULTRA-ROBUSTE
   useEffect(() => {
     const isExerciseAction = selectedAction === "Exercises";
     const isWhiteExamAction = selectedAction === "Astuces" && selectedMatiere === "SVT";
@@ -229,7 +228,7 @@ export default function StudentPage() {
           setExerciseScore(null);
         })
         .catch((err) => {
-          console.error("❌ Erreur de récupération des données d'évaluation", err);
+          console.error("❌ Erreur de récupération", err);
           if (isWhiteExamAction) setWhiteExams([]);
           else setExercises([]);
         });
@@ -245,7 +244,7 @@ export default function StudentPage() {
     setScore(null);
   };
 
- // 🧹 1. CLEAN LATEX (Nettoyé des regex buguées)
+  // 🧹 1. CLEAN LATEX (Nettoie uniquement les balises HTML sans casser le LaTeX)
   function cleanLatex(content?: string) {
     if (!content) return "";
     return content
@@ -265,24 +264,10 @@ export default function StudentPage() {
       .replace(/&gt;/g, ">")
       .replace(/&amp;/g, "&")
       .replace(/&nbsp;/gi, " ") 
-      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
-      .replace(/\\?below/g, "_")
-      .replace(/\\aleph/g, "\\mathbb{N}")
-      .replace(/\\rightarrow/g, "\\to")
-      .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
-      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{")
       .trim();
   }
 
-  // 📝 2. MOTEUR DE RENDU UNIVERSEL
-  // 🚨 C'EST ICI LA CLÉ : On ajoute le "$" dans les délimiteurs obligatoires
-  const LATEX_DELIMITERS = [
-    { left: "$$", right: "$$", display: true },
-    { left: "$", right: "$", display: false }, // <-- CETTE LIGNE DÉBLOQUE TOUT
-    { left: "\\(", right: "\\)", display: false },
-    { left: "\\[", right: "\\]", display: true }
-  ];
-
+  // 📝 2. MOTEUR DE RENDU UNIVERSEL (Utilise directement renderWithMath)
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
     let processedText = text;
@@ -291,20 +276,22 @@ export default function StudentPage() {
       processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
     }
     
-    if (!processedText.includes("<img")) {
-      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(processedText)}</Latex>;
+    const cleaned = cleanLatex(processedText);
+
+    if (!cleaned.includes("<img")) {
+      return <>{renderWithMath(cleaned)}</>;
     }
     
-    const imgStart = processedText.indexOf("<img");
-    const imgEnd = processedText.indexOf("/>", imgStart);
+    const imgStart = cleaned.indexOf("<img");
+    const imgEnd = cleaned.indexOf("/>", imgStart);
     
     if (imgStart === -1 || imgEnd === -1) {
-      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(processedText)}</Latex>;
+      return <>{renderWithMath(cleaned)}</>;
     }
     
-    const textBefore = processedText.substring(0, imgStart);
-    const rawImgTag = processedText.substring(imgStart, imgEnd + 2);
-    const textAfter = processedText.substring(imgEnd + 2);
+    const textBefore = cleaned.substring(0, imgStart);
+    const rawImgTag = cleaned.substring(imgStart, imgEnd + 2);
+    const textAfter = cleaned.substring(imgEnd + 2);
     const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
     const imgSrc = srcMatch ? srcMatch[1] : "";
     const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
@@ -314,7 +301,7 @@ export default function StudentPage() {
       <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap text-justify">
         {textBefore.trim().length > 0 && (
           <span className="text-gray-800 font-medium text-justify block w-full">
-            <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(textBefore)}</Latex>
+            {renderWithMath(textBefore)}
           </span>
         )}
         {imgSrc && (
@@ -324,7 +311,7 @@ export default function StudentPage() {
         )}
         {textAfter.trim().length > 0 && (
           <span className="text-gray-600 text-sm text-justify block w-full">
-            <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanLatex(textAfter)}</Latex>
+            {renderWithMath(textAfter)}
           </span>
         )}
       </div>
@@ -335,7 +322,7 @@ export default function StudentPage() {
     if (!content) return null;
     return (
       <div className="prose max-w-none text-gray-800">
-        <MixedContentRenderer text={content} />
+        {renderWithMath(cleanLatex(content))}
       </div>
     );
   }
@@ -728,7 +715,7 @@ export default function StudentPage() {
                         <div className="ml-6 mt-2 px-3 py-2 bg-red-50 text-red-900 rounded-md border border-red-100 text-sm">  
                           <span className="font-bold flex items-center mb-1">💡 Correction :</span>
                           <div className="prose max-w-none text-gray-800">
-                            <MixedContentRenderer text={subQ.explanation || ""} />
+                            {renderWithMath(subQ.explanation)}
                           </div>
                         </div>
                       )}
@@ -1021,7 +1008,7 @@ export default function StudentPage() {
                       <div className="ml-8 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
                         <span className="font-bold flex items-center mb-1">💡 Correction :</span>
                         <div className="prose max-w-none text-gray-800">
-                          <MixedContentRenderer text={subQ.explanation || ""} />
+                          {renderWithMath(subQ.explanation)}
                         </div>
                       </div>
                     )}
@@ -1091,7 +1078,6 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 4) Boutons d’actions par chapitre
       if (selectedChapter) {
         const actions = [
           { 
@@ -1123,7 +1109,6 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 5) Liste des chapitres
       return (
         <div className="flex flex-wrap gap-6 justify-start items-start min-h-full p-4">
           {chapters.map((chapter, index) => (
@@ -1165,7 +1150,6 @@ export default function StudentPage() {
         backgroundPosition: "center",
       }}
     >
-      {/* Menu Latéral */}
       <motion.div
         className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl overflow-y-auto"
         initial={{ x: -40, opacity: 0 }}
@@ -1229,7 +1213,6 @@ export default function StudentPage() {
         </div>
       </motion.div>
 
-      {/* Contenu Central */}
       <motion.div
         className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative"
         initial={{ opacity: 0 }}
