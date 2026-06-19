@@ -22,12 +22,17 @@ export default function ContactPage() {
     const formData = new FormData(form);
     
     // Votre clé d'accès Web3Forms
-        
-    formData.append("access_key", import.meta.env.VITE_WEB3FORMS_KEY);
-    
-    console.log("Ma clé API est :", import.meta.env.VITE_WEB3FORMS_KEY);
 
+    const accessKey = import.meta.env.VITE_WEB3FORMS_KEY;
+
+console.log("Access Key =", accessKey);
+
+formData.append("access_key", accessKey);
+        
     try {
+      for (const pair of formData.entries()) {
+  console.log(pair[0], pair[1]);
+}
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         body: formData,
@@ -74,10 +79,10 @@ export default function ContactPage() {
     {/* 🟢 Ajouté text-gray-900 bg-white placeholder-gray-400 */}
     <input
       type="text"
-      name="AdminMedContest"
+      name="name"
       required
       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
-      placeholder="Votre nom"
+      placeholder="AdminMedContest"
     />
   </div>
 
@@ -87,10 +92,10 @@ export default function ContactPage() {
     {/* 🟢 Ajouté text-gray-900 bg-white placeholder-gray-400 */}
     <input
       type="email"
-      name="moulay2011@gmail.com"
+      name="email"
       required
       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
-      placeholder="votre@email.com"
+      placeholder="moulay2011@gmail.com"
     />
   </div>
 
