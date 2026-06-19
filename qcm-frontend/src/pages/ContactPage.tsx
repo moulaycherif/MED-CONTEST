@@ -22,10 +22,9 @@ export default function ContactPage() {
     const formData = new FormData(form);
     
     // Votre clé d'accès Web3Forms
+        
+    formData.append("access_key", import.meta.env.VITE_WEB3FORMS_KEY);
     
-    formData.append("access_key", "cd51d5a0-de7c-4cc2-aa34-0fab4e41a644");
-    
-
     //console.log("Ma clé API est :", import.meta.env.VITE_WEB3FORMS_KEY);//
 
     try {
