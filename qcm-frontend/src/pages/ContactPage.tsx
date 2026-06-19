@@ -25,14 +25,10 @@ export default function ContactPage() {
 
     const accessKey = import.meta.env.VITE_WEB3FORMS_KEY;
 
-console.log("Access Key =", accessKey);
-
 formData.append("access_key", accessKey);
         
     try {
-      for (const pair of formData.entries()) {
-  console.log(pair[0], pair[1]);
-}
+      
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         body: formData,
@@ -82,7 +78,7 @@ formData.append("access_key", accessKey);
       name="name"
       required
       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
-      placeholder="AdminMedContest"
+      placeholder="Votre nom"
     />
   </div>
 
@@ -95,7 +91,7 @@ formData.append("access_key", accessKey);
       name="email"
       required
       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
-      placeholder="moulay2011@gmail.com"
+      placeholder="votre@email.com"
     />
   </div>
 
