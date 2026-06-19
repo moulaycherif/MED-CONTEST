@@ -974,11 +974,8 @@ export default function StudentPage() {
               
               <div className="space-y-6">
                 {currentEx.subQuestions?.map((subQ: any, index: number) => (
-                  <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">
-console.log("QUESTION =", subQ.questionText);
-                    
-                    <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">
-                      
+                  <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">                   
+                    <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">                      
                       <div className="flex items-start w-full">
                         <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0 font-bold">
                           Q{index + 1}
@@ -1007,6 +1004,7 @@ console.log("QUESTION =", subQ.questionText);
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
                         const isCorrect = opt === subQ.correctAnswer;
+                        console.log("QUESTION =", subQ.questionText);
                         return (
                           <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
