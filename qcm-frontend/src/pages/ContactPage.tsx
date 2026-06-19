@@ -75,7 +75,7 @@ export default function ContactPage() {
     {/* 🟢 Ajouté text-gray-900 bg-white placeholder-gray-400 */}
     <input
       type="text"
-      name="name"
+      name="AdminMedContest"
       required
       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
       placeholder="Votre nom"
@@ -88,7 +88,7 @@ export default function ContactPage() {
     {/* 🟢 Ajouté text-gray-900 bg-white placeholder-gray-400 */}
     <input
       type="email"
-      name="email"
+      name="moulay2011@gmail.com"
       required
       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-gray-900 bg-white placeholder-gray-400"
       placeholder="votre@email.com"
