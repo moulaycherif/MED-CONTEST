@@ -975,6 +975,7 @@ export default function StudentPage() {
               <div className="space-y-6">
                 {currentEx.subQuestions?.map((subQ: any, index: number) => (
                   <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">
+console.log("QUESTION =", subQ.questionText);
                     
                     <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">
                       
