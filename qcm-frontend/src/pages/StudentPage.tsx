@@ -6,7 +6,6 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import Latex from "react-latex-next";
 import { API_BASE_URL } from "../config";
 import { fetchAstucesByChapter } from "../api/astuces.api";
 import concoursImg from "../assets/CONCOURS.jfif";
@@ -245,48 +244,64 @@ export default function StudentPage() {
     setScore(null);
   };
 
-  function MixedContentRenderer({ text }: { text: string }) {
-    if (!text) return null;
-
-    // 1️⃣ LE TUEUR DE BUGS EXCEL : On supprime les sauts de ligne invisibles (\n, \r) 
-    // qui font planter le moteur mathématique dans la colonne "Question".
-    let clean = text
+  // =========================================================================
+  // 🧹 1. LE NETTOYEUR EXTRÊME (Détruit les sauts de ligne cachés d'Excel)
+  // =========================================================================
+  function cleanLatex(content?: string) {
+    if (!content) return "";
+    return content
+      .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
+      .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
+      .replace(/\\captionsetup\{[^}]*\}/g, "")
       .replace(/<p[^>]*>/gi, "")
       .replace(/<\/p>/gi, " ")
       .replace(/<br\s*\/?>/gi, " ")
       .replace(/<div[^>]*>/gi, " ")
       .replace(/<\/div>/gi, " ")
+      .replace(/<span class="ql-formula"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi, function(match, p1) {
+          const decoded = p1.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+          return ` $${decoded}$ `;
+      })
       .replace(/<span[^>]*>/gi, "")
       .replace(/<\/span>/gi, "")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
       .replace(/&nbsp;/gi, " ")
-      .replace(/[\r\n]+/g, " ") // 👈 C'est cette ligne qui sauve tout !
+      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
+      .replace(/\\?below/g, "_")
+      .replace(/\\aleph/g, "\\mathbb{N}")
+      .replace(/\\rightarrow/g, "\\to")
+      .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
+      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{")
+      .replace(/[\r\n]+/g, " ") // 👈 LE TUEUR DE BUGS EXCEL EST ICI !
+      .replace(/ {2,}/g, " ")
       .trim();
+  }
 
-    // 2️⃣ STANDARDISATION : On convertit de force les \( \) générés par le backend en $ $
-    clean = clean.replace(/\\\([\s\S]*?\\\)/g, (match) => "$" + match.slice(2, -2) + "$");
-    clean = clean.replace(/\\\[[\s\S]*?\\\]/g, (match) => "$$" + match.slice(2, -2) + "$$");
+  // =========================================================================
+  // 📝 2. MOTEUR DE RENDU UNIVERSEL (Utilise VOTRE renderWithMath fonctionnel)
+  // =========================================================================
+  function MixedContentRenderer({ text }: { text: string }) {
+    if (!text) return null;
+    
+    // Nettoyage radical avant envoi aux Mathématiques
+    const cleaned = cleanLatex(text);
 
-    // 3️⃣ DÉLIMITEURS STRICTS
-    const LATEX_DELIMITERS = [
-      { left: "$$", right: "$$", display: true },
-      { left: "$", right: "$", display: false }
-    ];
-
-    // 4️⃣ RENDU FINAL
-    if (!clean.includes("<img")) {
-      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{clean}</Latex>;
+    if (!cleaned.includes("<img")) {
+      return <>{renderWithMath(cleaned)}</>;
     }
     
-    const imgStart = clean.indexOf("<img");
-    const imgEnd = clean.indexOf("/>", imgStart);
+    const imgStart = cleaned.indexOf("<img");
+    const imgEnd = cleaned.indexOf("/>", imgStart);
     
     if (imgStart === -1 || imgEnd === -1) {
-      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{clean}</Latex>;
+      return <>{renderWithMath(cleaned)}</>;
     }
     
-    const textBefore = clean.substring(0, imgStart);
-    const rawImgTag = clean.substring(imgStart, imgEnd + 2);
-    const textAfter = clean.substring(imgEnd + 2);
+    const textBefore = cleaned.substring(0, imgStart);
+    const rawImgTag = cleaned.substring(imgStart, imgEnd + 2);
+    const textAfter = cleaned.substring(imgEnd + 2);
     const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
     const imgSrc = srcMatch ? srcMatch[1] : "";
     const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
@@ -296,7 +311,7 @@ export default function StudentPage() {
       <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap text-justify">
         {textBefore.trim().length > 0 && (
           <span className="text-gray-800 font-medium text-justify block w-full">
-            <Latex delimiters={LATEX_DELIMITERS} strict={false}>{textBefore}</Latex>
+            {renderWithMath(textBefore)}
           </span>
         )}
         {imgSrc && (
@@ -306,14 +321,17 @@ export default function StudentPage() {
         )}
         {textAfter.trim().length > 0 && (
           <span className="text-gray-600 text-sm text-justify block w-full">
-            <Latex delimiters={LATEX_DELIMITERS} strict={false}>{textAfter}</Latex>
+            {renderWithMath(textAfter)}
           </span>
         )}
       </div>
     );
   }
 
- function renderContent(content?: string) {
+  // =========================================================================
+  // 📝 3. RENDU POUR LES ASTUCES (Désormais lié au moteur universel propre)
+  // =========================================================================
+  function renderContent(content?: string) {
     if (!content) return null;
     return (
       <div className="prose max-w-none text-gray-800">
@@ -710,7 +728,7 @@ export default function StudentPage() {
                         <div className="ml-6 mt-2 px-3 py-2 bg-red-50 text-red-900 rounded-md border border-red-100 text-sm">  
                           <span className="font-bold flex items-center mb-1">💡 Correction :</span>
                           <div className="prose max-w-none text-gray-800">
-                            {renderWithMath(subQ.explanation)}
+                            <MixedContentRenderer text={subQ.explanation || ""} />
                           </div>
                         </div>
                       )}
@@ -1003,7 +1021,7 @@ export default function StudentPage() {
                       <div className="ml-8 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
                         <span className="font-bold flex items-center mb-1">💡 Correction :</span>
                         <div className="prose max-w-none text-gray-800">
-                          {renderWithMath(subQ.explanation)}
+                          <MixedContentRenderer text={subQ.explanation || ""} />
                         </div>
                       </div>
                     )}
