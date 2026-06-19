@@ -615,8 +615,8 @@ export default function StudentPage() {
       const chaptersBySubject: Record<string, string[]> = {
         Mathématique: [
           "Chapitre I : Suites & Sommes",
-          "Chapitre II : Limites, Continuité & Dérivabilité",
-          "Chapitre III : Étude de fonctions",
+          "Chapitre II : Étude de fonctions",
+          "Chapitre III : Équations différentielles",
           "Chapitre IV : Nombres complexes",
           "Chapitre V : Intégrales",
           "Chapitre VI : Géométrie dans l'espace",
@@ -714,7 +714,7 @@ export default function StudentPage() {
                           const isSelected = exerciseAnswers[subQ._id] === opt;
                           const isCorrect = opt === subQ.correctAnswer;
                           return (
-                            <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-red-50 border-gray-200"}`}>
+                            <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : "bg-gray-50 opacity-50" : "hover:bg-red-50 border-gray-200"}`}>
                               <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
                               <div className="flex-1 w-full">
                                 <MixedContentRenderer text={opt} />
@@ -1005,7 +1005,7 @@ export default function StudentPage() {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
                         const isCorrect = opt === subQ.correctAnswer;
                         return (
-                          <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
+                          <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : "bg-gray-50 opacity-50" : "hover:bg-red-50 border-gray-200"}`}>
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
                             <div className="flex-1 w-full">
                               <MixedContentRenderer text={opt} />

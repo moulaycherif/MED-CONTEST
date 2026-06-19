@@ -1,3 +1,6 @@
+import AbonnementPage from "./pages/AbonnementPage";
+import DemoPage from "./pages/DemoPage";
+import ContactPage from "./pages/ContactPage";
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
@@ -56,6 +59,9 @@ export default function App() {
         <main className="pt-16 min-h-screen">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/abonnement" element={<AbonnementPage />} />
+            <Route path="/demo" element={<DemoPage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/student/*" element={<StudentPage />} />
             <Route path="/admin" element={<AdminDashboard />} />
