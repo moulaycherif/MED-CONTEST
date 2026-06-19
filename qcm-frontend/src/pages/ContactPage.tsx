@@ -25,7 +25,7 @@ export default function ContactPage() {
         
     formData.append("access_key", import.meta.env.VITE_WEB3FORMS_KEY);
     
-    //console.log("Ma clé API est :", import.meta.env.VITE_WEB3FORMS_KEY);//
+    console.log("Ma clé API est :", "import.meta.env.VITE_WEB3FORMS_KEY");
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
