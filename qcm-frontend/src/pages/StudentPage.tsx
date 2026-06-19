@@ -248,48 +248,45 @@ export default function StudentPage() {
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
 
-    // 1️⃣ Nettoyage radical des balises HTML et espaces invisibles
-    let cleanedText = text
+    // 1️⃣ LE TUEUR DE BUGS EXCEL : On supprime les sauts de ligne invisibles (\n, \r) 
+    // qui font planter le moteur mathématique dans la colonne "Question".
+    let clean = text
       .replace(/<p[^>]*>/gi, "")
-      .replace(/<\/p>/gi, " \n ")
-      .replace(/<br\s*\/?>/gi, " \n ")
-      .replace(/<div[^>]*>/gi, " \n ")
-      .replace(/<\/div>/gi, " \n ")
+      .replace(/<\/p>/gi, " ")
+      .replace(/<br\s*\/?>/gi, " ")
+      .replace(/<div[^>]*>/gi, " ")
+      .replace(/<\/div>/gi, " ")
       .replace(/<span[^>]*>/gi, "")
       .replace(/<\/span>/gi, "")
       .replace(/&nbsp;/gi, " ")
-      .replace(/&lt;/gi, "<")
-      .replace(/&gt;/gi, ">")
+      .replace(/[\r\n]+/g, " ") // 👈 C'est cette ligne qui sauve tout !
       .trim();
 
-    // 2️⃣ Conversion FORCÉE des symboles $...$ vers \(...\)
-    // L'astuce [\s\S] permet de capturer la formule MÊME SI elle contient des retours à la ligne (Alt+Entrée)
-    cleanedText = cleanedText.replace(/\$\$([\s\S]*?)\$\$/g, "\\[$1\\]");
-    cleanedText = cleanedText.replace(/\$([\s\S]+?)\$/g, "\\($1\\)");
+    // 2️⃣ STANDARDISATION : On convertit de force les \( \) générés par le backend en $ $
+    clean = clean.replace(/\\\([\s\S]*?\\\)/g, (match) => "$" + match.slice(2, -2) + "$");
+    clean = clean.replace(/\\\[[\s\S]*?\\\]/g, (match) => "$$" + match.slice(2, -2) + "$$");
 
-    // 3️⃣ Configuration officielle et sécurisée du parseur LaTeX
+    // 3️⃣ DÉLIMITEURS STRICTS
     const LATEX_DELIMITERS = [
       { left: "$$", right: "$$", display: true },
-      { left: "\\[", right: "\\]", display: true },
-      { left: "\\(", right: "\\)", display: false },
       { left: "$", right: "$", display: false }
     ];
 
-    // 4️⃣ Rendu final avec gestion des images
-    if (!cleanedText.includes("<img")) {
-      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanedText}</Latex>;
+    // 4️⃣ RENDU FINAL
+    if (!clean.includes("<img")) {
+      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{clean}</Latex>;
     }
-
-    const imgStart = cleanedText.indexOf("<img");
-    const imgEnd = cleanedText.indexOf("/>", imgStart);
+    
+    const imgStart = clean.indexOf("<img");
+    const imgEnd = clean.indexOf("/>", imgStart);
     
     if (imgStart === -1 || imgEnd === -1) {
-      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanedText}</Latex>;
+      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{clean}</Latex>;
     }
     
-    const textBefore = cleanedText.substring(0, imgStart);
-    const rawImgTag = cleanedText.substring(imgStart, imgEnd + 2);
-    const textAfter = cleanedText.substring(imgEnd + 2);
+    const textBefore = clean.substring(0, imgStart);
+    const rawImgTag = clean.substring(imgStart, imgEnd + 2);
+    const textAfter = clean.substring(imgEnd + 2);
     const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
     const imgSrc = srcMatch ? srcMatch[1] : "";
     const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
@@ -316,11 +313,11 @@ export default function StudentPage() {
     );
   }
 
-  function renderContent(content?: string) {
+ function renderContent(content?: string) {
     if (!content) return null;
     return (
       <div className="prose max-w-none text-gray-800">
-        {renderWithMath(cleanLatex(content))}
+        <MixedContentRenderer text={content} />
       </div>
     );
   }
