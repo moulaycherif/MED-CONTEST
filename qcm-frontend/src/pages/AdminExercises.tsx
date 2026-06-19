@@ -28,7 +28,7 @@ interface Exercise {
 const emptySubQuestion: SubQuestion = {
   questionText: "",
   qType: "qcm",
-  options: ["", "", "", ""],
+  options: ["", "", "", "", ""],
   correctAnswer: "",
   explanation: "",
   image: "", // 👈 INITIALISATION DU CHAMP
@@ -139,7 +139,7 @@ const AdminExercises: React.FC = () => {
       updated[index].options = ["Vrai", "Faux"];
       updated[index].correctAnswer = ""; // On réinitialise pour forcer une sélection propre
     } else if (field === "qType" && value === "qcm") {
-      updated[index].options = ["", "", "", ""];
+      updated[index].options = ["", "", "", "", ""];
       updated[index].correctAnswer = "";
     }
 

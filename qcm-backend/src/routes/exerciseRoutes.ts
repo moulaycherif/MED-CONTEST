@@ -146,9 +146,11 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
         const optB = cleanRow["optionb"] || cleanRow["optb"] || "";
         const optC = cleanRow["optionc"] || cleanRow["optc"] || "";
         const optD = cleanRow["optiond"] || cleanRow["optd"] || "";
+        const optE = cleanRow["optione"] || cleanRow["opte"] || ""; // 👈 AJOUT
 
-        optionsArray = [optA, optB, optC, optD]
-          .map((o) => formatExcelMath(String(o).trim())) // Conversion des options
+        // 👈 On ajoute optE dans le tableau
+        optionsArray = [optA, optB, optC, optD, optE] 
+          .map((o) => formatExcelMath(String(o).trim())) 
           .filter((o) => o !== "undefined" && o !== "");
       }
 
