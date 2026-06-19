@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "../api/axios"; 
 import { useNavigate } from "react-router-dom";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.bubble.css";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { API_BASE_URL } from "../config";
@@ -17,10 +15,8 @@ import bgImage from "/Image3.jfif";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
-import ChemStructure from "../components/ChemStructure";
-import { renderWithMath } from "../utils/mathUtils";
 
-// Indispensable pour que React-Quill puisse interpréter les formules
+// Indispensable pour l'interprétation globale
 (window as any).katex = katex;
 
 // --- Interfaces ---
@@ -245,91 +241,100 @@ export default function StudentPage() {
   };
 
   // =========================================================================
-  // 🧹 1. LE NETTOYEUR EXTRÊME (Détruit les sauts de ligne cachés d'Excel)
-  // =========================================================================
-  function cleanLatex(content?: string) {
-    if (!content) return "";
-    return content
-      .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
-      .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
-      .replace(/\\captionsetup\{[^}]*\}/g, "")
-      .replace(/<p[^>]*>/gi, "")
-      .replace(/<\/p>/gi, " ")
-      .replace(/<br\s*\/?>/gi, " ")
-      .replace(/<div[^>]*>/gi, " ")
-      .replace(/<\/div>/gi, " ")
-      .replace(/<span class="ql-formula"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi, function(match, p1) {
-          const decoded = p1.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
-          return ` $${decoded}$ `;
-      })
-      .replace(/<span[^>]*>/gi, "")
-      .replace(/<\/span>/gi, "")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&amp;/g, "&")
-      .replace(/&nbsp;/gi, " ")
-      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
-      .replace(/\\?below/g, "_")
-      .replace(/\\aleph/g, "\\mathbb{N}")
-      .replace(/\\rightarrow/g, "\\to")
-      .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
-      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{")
-      .replace(/[\r\n]+/g, " ") // 👈 LE TUEUR DE BUGS EXCEL EST ICI !
-      .replace(/ {2,}/g, " ")
-      .trim();
-  }
-
-  // =========================================================================
-  // 📝 2. MOTEUR DE RENDU UNIVERSEL (Utilise VOTRE renderWithMath fonctionnel)
+  // 🌟 NOUVEAU MOTEUR NATIF INFAILLIBLE : KATEX PUR SANS BIBLIOTHEQUE EXTERNE
   // =========================================================================
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
-    
-    // Nettoyage radical avant envoi aux Mathématiques
-    const cleaned = cleanLatex(text);
 
-    if (!cleaned.includes("<img")) {
-      return <>{renderWithMath(cleaned)}</>;
+    // 1. Nettoyage de base (garde les balises utiles comme <p>, <br>)
+    let processedText = text
+      .replace(/&nbsp;/gi, " ")
+      .replace(/<smiles>[\s\S]*?<\/smiles>/gi, "");
+
+    // 2. Extraction sécurisée de l'image (pour ne pas casser LaTeX)
+    let imgSrc = "";
+    let imgClass = "max-h-24 object-contain inline-block my-2 rounded shadow-sm";
+    const imgStart = processedText.indexOf("<img");
+    if (imgStart !== -1) {
+      const imgEnd = processedText.indexOf(">", imgStart);
+      if (imgEnd !== -1) {
+        const rawImgTag = processedText.substring(imgStart, imgEnd + 1);
+        const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
+        if (srcMatch) imgSrc = srcMatch[1];
+        const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
+        if (classMatch) imgClass = classMatch[1];
+        processedText = processedText.replace(rawImgTag, " [[IMAGE_PLACEHOLDER]] ");
+      }
     }
-    
-    const imgStart = cleaned.indexOf("<img");
-    const imgEnd = cleaned.indexOf("/>", imgStart);
-    
-    if (imgStart === -1 || imgEnd === -1) {
-      return <>{renderWithMath(cleaned)}</>;
-    }
-    
-    const textBefore = cleaned.substring(0, imgStart);
-    const rawImgTag = cleaned.substring(imgStart, imgEnd + 2);
-    const textAfter = cleaned.substring(imgEnd + 2);
-    const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
-    const imgSrc = srcMatch ? srcMatch[1] : "";
-    const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
-    const imgClass = classMatch ? classMatch[1] : "max-h-24 object-contain inline-block";
+
+    // 3. Découpage chirurgical (Sépare le texte normal des équations)
+    const mathRegex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<!\\)\$[\s\S]*?(?<!\\)\$)/g;
+    const parts = processedText.split(mathRegex);
 
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap text-justify">
-        {textBefore.trim().length > 0 && (
-          <span className="text-gray-800 font-medium text-justify block w-full">
-            {renderWithMath(textBefore)}
-          </span>
-        )}
-        {imgSrc && (
-          <div className="bg-white rounded-lg p-2 border border-gray-100 shadow-sm transition-transform hover:scale-105 inline-block">
-            <img src={imgSrc} alt="Illustration" className={`${imgClass} rounded`} loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }}/>
-          </div>
-        )}
-        {textAfter.trim().length > 0 && (
-          <span className="text-gray-600 text-sm text-justify block w-full">
-            {renderWithMath(textAfter)}
-          </span>
-        )}
-      </div>
+      <span className="w-full inline-block text-justify text-gray-800">
+        {parts.map((part, index) => {
+          if (!part) return null;
+
+          // Rendu de l'image
+          if (part.includes("[[IMAGE_PLACEHOLDER]]")) {
+            return imgSrc ? (
+              <div key={index} className="w-full flex justify-center my-3">
+                <img src={imgSrc} className={imgClass} alt="Illustration" loading="lazy" />
+              </div>
+            ) : null;
+          }
+
+          let isMath = false;
+          let mathContent = part;
+          let isBlock = false;
+
+          // Identification automatique des balises
+          if (part.startsWith("$$") && part.endsWith("$$")) {
+            isMath = true; isBlock = true; mathContent = part.slice(2, -2);
+          } else if (part.startsWith("\\[") && part.endsWith("\\]")) {
+            isMath = true; isBlock = true; mathContent = part.slice(2, -2);
+          } else if (part.startsWith("\\(") && part.endsWith("\\)")) {
+            isMath = true; mathContent = part.slice(2, -2);
+          } else if (part.startsWith("$") && part.endsWith("$")) {
+            isMath = true; mathContent = part.slice(1, -1);
+          }
+
+          // Rendu KaTeX
+          if (isMath) {
+            try {
+              // SÉCURITÉ ABSOLUE : Détruit tout HTML infiltré DANS la formule (Le bug de la colonne Question)
+              let safeMath = mathContent
+                .replace(/<[^>]*>/g, "") 
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&amp;/g, "&");
+
+              const html = katex.renderToString(safeMath, {
+                displayMode: isBlock,
+                throwOnError: false,
+                strict: false,
+              });
+
+              return (
+                <span 
+                  key={index} 
+                  dangerouslySetInnerHTML={{ __html: html }} 
+                  className={isBlock ? "block my-2 text-center overflow-x-auto" : "inline-block"} 
+                />
+              );
+            } catch (e) {
+              return <span key={index} className="text-red-500">{part}</span>;
+            }
+          }
+
+          // Rendu du texte normal et des balises HTML inoffensives (<p>, <br>)
+          return <span key={index} dangerouslySetInnerHTML={{ __html: part }} />;
+        })}
+      </span>
     );
   }
 
-  // =========================================================================
-  // 📝 3. RENDU POUR LES ASTUCES (Désormais lié au moteur universel propre)
   // =========================================================================
   function renderContent(content?: string) {
     if (!content) return null;
@@ -403,7 +408,6 @@ export default function StudentPage() {
       return <StudentDashboardStats />;
     }
     
-    // 🧩 Cas 1 : QCE par Concours / Matière
     if (section === "qcm" && currentExam) {
       if (questions.length === 0) {
         return (
@@ -541,7 +545,6 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 2 : QCE par concours
     if (section === "concours") {
       return (
         <motion.div
@@ -571,7 +574,6 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 3 : QCE par matière
     if (section === "matiere" && selectedMatiere) {
       const matiereImage = subjectImages[selectedMatiere];
       const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
@@ -609,7 +611,6 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 4 : Soutien
     if (section === "soutien" && selectedMatiere) {
       const chaptersBySubject: Record<string, string[]> = {
         Mathématique: [
@@ -647,7 +648,6 @@ export default function StudentPage() {
 
       const chapters = chaptersBySubject[selectedMatiere] || [];
 
-     // 👉 1) ASTUCES / EXAMEN BLANC (SVT uniquement)
       if (selectedChapter && selectedAction === "Astuces") {
         
         if (selectedMatiere === "SVT") {
@@ -880,7 +880,6 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 2) RÉSUMÉS
       if (selectedChapter && selectedAction === "Résumé") {
         return (
           <div className="p-6 relative">
@@ -926,7 +925,6 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 3) EXERCICES
       if (selectedChapter && selectedAction === "Exercises") {
         const currentEx = exercises[exerciseIndex];
         if (exercises.length === 0) {
@@ -974,8 +972,10 @@ export default function StudentPage() {
               
               <div className="space-y-6">
                 {currentEx.subQuestions?.map((subQ: any, index: number) => (
-                  <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">                   
-                    <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">                      
+                  <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">
+                    
+                    <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">
+                      
                       <div className="flex items-start w-full">
                         <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0 font-bold">
                           Q{index + 1}
@@ -1004,7 +1004,6 @@ export default function StudentPage() {
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
                         const isCorrect = opt === subQ.correctAnswer;
-                        console.log("QUESTION =", subQ.questionText);
                         return (
                           <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
