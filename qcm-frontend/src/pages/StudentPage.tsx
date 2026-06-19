@@ -6,6 +6,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import Latex from "react-latex-next";
 import { API_BASE_URL } from "../config";
 import { fetchAstucesByChapter } from "../api/astuces.api";
 import concoursImg from "../assets/CONCOURS.jfif";
@@ -244,54 +245,51 @@ export default function StudentPage() {
     setScore(null);
   };
 
-  // 🧹 1. CLEAN LATEX (Nettoie uniquement les balises HTML sans casser le LaTeX)
-  function cleanLatex(content?: string) {
-    if (!content) return "";
-    return content
-      .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
-      .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
-      .replace(/\\captionsetup\{[^}]*\}/g, "")
-      .replace(/<\/p>/gi, " \n ") 
-      .replace(/<p[^>]*>/gi, "")
-      .replace(/<br\s*\/?>/gi, " \n ")
-      .replace(/<\/div>/gi, " \n ")
-      .replace(/<div[^>]*>/gi, "")
-      .replace(/<span class="ql-formula"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi, function(match, p1) {
-          const decoded = p1.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
-          return ` $${decoded}$ `;
-      })
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&amp;/g, "&")
-      .replace(/&nbsp;/gi, " ") 
-      .trim();
-  }
-
-  // 📝 2. MOTEUR DE RENDU UNIVERSEL (Utilise directement renderWithMath)
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
-    let processedText = text;
-    
-    if (processedText.includes("<smiles>")) {
-      processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
-    }
-    
-    const cleaned = cleanLatex(processedText);
 
-    if (!cleaned.includes("<img")) {
-      return <>{renderWithMath(cleaned)}</>;
+    // 1️⃣ Nettoyage radical des balises HTML et espaces invisibles
+    let cleanedText = text
+      .replace(/<p[^>]*>/gi, "")
+      .replace(/<\/p>/gi, " \n ")
+      .replace(/<br\s*\/?>/gi, " \n ")
+      .replace(/<div[^>]*>/gi, " \n ")
+      .replace(/<\/div>/gi, " \n ")
+      .replace(/<span[^>]*>/gi, "")
+      .replace(/<\/span>/gi, "")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .trim();
+
+    // 2️⃣ Conversion FORCÉE des symboles $...$ vers \(...\)
+    // L'astuce [\s\S] permet de capturer la formule MÊME SI elle contient des retours à la ligne (Alt+Entrée)
+    cleanedText = cleanedText.replace(/\$\$([\s\S]*?)\$\$/g, "\\[$1\\]");
+    cleanedText = cleanedText.replace(/\$([\s\S]+?)\$/g, "\\($1\\)");
+
+    // 3️⃣ Configuration officielle et sécurisée du parseur LaTeX
+    const LATEX_DELIMITERS = [
+      { left: "$$", right: "$$", display: true },
+      { left: "\\[", right: "\\]", display: true },
+      { left: "\\(", right: "\\)", display: false },
+      { left: "$", right: "$", display: false }
+    ];
+
+    // 4️⃣ Rendu final avec gestion des images
+    if (!cleanedText.includes("<img")) {
+      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanedText}</Latex>;
     }
-    
-    const imgStart = cleaned.indexOf("<img");
-    const imgEnd = cleaned.indexOf("/>", imgStart);
+
+    const imgStart = cleanedText.indexOf("<img");
+    const imgEnd = cleanedText.indexOf("/>", imgStart);
     
     if (imgStart === -1 || imgEnd === -1) {
-      return <>{renderWithMath(cleaned)}</>;
+      return <Latex delimiters={LATEX_DELIMITERS} strict={false}>{cleanedText}</Latex>;
     }
     
-    const textBefore = cleaned.substring(0, imgStart);
-    const rawImgTag = cleaned.substring(imgStart, imgEnd + 2);
-    const textAfter = cleaned.substring(imgEnd + 2);
+    const textBefore = cleanedText.substring(0, imgStart);
+    const rawImgTag = cleanedText.substring(imgStart, imgEnd + 2);
+    const textAfter = cleanedText.substring(imgEnd + 2);
     const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
     const imgSrc = srcMatch ? srcMatch[1] : "";
     const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
@@ -301,7 +299,7 @@ export default function StudentPage() {
       <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap text-justify">
         {textBefore.trim().length > 0 && (
           <span className="text-gray-800 font-medium text-justify block w-full">
-            {renderWithMath(textBefore)}
+            <Latex delimiters={LATEX_DELIMITERS} strict={false}>{textBefore}</Latex>
           </span>
         )}
         {imgSrc && (
@@ -311,7 +309,7 @@ export default function StudentPage() {
         )}
         {textAfter.trim().length > 0 && (
           <span className="text-gray-600 text-sm text-justify block w-full">
-            {renderWithMath(textAfter)}
+            <Latex delimiters={LATEX_DELIMITERS} strict={false}>{textAfter}</Latex>
           </span>
         )}
       </div>
