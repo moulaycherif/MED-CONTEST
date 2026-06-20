@@ -4,6 +4,15 @@ import Student from "../models/Student";
 
 const SECRET = process.env.JWT_SECRET || "super_secret_key";
 
+// Pour que TypeScript accepte req.student avec le rôle guest
+declare global {
+  namespace Express {
+    interface Request {
+      student?: any; 
+    }
+  }
+}
+
 export const authenticateStudent = async (
   req: Request,
   res: Response,
@@ -16,8 +25,14 @@ export const authenticateStudent = async (
       return res.status(401).json({ error: "Token manquant" });
     }
 
-    const decoded: any = jwt.verify(token, SECRET);
+    // 🟢 NOUVEAU : Interception du token Invité
+    if (token === "guest_token") {
+      req.student = { role: "guest" }; // On crée un profil fictif côté serveur
+      return next(); // On laisse passer vers le Controller
+    }
 
+    // --- Suite normale pour les vrais étudiants ---
+    const decoded: any = jwt.verify(token, SECRET);
     const student = await Student.findById(decoded.id);
 
     if (!student) {
@@ -26,7 +41,6 @@ export const authenticateStudent = async (
 
     // 🔥 ICI la clé
     req.student = student;
-
     next();
   } catch (err) {
     return res.status(401).json({ error: "Token invalide" });

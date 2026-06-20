@@ -34,8 +34,9 @@ export const getQuestions = async (req: Request, res: Response) => {
       subject?: string;
     };
 
-    const filter: any = {};
+    const isGuest = req.student && req.student.role === "guest"; // 🟢 Vérification invité
 
+    const filter: any = {};
     if (exam) {
       filter.exam = { $regex: new RegExp(`^${exam.trim()}$`, "i") };
     }
@@ -43,7 +44,8 @@ export const getQuestions = async (req: Request, res: Response) => {
       filter.subject = { $regex: new RegExp(`^${subject.trim()}$`, "i") };
     }
 
-    const questions = await Question.find(filter)
+    // On prépare la requête de base
+    let query = Question.find(filter)
       .populate({
         path: "groupId",
         model: "QuestionGroup",
@@ -52,6 +54,12 @@ export const getQuestions = async (req: Request, res: Response) => {
       .sort({ "groupId.order": 1, _id: 1 })
       .lean();
 
+    // 🔒 SÉCURITÉ ABSOLUE : Si c'est un invité, il ne reçoit qu'UNE SEULE question
+    if (isGuest) {
+      query = query.limit(1) as any;
+    }
+
+    const questions = await query;
     res.json(questions);
   } catch (err) {
     console.error("❌ getQuestions error:", err);
@@ -203,17 +211,23 @@ export const importExcel = async (req: Request, res: Response) => {
     📚 AUTRES ROUTES
 ============================================================ */
 
-export const getExams = async (_req: Request, res: Response) => {
+export const getExams = async (req: Request, res: Response) => {
   try {
-    const exams = await Question.distinct("exam");
+    const isGuest = req.student && req.student.role === "guest"; // 🟢
+
+    let exams = await Question.distinct("exam");
+    exams = exams.sort();
+
+    // 🔒 SÉCURITÉ : L'invité ne voit qu'un seul concours (le premier de la liste)
+    if (isGuest) {
+      exams = exams.slice(0, 1);
+    }
 
     res.json(
-      exams
-        .sort()
-        .map((title) => ({
-          _id: title,
-          title,
-        }))
+      exams.map((title) => ({
+        _id: title,
+        title,
+      }))
     );
   } catch (err) {
     console.error(err);
@@ -222,10 +236,23 @@ export const getExams = async (_req: Request, res: Response) => {
 };
 
 export const getSubjectsByExam = async (req: Request, res: Response) => {
-  const subjects = await Question.distinct("subject", {
-    exam: req.params.exam,
-  });
-  res.json(subjects);
+  try {
+    const isGuest = req.student && req.student.role === "guest"; // 🟢
+
+    let subjects = await Question.distinct("subject", {
+      exam: req.params.exam,
+    });
+
+    // 🔒 SÉCURITÉ : L'invité ne voit qu'une seule matière
+    if (isGuest) {
+      subjects = subjects.slice(0, 1);
+    }
+
+    res.json(subjects);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur matières" });
+  }
 };
 
 export const deleteAllQuestions = async (_req: Request, res: Response) => {
