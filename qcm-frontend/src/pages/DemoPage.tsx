@@ -1,172 +1,229 @@
 // src/pages/DemoPage.tsx
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BackgroundWrapper from "../components/BackgroundWrapper";
+import { Link } from "react-router-dom";
 
 // --- DONNÉES DE DÉMONSTRATION STATIQUES ---
 const DEMO_CONCOURS = {
-  nom: "Concours Médecine Élite - 2025",
-  question: "Quelle est la valeur exacte de l'intégrale $\\int_{0}^{1} \\frac{1}{t^2-t-2} \\,\\mathrm{d}t$ ?",
-  options: ["0", "\\ln(1/2)", "\\ln 2", "-\\frac{2}{3}\\ln(2)"],
+  titre: "Concours Blanc - Session Principale",
+  matiere: "Mathématiques (Intégrales)",
+  question: "Question 1 : L'intégrale $\\int_{0}^{1}\\frac{1}{t^{2}-t-2} \\mathrm{d}t$ vaut :",
+  options: [
+    { label: "A", texte: "0" },
+    { label: "B", texte: "$\\ln(1/2)$" },
+    { label: "C", texte: "$\\ln 2$" },
+    { label: "D", texte: "$-\\frac{2}{3}\\ln(2)$" }
+  ]
 };
 
 const DEMO_MATIERE = {
-  nom: "Physique Chimie",
+  nom: "Physique - Chimie",
   chapitre: "Thermodynamique",
   question: "Le premier principe de la thermodynamique énonce la conservation de :",
-  options: ["L'entropie", "L'énergie totale", "L'enthalpie libre", "La température"],
+  options: [
+    { label: "A", texte: "L'entropie globale" },
+    { label: "B", texte: "L'énergie totale du système isolé" },
+    { label: "C", texte: "L'enthalpie libre" },
+    { label: "D", texte: "La température absolue" }
+  ]
 };
 
 const DEMO_SOUTIEN = {
   matiere: "Mathématiques",
   chapitre: "Chapitre I : Intégration & Primitives",
-  astuce: "💡 **Astuce de Pro :** Pour intégrer une fraction rationnelle dont le dénominateur est un polynôme de degré 2, pensez toujours à vérifier s'il se factorise afin de réaliser une décomposition en éléments simples.",
+  astuce: "💡 **Astuce de l'enseignant :** Lorsque vous rencontrez une fraction rationnelle du type $\\frac{1}{at^2+bt+c}$, calculez d'abord le discriminant $\\Delta$. S'il est positif, factorisez le dénominateur pour décomposer la fraction en éléments simples.",
   exercice: {
-    enonce: "Démontrer par décomposition en éléments simples la valeur de $\\int_{0}^{1} \\frac{1}{t^2-t-2} \\,\\mathrm{d}t$.",
-    solution: "Étape 1 : Factoriser $t^2-t-2 = (t-2)(t+1)$. Étape 2 : Écrire sous la forme $A/(t-2) + B/(t+1)$..."
+    enonce: "Calculer la valeur exacte de l'intégrale $\\int_{0}^{1}\\frac{1}{t^{2}-t-2} \\mathrm{d}t$ en détaillant les étapes de décomposition.",
+    solution: "1) Factorisation : $t^2-t-2 = (t-2)(t+1)$. 2) Décomposition : $\\frac{1}{t^2-t-2} = \\frac{1}{3(t-2)} - \\frac{1}{3(t+1)}$. 3) Intégration : $[\\frac{1}{3}\\ln|\\frac{t-2}{t+1}|]_0^1 = \\frac{2}{3}\\ln(1/2)$."
   }
 };
 
 export default function DemoPage() {
-  // Gestion de la navigation dans la démo
-  const [activeTab, setActiveTab] = useState<"concours" | "matiere" | "soutien">("concours");
+  // Navigation interne de la visite guidée
+  const [activePart, setActivePart] = useState<"concours" | "matiere" | "soutien">("concours");
 
   return (
     <BackgroundWrapper>
       <Navbar />
-      <main className="flex flex-col min-h-screen items-center pt-24 pb-12 px-6 bg-white">
+      {/* Modification vers le fond blanc et gestion de l'alignement */}
+      <main className="flex flex-col min-h-screen items-center pt-24 pb-12 px-6 bg-white text-center">
         
-        {/* En-tête de la Démo */}
-        <div className="text-center max-w-2xl mb-10">
-          <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold uppercase tracking-wider">
-            👀 Mode Invité / Démonstration
-          </span>
-          <h1 className="text-4xl font-bold text-blue-700 mt-3 mb-2">
-            Aperçu de l'Application
-          </h1>
-          <p className="text-gray-600">
-            Découvrez l'interface de MED-CONTEST. Pour accéder à l'intégralité des fonctionnalités et répondre aux questions, activez votre abonnement.
-          </p>
-        </div>
+        <motion.h1 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-4xl font-bold text-blue-700 mb-4"
+        >
+          🚀 Essayez Med-Contest gratuitement
+        </motion.h1>
+        
+        <p className="text-gray-500 max-w-2xl mb-8 text-sm">
+          Découvrez l'interface de notre plateforme à travers cette visite guidée. Pour interagir avec les QCM et accéder à l'ensemble des exercices corrigés, l'activation d'un abonnement est requise.
+        </p>
 
-        {/* Onglets de navigation (Tabs) */}
-        <div className="flex gap-4 mb-8 bg-gray-100 p-1.5 rounded-xl shadow-inner">
+        {/* --- ONGLETS DE SÉLECTION DE LA VISITE --- */}
+        <div className="flex flex-wrap justify-center gap-3 mb-8 bg-gray-50 p-2 rounded-2xl border border-gray-100 shadow-sm w-full max-w-3xl">
           <button
-            onClick={() => setActiveTab("concours")}
-            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition ${
-              activeTab === "concours" ? "bg-white text-blue-700 shadow" : "text-gray-600 hover:text-gray-900"
+            onClick={() => setActivePart("concours")}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+              activePart === "concours" 
+                ? "bg-blue-600 text-white shadow-lg" 
+                : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
             }`}
           >
-            🏆 QCM par Concours
+            🏆 QCE par Concours
           </button>
-          <button
-            onClick={() => setActiveTab("matiere")}
-            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition ${
-              activeTab === "matiere" ? "bg-white text-blue-700 shadow" : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            📚 QCM par Matière
-          </button>
-          <button
-            onClick={() => setActiveTab("soutien")}
-            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition ${
-              activeTab === "soutien" ? "bg-white text-blue-700 shadow" : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            🧠 Espace Soutien
-          </button>
-        </div>
-
-        {/* Zone de contenu verrouillée (pointer-events-none empêche les clics) */}
-        <div className="w-full max-w-3xl bg-gray-50 border border-gray-200 rounded-2xl p-8 relative overflow-hidden shadow-md">
           
-          {/* Filigrane d'interdiction global */}
-          <div className="absolute top-4 right-4 z-10 bg-red-100 text-red-700 font-bold text-xs px-3 py-1 rounded-full border border-red-200">
-            🔒 Vue bloquée (Mode Démo)
+          <button
+            onClick={() => setActivePart("matiere")}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+              activePart === "matiere" 
+                ? "bg-blue-600 text-white shadow-lg" 
+                : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
+            }`}
+          >
+            📚 QCE par Matière
+          </button>
+          
+          <button
+            onClick={() => setActivePart("soutien")}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+              activePart === "soutien" 
+                ? "bg-blue-600 text-white shadow-lg" 
+                : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
+            }`}
+          >
+            💡 Espace Soutien
+          </button>
+        </div>
+
+        {/* --- ZONE D'AFFICHAGE REPRÉSENTATIVE DE L'INTERFACE (BLOCÉE) --- */}
+        <div className="w-full max-w-3xl bg-slate-50 border border-slate-200 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-xl text-left">
+          
+          {/* Badge de notification du Mode Démo */}
+          <div className="absolute top-4 right-4 z-10 bg-red-50 text-red-600 font-bold text-xs px-3 py-1 rounded-full border border-red-200">
+            🔒 Aperçu Invité
           </div>
 
-          <div className="pointer-events-none opacity-85 select-none">
+          {/* Conteneur désactivé pour empêcher les réponses ou la sélection */}
+          <div className="pointer-events-none opacity-90 select-none">
             
-            {/* CONTENU 1 : QCM PAR CONCOURS */}
-            {activeTab === "concours" && (
-              <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">{DEMO_CONCOURS.nom}</h2>
-                <div className="h-1 w-20 bg-blue-600 mb-6 rounded-full"></div>
-                <p className="text-lg font-medium text-gray-700 mb-4">{DEMO_CONCOURS.question}</p>
-                <div className="space-y-3">
-                  {DEMO_CONCOURS.options.map((opt, i) => (
-                    <label key={i} className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl cursor-not-allowed">
-                      <input type="radio" name="demo-concours" disabled className="h-4 w-4 text-blue-600" />
-                      <span className="text-gray-600">{opt}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* CONTENU 2 : QCM PAR MATIÈRE */}
-            {activeTab === "matiere" && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded">
-                    {DEMO_MATIERE.nom}
+            {/* PARTIE 1 : RENDU QCE PAR CONCOURS */}
+            {activePart === "concours" && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <div className="mb-4">
+                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-md uppercase">
+                    {DEMO_CONCOURS.matiere}
                   </span>
-                  <span className="text-gray-400">/</span>
-                  <span className="text-sm text-gray-600 font-medium">{DEMO_MATIERE.chapitre}</span>
+                  <h2 className="text-xl font-extrabold text-slate-800 mt-2">{DEMO_CONCOURS.titre}</h2>
                 </div>
-                <div className="h-1 w-20 bg-indigo-600 mb-6 rounded-full"></div>
-                <p className="text-lg font-medium text-gray-700 mb-4">{DEMO_MATIERE.question}</p>
-                <div className="space-y-3">
-                  {DEMO_MATIERE.options.map((opt, i) => (
-                    <label key={i} className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl cursor-not-allowed">
-                      <input type="radio" name="demo-matiere" disabled className="h-4 w-4 text-indigo-600" />
-                      <span className="text-gray-600">{opt}</span>
-                    </label>
+                <div className="h-px bg-slate-200 my-4" />
+                
+                <p className="text-base font-medium text-slate-700 bg-white p-4 rounded-xl border border-slate-100 shadow-sm mb-4">
+                  {DEMO_CONCOURS.question}
+                </p>
+                
+                <div className="space-y-2.5">
+                  {DEMO_CONCOURS.options.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3.5 bg-white border border-slate-200 rounded-xl">
+                      <input 
+                        type="radio" 
+                        name="demo-qcm-concours" 
+                        disabled 
+                        className="h-4 w-4 text-blue-600 border-slate-300 focus:ring-0 cursor-not-allowed" 
+                      />
+                      <span className="font-bold text-slate-400 text-sm w-4">{opt.label}.</span>
+                      <span className="text-slate-600 text-sm">{opt.texte}</span>
+                    </div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            {/* CONTENU 3 : ESPACE SOUTIEN (Mathématiques, Chapitre 1, Astuce, Exercice) */}
-            {activeTab === "soutien" && (
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">{DEMO_SOUTIEN.matiere}</h2>
-                <p className="text-sm text-gray-500 mb-4">{DEMO_SOUTIEN.chapitre}</p>
-                <div className="h-1 w-20 bg-emerald-600 mb-6 rounded-full"></div>
+            {/* PARTIE 2 : RENDU QCE PAR MATIÈRE */}
+            {activePart === "matiere" && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <div className="mb-4">
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md uppercase">
+                    Matière : {DEMO_MATIERE.nom}
+                  </span>
+                  <h2 className="text-lg font-bold text-slate-500 mt-2">Chapitre : {DEMO_MATIERE.chapitre}</h2>
+                </div>
+                <div className="h-px bg-slate-200 my-4" />
+                
+                <p className="text-base font-medium text-slate-700 bg-white p-4 rounded-xl border border-slate-100 shadow-sm mb-4">
+                  {DEMO_MATIERE.question}
+                </p>
+                
+                <div className="space-y-2.5">
+                  {DEMO_MATIERE.options.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3.5 bg-white border border-slate-200 rounded-xl">
+                      <input 
+                        type="radio" 
+                        name="demo-qcm-matiere" 
+                        disabled 
+                        className="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-0 cursor-not-allowed" 
+                      />
+                      <span className="font-bold text-slate-400 text-sm w-4">{opt.label}.</span>
+                      <span className="text-slate-600 text-sm">{opt.texte}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* PARTIE 3 : RENDU ESPACE SOUTIEN */}
+            {activePart === "soutien" && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
+                <div>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-md uppercase">
+                    Soutien : {DEMO_SOUTIEN.matiere}
+                  </span>
+                  <h2 className="text-xl font-extrabold text-slate-800 mt-2">{DEMO_SOUTIEN.chapitre}</h2>
+                </div>
+                <div className="h-px bg-slate-200" />
 
                 {/* Bloc Astuce */}
-                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl mb-6">
+                <div className="bg-amber-50/70 border-l-4 border-amber-500 p-4 rounded-r-xl">
+                  <span className="text-xs font-extrabold text-amber-800 uppercase tracking-wider block mb-1">💡 Méthode & Astuce</span>
                   <p className="text-amber-900 text-sm leading-relaxed">{DEMO_SOUTIEN.astuce}</p>
                 </div>
 
-                {/* Bloc Exercice */}
-                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                  <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-1">✍️ Exercice d'application</span>
-                  <p className="text-gray-800 font-medium mb-3">{DEMO_SOUTIEN.exercice.enonce}</p>
-                  <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
-                    <span className="text-xs font-bold text-gray-500 uppercase block mb-1">📖 Extrait Corrigé</span>
-                    <p className="text-sm text-gray-600 italic bg-gray-50 p-3 rounded-lg border border-gray-100">
+                {/* Bloc Exercice d'application */}
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider inline-block mb-3">
+                    📝 Exercice d'entraînement
+                  </span>
+                  <p className="text-slate-800 font-medium text-sm mb-4">{DEMO_SOUTIEN.exercice.enonce}</p>
+                  
+                  {/* Extrait de corrigé type */}
+                  <div className="pt-4 border-t border-dashed border-slate-200">
+                    <span className="text-xs font-bold text-slate-400 uppercase block mb-1.5">Solution attendue :</span>
+                    <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 italic font-mono">
                       {DEMO_SOUTIEN.exercice.solution}
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
           </div>
 
-          {/* Bouton d'action incitatif pour l'abonnement */}
-          <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-500 text-center sm:text-left">
-              Pour débloquer ce contenu et s'entraîner en conditions réelles :
-            </p>
-            <a 
-              href="/abonnement" 
-              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow hover:from-blue-700 hover:to-indigo-700 transition transform hover:scale-102 text-sm text-center"
+          {/* --- PIED DE LA VISITE (BOUTON DE CONVERSION EN ABONNÉ) --- */}
+          {/* Ce bloc est actif (en dehors de pointer-events-none) */}
+          <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <p className="text-sm font-semibold text-slate-700">Prêt à booster vos révisions ?</p>
+              <p className="text-xs text-slate-400">Débloquez des milliers de questions et de corrections détaillées.</p>
+            </div>
+            <Link 
+              to="/abonnement" 
+              className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 text-center whitespace-nowrap"
             >
-              🚀 Activer mon accès complet
-            </a>
+              🚀 S'abonner maintenant
+            </Link>
           </div>
 
         </div>
