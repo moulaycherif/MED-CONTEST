@@ -1,5 +1,5 @@
 // src/pages/DemoPage.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // 💡 Ajustez le chemin selon votre structure de dossiers
@@ -8,8 +8,16 @@ import Footer from "../components/Footer";
 import BackgroundWrapper from "../components/BackgroundWrapper";
 
 export default function DemoPage() {
-  const { loginAsGuest } = useAuth();
+  const { loginAsGuest, logout } = useAuth(); // 🟢 Récupération de logout ajoutée
   const navigate = useNavigate();
+
+  // 🟢 NOUVEAU : Nettoie toute ancienne session invité quand on atterrit sur cette page
+  // Cela empêche l'intercepteur Axios de paniquer avec un vieux "guest_token"
+  useEffect(() => {
+    if (localStorage.getItem("token") === "guest_token") {
+      logout();
+    }
+  }, [logout]);
 
   // Fonction déclenchée au clic sur le bouton de démo
   const handleStartDemo = () => {

@@ -27,8 +27,20 @@ export const authenticateStudent = async (
 
     // 🟢 NOUVEAU : Interception du token Invité
     if (token === "guest_token") {
-      req.student = { role: "guest" }; // On crée un profil fictif côté serveur
-      return next(); // On laisse passer vers le Controller
+      // Si le Frontend tente de récupérer le profil étudiant en arrière-plan
+      // On court-circuite la base de données et on renvoie un faux profil valide !
+      if (req.originalUrl.includes("/me") || req.originalUrl.includes("/profile") || req.originalUrl.includes("/verify")) {
+        return res.json({
+          _id: "guest_id",
+          name: "Mode Démo",
+          email: "demo@med-contest.com",
+          role: "guest",
+        });
+      }
+
+      // Pour les autres requêtes (comme les QCM), on laisse passer
+      req.student = { role: "guest" };
+      return next();
     }
 
     // --- Suite normale pour les vrais étudiants ---
