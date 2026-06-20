@@ -14,17 +14,17 @@ export default function AbonnementPage() {
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-bold text-blue-700 mb-8 translate-x-4 md:translate-x-12"
+          className="text-4xl font-bold text-blue-700 mb-8 translate-x-8 md:translate-x-18"
         >
           💎 Notre Offre d'Abonnement
         </motion.h1>
         
         {/* Grille/Bloc décalé légèrement à droite avec les mêmes dimensions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto translate-x-4 md:translate-x-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto translate-x-8 md:translate-x-18">
          
           <div className="bg-gradient-to-br from-blue-600 to-indigo-800 p-8 rounded-2xl shadow-2xl transform scale-105 flex flex-col text-white">
-            <h2 className="text-2xl font-bold mb-2">Démarche d'abonnement à l'application</h2>
-            <p className="text-4xl font-extrabold text-yellow-400 mb-6">MED-CONTEST</p>
+            <h2 className="text-2xl font-bold justify-center mb-2">Démarche d'abonnement à l'application</h2>
+            <p className="text-4xl font-extrabold text-yellow-400 justify-center mb-6">MED-CONTEST</p>
             <ul className="space-y-3 mb-8 flex-1">
               <li>✅ Nous contacter sur Whatsapp (ou par E-mail)</li>
               <li>✅ Procédez au paiement des frais d'abonnement</li>
