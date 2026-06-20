@@ -27,7 +27,7 @@ api.interceptors.request.use(
   }
 );
 
-// 🔒 2. Intercepteur de Réponse
+// 🔒 2. Intercepteur de Réponse (axios.ts)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -35,36 +35,31 @@ api.interceptors.response.use(
       const status = error.response.status;
       const errorCode = error.response.data?.code;
 
-      // ⚠️ Ignorer l'erreur si elle provient directement des tentatives de login 
-      // pour éviter de vider le stockage sur une simple faute de frappe de mot de passe
       const isLoginRequest = error.config.url?.includes("/api/auth/login") || error.config.url?.includes("/api/auth/admin/login");
 
       if (!isLoginRequest && (status === 403 || status === 401 || errorCode === "SESSION_KICKED")) {
         
-        // 🟢 NOUVEAU : On vérifie si c'est l'invité AVANT de vider le localStorage
+        // 🟢 Vérification de l'invité
         const isGuest = localStorage.getItem("token") === "guest_token";
 
-        // 1. Nettoyage complet
+        // 🛡️ SI C'EST L'INVITÉ : On bloque l'expulsion automatique !
+        if (isGuest) {
+          console.warn("Tentative d'accès bloquée en mode Démo :", error.config.url);
+          // On rejette silencieusement l'erreur pour laisser la page affichée
+          return Promise.reject(error); 
+        }
+
+        // --- SI C'EST UN VRAI ÉTUDIANT (Comportement normal) ---
         localStorage.removeItem("token");
         localStorage.removeItem("adminToken");
 
-        // 🟢 NOUVEAU : Comportement séparé pour la Démo vs Utilisateurs réels
-        if (isGuest) {
-          alert("👋 Fin de la visite guidée ! Merci d'avoir testé Med-Contest.");
-          window.location.href = "/"; // On redirige vers l'accueil plutôt que le login
-          return new Promise(() => {});
-        }
-
-        // 2. Message adapté pour les VRAIS étudiants/admins
         if (status === 403 || errorCode === "SESSION_KICKED") {
           alert("⚠️ Déconnexion : Accès refusé ou compte actif sur un autre appareil.");
         } else {
           alert("🔑 Votre session a expiré. Veuillez vous reconnecter.");
         }
 
-        // 3. Redirection classique
         window.location.href = "/login";
-        
         return new Promise(() => {}); 
       }
     }

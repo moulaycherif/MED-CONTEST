@@ -27,19 +27,26 @@ export const authenticateStudent = async (
 
     // 🟢 NOUVEAU : Interception du token Invité
     if (token === "guest_token") {
-      // Si le Frontend tente de récupérer le profil étudiant en arrière-plan
-      // On court-circuite la base de données et on renvoie un faux profil valide !
-      if (req.originalUrl.includes("/me") || req.originalUrl.includes("/profile") || req.originalUrl.includes("/verify")) {
-        return res.json({
-          _id: "guest_id",
-          name: "Mode Démo",
-          email: "demo@med-contest.com",
-          role: "guest",
-        });
+      
+      // 1. On crée un faux étudiant BLINDÉ pour ne faire planter aucun contrôleur
+      req.student = { 
+        _id: "000000000000000000000000", // Faux ID parfait pour MongoDB
+        role: "guest",
+        name: "Mode Démo",
+        email: "demo@med-contest.com",
+        isActive: true, // Simule un compte actif
+        // Si vous avez un champ d'abonnement dans votre base, ajoutez-le ici :
+        hasSubscription: true, 
+        plan: "premium"
+      };
+
+      // 2. On intercepte TOUTES les requêtes de vérification de profil
+      const url = req.originalUrl.toLowerCase();
+      if (url.includes("/me") || url.includes("/profile") || url.includes("/verify") || url.includes("/current")) {
+        return res.status(200).json(req.student);
       }
 
-      // Pour les autres requêtes (comme les QCM), on laisse passer
-      req.student = { role: "guest" };
+      // 3. On laisse passer la requête vers les contrôleurs
       return next();
     }
 
