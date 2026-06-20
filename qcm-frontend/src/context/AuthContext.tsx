@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // 🟢 NOUVEAU : On gère l'état invité via le localStorage pour survivre aux rafraîchissements
   const [isGuest, setIsGuest] = useState<boolean>(localStorage.getItem("isGuest") === "true");
 
-  const login = (newToken: string, isGuestUser: boolean = false) => {
+ const login = (newToken: string, isGuestUser: boolean = false) => {
     setToken(newToken);
     setIsGuest(isGuestUser);
     
@@ -29,6 +29,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       localStorage.removeItem("isGuest");
     }
+
+    // 🚨 NOUVEAU : On force Axios à utiliser ce Token pour TOUTES les prochaines requêtes instantanément
+    axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
   };
 
   // 🟢 NOUVEAU : Appel réel au Backend pour obtenir un VRAI jeton crypté

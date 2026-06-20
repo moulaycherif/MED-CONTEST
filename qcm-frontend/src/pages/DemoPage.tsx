@@ -25,12 +25,17 @@ export default function DemoPage() {
 
   // Fonction déclenchée au clic sur le bouton de démo
   // On ajoute "async" ici
-  const handleStartDemo = async () => {
-    // On ajoute "await" pour forcer React à attendre la fin de l'opération
-    await loginGuest(); 
-    
-    // Seulement APRÈS, on redirige
-    navigate("/student");
+ const handleStartDemo = async () => {
+    try {
+      await loginGuest(); 
+      
+      // 🚨 NOUVEAU : On laisse 100ms à React pour mettre à jour ses variables globales
+      setTimeout(() => {
+        navigate("/student");
+      }, 100);
+    } catch (err) {
+      console.error("Erreur lors de la connexion invité", err);
+    }
   };
 
   return (
