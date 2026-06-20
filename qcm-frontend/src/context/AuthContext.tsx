@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import axios from "axios";
 
 interface AuthContextType {
   token: string | null;
@@ -31,27 +32,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // 🟢 NOUVEAU : Appel réel au Backend pour obtenir un VRAI jeton crypté
   const loginGuest = async () => {
-    try {
-      // ⚠️ Ajustez l'URL si nécessaire (ex: "http://localhost:5000/api/auth/guest" selon votre configuration)
-      const response = await fetch("/api/auth/guest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
+  try {
+    // 💡 On utilise axios. Ajustez le chemin "/api/auth/guest" si votre backend a un autre préfixe.
+    const response = await axios.post("/api/auth/guest");
 
-      if (!response.ok) {
-        throw new Error("Erreur lors de la génération du token invité");
-      }
+    // Avec Axios, la réponse est directement dans response.data
+    login(response.data.token, true);
 
-      const data = await response.json();
-      
-      // On utilise la fonction login pour enregistrer le vrai token et activer le mode invité
-      login(data.token, true);
-
-    } catch (error) {
-      console.error("❌ Impossible de se connecter en tant qu'invité :", error);
-      throw error;
-    }
-  };
+  } catch (error: any) {
+    // 🚨 Cette ligne va afficher la VRAIE raison du blocage dans votre console !
+    console.error(
+      "❌ Raison exacte du refus :", 
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
 
   const logout = () => {
     setToken(null);
