@@ -35,21 +35,19 @@ api.interceptors.response.use(
       const status = error.response.status;
       const errorCode = error.response.data?.code;
 
+      // Vérifier si l'utilisateur actuel est un invité démo
+      const isGuest = localStorage.getItem("token") === "guest_token";
+
+      // 🛡️ SI ON EST EN MODE INVITÉ : On bloque TOUTES les expulsions automatiques !
+      if (isGuest) {
+        console.warn("⚠️ Mode Démo : Requête bloquée ou non autorisée mais ignorée pour la visite", error.config.url);
+        return Promise.reject(error);
+      }
+
+      // --- COMPORTEMENT NORMAL POUR LES VRAIS ÉTUDIANTS COMPLETS ---
       const isLoginRequest = error.config.url?.includes("/api/auth/login") || error.config.url?.includes("/api/auth/admin/login");
 
       if (!isLoginRequest && (status === 403 || status === 401 || errorCode === "SESSION_KICKED")) {
-        
-        // 🟢 Vérification de l'invité
-        const isGuest = localStorage.getItem("token") === "guest_token";
-
-        // 🛡️ SI C'EST L'INVITÉ : On bloque l'expulsion automatique !
-        if (isGuest) {
-          console.warn("Tentative d'accès bloquée en mode Démo :", error.config.url);
-          // On rejette silencieusement l'erreur pour laisser la page affichée
-          return Promise.reject(error); 
-        }
-
-        // --- SI C'EST UN VRAI ÉTUDIANT (Comportement normal) ---
         localStorage.removeItem("token");
         localStorage.removeItem("adminToken");
 
@@ -60,7 +58,7 @@ api.interceptors.response.use(
         }
 
         window.location.href = "/login";
-        return new Promise(() => {}); 
+        return new Promise(() => {}); // Bloque la propagation
       }
     }
 

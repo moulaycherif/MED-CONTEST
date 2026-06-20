@@ -12,7 +12,7 @@ export interface AuthPayload {
 }
 
 export interface AuthenticatedRequest extends Request {
-  student?: IStudent;
+  student?: any; // Changé en any pour accepter le faux profil invité
   auth?: AuthPayload;
 }
 
@@ -27,6 +27,25 @@ export const authenticateStudent = async (
     return res.status(401).json({ error: "Token manquant" });
   }
 
+  // 🟢 NOUVEAU : Interception du token Invité dans le VRAI middleware
+  if (token === "guest_token") {
+    req.student = { 
+      _id: "000000000000000000000000", // Faux ID parfait pour MongoDB
+      role: "guest",
+      name: "Mode Démo",
+      email: "demo@med-contest.com",
+      isActive: true,
+    };
+
+    // On intercepte les requêtes de vérification de profil
+    const url = req.originalUrl.toLowerCase();
+    if (url.includes("/me") || url.includes("/profile") || url.includes("/verify")) {
+      return res.status(200).json(req.student);
+    }
+
+    return next();
+  }
+
   try {
     // 1. Décoder et vérifier le token JWT
     const decoded = jwt.verify(token, SECRET) as AuthPayload;
@@ -39,9 +58,6 @@ export const authenticateStudent = async (
     }
 
     // 🛑 3. SÉCURITÉ POSTE UNIQUE : Comparaison des sessions
-    // Si l'ID de session du token n'est pas identique à celui stocké en base,
-    // cela signifie que cet étudiant s'est connecté sur un autre ordinateur/navigateur.
-
     if (student.currentSessionId !== decoded.sessionId) {
       return res.status(403).json({ 
         code: "SESSION_KICKED", 
