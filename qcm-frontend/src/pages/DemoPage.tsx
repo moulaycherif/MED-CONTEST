@@ -8,15 +8,18 @@ import Footer from "../components/Footer";
 import BackgroundWrapper from "../components/BackgroundWrapper";
 
 export default function DemoPage() {
-  const { loginAsGuest, logout } = useAuth(); // 🟢 Récupération de logout ajoutée
+  const { loginGuest, logout } = useAuth(); // 🟢 Récupération de logout ajoutée
   const navigate = useNavigate();
 
  // 🟢 MODIFIÉ : On utilise un tableau de dépendances vide []
   // Le nettoyage se fait UNIQUEMENT quand on arrive sur la page, pas quand on clique.
   useEffect(() => {
-    if (localStorage.getItem("token") === "guest_token") {
-      logout();
-    }
+    // 🚨 NETTOYAGE EXTRÊME : On supprime tout pour repartir à zéro
+    localStorage.removeItem("token");
+    localStorage.removeItem("adminToken");
+    
+    // On vide l'état global si nécessaire
+    logout(); 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -24,7 +27,7 @@ export default function DemoPage() {
   // On ajoute "async" ici
   const handleStartDemo = async () => {
     // On ajoute "await" pour forcer React à attendre la fin de l'opération
-    await loginAsGuest(); 
+    await loginGuest(); 
     
     // Seulement APRÈS, on redirige
     navigate("/student");

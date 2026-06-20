@@ -211,3 +211,35 @@ export const deleteStudent = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
+// NOUVELLE FONCTION À AJOUTER DANS authController.ts
+export const loginGuest = async (req: Request, res: Response) => {
+  try {
+    // On génère un identifiant unique temporaire pour ce visiteur
+    const guestId = "guest_" + crypto.randomUUID();
+
+    // On crée un VRAI jeton crypté, avec la propriété isGuest: true !
+    const token = jwt.sign(
+      { 
+        userId: guestId, 
+        isAdmin: false,
+        isGuest: true // 👈 Le passe-partout magique mais bridé !
+      },
+      JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    res.json({
+      message: "Connexion invité réussie",
+      token,
+      student: { 
+        id: guestId, 
+        name: "Invité", 
+        email: "demo@med-contest.com", 
+        isGuest: true 
+      }
+    });
+  } catch (err) {
+    console.error("❌ Erreur Login Invité :", err);
+    res.status(500).json({ error: "Erreur serveur lors de la connexion invité" });
+  }
+};
