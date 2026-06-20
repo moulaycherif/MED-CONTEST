@@ -9,8 +9,10 @@ export default function AbonnementPage() {
   return (
     <BackgroundWrapper>
       <Navbar />
-      <main className="flex flex-col min-h-screen items-center pt-24 pb-12 px-6">
-        {/* Titre de la page */}
+      {/* bg-white force le fond de toute la page en blanc */}
+      <main className="flex flex-col min-h-screen items-center pt-24 pb-12 px-6 bg-white">
+        
+        {/* Titre de la page (inchangé, le bleu-700 ressort très bien sur le blanc) */}
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -22,9 +24,9 @@ export default function AbonnementPage() {
         {/* Conteneur de la carte centré */}
         <div className="w-full max-w-md mx-auto flex justify-center">
          
+          {/* La carte conserve son dégradé bleu/indigo pour garder du contraste et un aspect Premium */}
           <div className="bg-gradient-to-br from-blue-600 to-indigo-800 p-8 rounded-2xl shadow-2xl transform scale-105 flex flex-col text-white w-full">
             
-            {/* TEXTES CENTRÉS */}
             <h2 className="text-2xl font-bold mb-2 text-center">
               Démarche d'abonnement à l'application
             </h2>
@@ -32,22 +34,16 @@ export default function AbonnementPage() {
               MED-CONTEST
             </p>
             
-            {/* TEXTE JUSTIFIÉ (Aligné à droite et à gauche) */}
             <ul className="space-y-3 mb-8 flex-1 text-justify">
               <li>✅ Nous contacter sur Whatsapp (ou par E-mail)</li>
               <li>✅ Procédez au paiement des frais d'abonnement</li>
               <li>✅ Screenez le reçu de confirmation de paiement et l'envoyer</li>
               <li>✅ Activation de votre compte</li>
             </ul>
-            <a
-          href="https://wa.me/212650188863" // Remplace le numéro par ton vrai numéro WhatsApp
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-2 bg-green-500 rounded-lg shadow hover:bg-green-600 transition"
-        >
-          💬 Discuter sur WhatsApp
-        </a>
-          
+            
+            <button className="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-500 shadow-lg transition">
+              💬 Discuter sur WhatsApp
+            </button>
           </div>
 
         </div>
