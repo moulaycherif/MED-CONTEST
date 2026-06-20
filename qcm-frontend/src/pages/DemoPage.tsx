@@ -20,11 +20,12 @@ export default function DemoPage() {
   }, [logout]);
 
   // Fonction déclenchée au clic sur le bouton de démo
-  const handleStartDemo = () => {
-    // 1. On connecte virtuellement l'utilisateur avec le rôle "guest"
-    loginAsGuest();
+  // On ajoute "async" ici
+  const handleStartDemo = async () => {
+    // On ajoute "await" pour forcer React à attendre la fin de l'opération
+    await loginAsGuest(); 
     
-    // 2. On le redirige vers l'interface réelle de l'application
+    // Seulement APRÈS, on redirige
     navigate("/student");
   };
 

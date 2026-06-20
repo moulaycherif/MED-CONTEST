@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface AuthContextType {
   token: string | null;
-  isGuest: boolean; // 🟢 NOUVEAU : Permet de savoir si on est en mode Démo
+  isGuest: boolean;
   login: (token: string) => void;
-  loginAsGuest: () => void; // 🟢 NOUVEAU : Fonction pour se connecter en invité
+  loginAsGuest: () => Promise<void>; // 🟢 Modifié : Accepte désormais l'asynchrone
   logout: () => void;
 }
 
@@ -15,7 +15,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.getItem("token")
   );
 
-  // 🟢 NOUVEAU : Détermine si l'utilisateur actuel est l'invité
   const isGuest = token === "guest_token";
 
   const login = (newToken: string) => {
@@ -23,10 +22,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("token", newToken);
   };
 
-  // 🟢 NOUVEAU : Connecte l'utilisateur en tant qu'invité
-  const loginAsGuest = () => {
-    setToken("guest_token");
+  // 🟢 NOUVEAU : Fonction asynchrone avec délai de synchronisation
+  const loginAsGuest = async () => {
+    // 1. Force l'écriture dans le navigateur
     localStorage.setItem("token", "guest_token");
+    
+    // 2. Informe React
+    setToken("guest_token");
+    
+    // 3. Laisse 100 millisecondes à React et au navigateur pour synchroniser leurs états
+    return new Promise<void>((resolve) => setTimeout(resolve, 100));
   };
 
   const logout = () => {
