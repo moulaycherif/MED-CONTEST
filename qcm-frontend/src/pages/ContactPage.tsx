@@ -127,7 +127,7 @@ formData.append("access_key", accessKey);
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2 bg-green-500 text-white font-bold rounded-lg shadow hover:bg-green-600 transition"
             >
-              💬 +212 650 188 863
+              💬 "https://wa.me/212650188863"
             </a>
           </div>
         </div>
