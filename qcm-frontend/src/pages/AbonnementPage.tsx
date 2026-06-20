@@ -20,7 +20,7 @@ export default function AbonnementPage() {
         
         <div className="min-h-screen w-full flex items-center justify-center p-4">
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl">
     </div>
           
           <div className="bg-gradient-to-br from-blue-600 to-indigo-800 p-8 rounded-2xl shadow-2xl transform scale-105 flex flex-col text-white">
