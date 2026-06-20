@@ -19,7 +19,8 @@ export interface IExercise extends Document {
   contextImage: string;
   subQuestions: ISubQuestion[];
   difficulty: 'facile' | 'moyen' | 'difficile';
-  isWhiteExam: boolean; // 👈 AJOUT ICI
+  isWhiteExam: boolean; 
+  isFree: boolean; // 👈 AJOUT ICI pour la gestion des invités
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,10 +99,16 @@ const exerciseSchema = new Schema<IExercise>(
       enum: ['facile', 'moyen', 'difficile'],
       default: 'moyen',
     },
-    // 🚨 AJOUT DU CHAMP ICI :
+    
     isWhiteExam: {
       type: Boolean,
       default: false, // Par défaut, c'est un exercice normal
+    },
+
+    // 🚨 AJOUT DU CHAMP ICI :
+    isFree: {
+      type: Boolean,
+      default: false, // Par défaut, l'exercice est payant / premium
     },
   },
   {

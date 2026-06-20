@@ -47,10 +47,15 @@ export const loginStudent = async (req: Request, res: Response) => {
     await student.save();
 
     const token = jwt.sign(
-      { userId: student._id, sessionId: newSessionId, isAdmin: student.isAdmin },
-      JWT_SECRET,
-      { expiresIn: "24h" }
-    );
+  { 
+    userId: student._id, 
+    sessionId: newSessionId,
+    isAdmin: student.isAdmin,
+    isGuest: student.isGuest || false // 👈 1. ON AJOUTE CELA ICI
+  },
+  JWT_SECRET,
+  { expiresIn: "24h" }
+);
 
     res.json({
       message: "Connexion réussie",
