@@ -3,6 +3,10 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import Admin from "../models/Admin";
 
+// 👇 Ajoutez ces DEUX lignes ici pour faire disparaître les erreurs :
+import jwt from "jsonwebtoken";
+import Student from "../models/Student";
+
 // 🛡️ Vos middlewares de sécurité
 import { authenticateAdmin } from "../middleware/authAdmin"; // 👈 Utilisation de votre middleware admin mis à jour
 import { authenticateStudent } from "../middleware/authMiddleware";
@@ -68,5 +72,36 @@ router.post("/logout", authenticateStudent, logoutStudent);
 router.get("/students", authenticateAdmin, getStudents);
 router.post("/students", authenticateAdmin, createStudent);
 router.delete("/students/:id", authenticateAdmin, deleteStudent);
+
+// 📁 À ajouter dans authRoutes.ts
+
+// Route universelle pour vérifier l'identité et la validité de la session en cours
+router.get("/me", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Non authentifié" });
+
+  try {
+    // On décode le token pour savoir à qui on a affaire
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "votre_secret_jwt_super_securise") as any;
+    
+    if (decoded.isAdmin) {
+      // Vérification côté Admin
+      const admin = await Admin.findById(decoded.userId);
+      if (!admin || admin.currentSessionId !== decoded.sessionId) {
+        return res.status(403).json({ code: "SESSION_KICKED", error: "Session admin invalide" });
+      }
+      return res.json({ id: admin._id, name: admin.name, email: admin.email, isAdmin: true });
+    } else {
+      // Vérification côté Étudiant
+      const student = await Student.findById(decoded.userId);
+      if (!student || student.currentSessionId !== decoded.sessionId) {
+        return res.status(403).json({ code: "SESSION_KICKED", error: "Session étudiante invalide" });
+      }
+      return res.json({ id: student._id, name: student.name, email: student.email, isAdmin: false });
+    }
+  } catch (err) {
+    return res.status(401).json({ error: "Session expirée ou invalide" });
+  }
+});
 
 export default router;
