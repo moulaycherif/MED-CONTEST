@@ -18,10 +18,13 @@ export default function AbonnementPage() {
           💎 Notre Offre d'Abonnement
         </motion.h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <div className="min-h-screen w-full flex items-center justify-center p-4">
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+    </div>
           
           <div className="bg-gradient-to-br from-blue-600 to-indigo-800 p-8 rounded-2xl shadow-2xl transform scale-105 flex flex-col text-white">
-            <h2 className="text-2xl font-bold mb-2">Pémarche d'abonnemnt à l'application</h2>
+            <h2 className="text-2xl font-bold mb-2">Démarche d'abonnement à l'application</h2>
             <p className="text-4xl font-extrabold text-yellow-400 mb-6">MED-CONTEST</p>
             <ul className="space-y-3 mb-8 flex-1">
               <li>✅ Nous contacter sur Whatsapp (ou par E-mail)</li>
