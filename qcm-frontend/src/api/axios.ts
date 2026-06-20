@@ -1,3 +1,4 @@
+// src/axios.ts (ou le chemin correct de votre fichier)
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
@@ -40,18 +41,28 @@ api.interceptors.response.use(
 
       if (!isLoginRequest && (status === 403 || status === 401 || errorCode === "SESSION_KICKED")) {
         
+        // 🟢 NOUVEAU : On vérifie si c'est l'invité AVANT de vider le localStorage
+        const isGuest = localStorage.getItem("token") === "guest_token";
+
         // 1. Nettoyage complet
         localStorage.removeItem("token");
         localStorage.removeItem("adminToken");
 
-        // 2. Message adapté
+        // 🟢 NOUVEAU : Comportement séparé pour la Démo vs Utilisateurs réels
+        if (isGuest) {
+          alert("👋 Fin de la visite guidée ! Merci d'avoir testé Med-Contest.");
+          window.location.href = "/"; // On redirige vers l'accueil plutôt que le login
+          return new Promise(() => {});
+        }
+
+        // 2. Message adapté pour les VRAIS étudiants/admins
         if (status === 403 || errorCode === "SESSION_KICKED") {
           alert("⚠️ Déconnexion : Accès refusé ou compte actif sur un autre appareil.");
         } else {
           alert("🔑 Votre session a expiré. Veuillez vous reconnecter.");
         }
 
-        // 3. Redirection
+        // 3. Redirection classique
         window.location.href = "/login";
         
         return new Promise(() => {}); 
