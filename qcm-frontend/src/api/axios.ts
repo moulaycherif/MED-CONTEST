@@ -4,8 +4,7 @@ import { API_BASE_URL } from "../config";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+  });
 
 // 🔹 1. Intercepteur de Requête Adaptatif (Admin ou Étudiant)
 api.interceptors.request.use(

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import axios from "axios";
+import api from "../api/axios"; // 👈 Utilisez votre instance personnalisée
 import { API_BASE_URL } from "../config"; // 👈 Ajoutez cette ligne
 
 interface AuthContextType {
@@ -21,32 +21,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
  const login = (newToken: string, isGuestUser: boolean = false) => {
     setToken(newToken);
     setIsGuest(isGuestUser);
-    
+
     localStorage.setItem("token", newToken);
-    
+
     if (isGuestUser) {
       localStorage.setItem("isGuest", "true");
     } else {
       localStorage.removeItem("isGuest");
     }
 
-    // 🚨 NOUVEAU : On force Axios à utiliser ce Token pour TOUTES les prochaines requêtes instantanément
-    axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+    // 🚨 CORRECTION : On injecte le Token dans l'instance 'api' utilisée par le SessionGuard
+    api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
   };
 
   // 🟢 NOUVEAU : Appel réel au Backend pour obtenir un VRAI jeton crypté
   const loginGuest = async () => {
     try {
-      // 💡 On combine l'URL du Backend (Render) avec la route
-      const response = await axios.post(`${API_BASE_URL}/api/auth/guest`);
-
+      // 💡 On utilise 'api' ici aussi
+      const response = await api.post(`${API_BASE_URL}/api/auth/guest`);
       login(response.data.token, true);
-
     } catch (error: any) {
-      console.error(
-        "❌ Raison exacte du refus :", 
-        error.response?.data || error.message
-      );
+      console.error("❌ Raison exacte du refus :", error.response?.data || error.message);
       throw error;
     }
   };
