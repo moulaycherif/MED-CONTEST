@@ -11,13 +11,14 @@ export default function DemoPage() {
   const { loginAsGuest, logout } = useAuth(); // 🟢 Récupération de logout ajoutée
   const navigate = useNavigate();
 
-  // 🟢 NOUVEAU : Nettoie toute ancienne session invité quand on atterrit sur cette page
-  // Cela empêche l'intercepteur Axios de paniquer avec un vieux "guest_token"
+ // 🟢 MODIFIÉ : On utilise un tableau de dépendances vide []
+  // Le nettoyage se fait UNIQUEMENT quand on arrive sur la page, pas quand on clique.
   useEffect(() => {
     if (localStorage.getItem("token") === "guest_token") {
       logout();
     }
-  }, [logout]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fonction déclenchée au clic sur le bouton de démo
   // On ajoute "async" ici

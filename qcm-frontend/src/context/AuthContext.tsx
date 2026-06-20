@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useCallback } from "react"; // 👈 Ajoutez useCallback ici
 
 interface AuthContextType {
   token: string | null;
