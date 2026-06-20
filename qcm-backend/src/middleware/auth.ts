@@ -33,16 +33,12 @@ export const authenticateStudent = async (
         _id: "000000000000000000000000", // Faux ID parfait pour MongoDB
         role: "guest",
         name: "Mode Démo",
-        email: "demo@med-contest.com",
         isActive: true, // Simule un compte actif
-        // Si vous avez un champ d'abonnement dans votre base, ajoutez-le ici :
-        hasSubscription: true, 
-        plan: "premium"
       };
 
       // 2. On intercepte TOUTES les requêtes de vérification de profil
       const url = req.originalUrl.toLowerCase();
-      if (url.includes("/me") || url.includes("/profile") || url.includes("/verify") || url.includes("/current")) {
+      if (url.includes("/me") || url.includes("/profile") || url.includes("/verify") ) {
         return res.status(200).json(req.student);
       }
 
