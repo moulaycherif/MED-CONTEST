@@ -39,10 +39,15 @@ export default function AbonnementPage() {
               <li>✅ Screenez le reçu de confirmation de paiement et l'envoyer</li>
               <li>✅ Activation de votre compte</li>
             </ul>
-            
-            <button className="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-500 shadow-lg">
-              💬 Discuter sur WhatsApp
-            </button>
+            <a
+          href="https://wa.me/212650188863" // Remplace le numéro par ton vrai numéro WhatsApp
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-5 py-2 bg-green-500 rounded-lg shadow hover:bg-green-600 transition"
+        >
+          💬 Discuter sur WhatsApp
+        </a>
+          
           </div>
 
         </div>
