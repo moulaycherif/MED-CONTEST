@@ -6,7 +6,7 @@ import { createStudentActivity } from "../controllers/studentActivityController"
 
 const router = express.Router();
 
-// 🔒 Pas d'enregistrement d'activité pour le mode démo
-router.post("/", authenticateStudent, blockGuest, createStudentActivity);
+// 🔒 Pas d'enregistrement d'activité pour le mode démo (On retire blockGuest)
+router.post("/", authenticateStudent, createStudentActivity);
 
 export default router;
