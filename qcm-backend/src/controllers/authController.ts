@@ -68,12 +68,19 @@ export const loginStudent = async (req: Request, res: Response) => {
   }
 };
 
+// controllers/authController.ts
+
 export const logoutStudent = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.auth?.userId; 
     
+    // 🟢 CORRECTION : Si c'est un compte invité (ID commence par "guest_"), on ne touche pas à la BDD
+    if (req.student?.role === "guest" || String(userId).startsWith("guest_")) {
+      return res.json({ message: "Déconnexion invité réussie" });
+    }
+    
+    // Pour les vrais étudiants, on nettoie la session normalement
     if (userId) {
-      // On remet à null pour libérer le compte instantanément et autoriser une nouvelle connexion
       await User.findByIdAndUpdate(userId, {
         currentSessionId: null,
         currentIp: null

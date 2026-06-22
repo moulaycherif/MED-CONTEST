@@ -210,14 +210,11 @@ export const importExcel = async (req: Request, res: Response) => {
 
 export const getExams = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const isGuest = req.student?.role === "guest"; 
-
     let exams = await Question.distinct("exam");
     exams = exams.sort();
 
-    if (isGuest) {
-      exams = exams.slice(0, 1);
-    }
+    // 🟢 CORRECTION : On ne coupe plus la liste pour éviter de casser le menu React
+    // L'invité peut voir les concours, mais getQuestions bloquera le contenu.
 
     res.json(
       exams.map((title) => ({
@@ -233,16 +230,11 @@ export const getExams = async (req: AuthenticatedRequest, res: Response) => {
 
 export const getSubjectsByExam = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const isGuest = req.student?.role === "guest"; 
-
     let subjects = await Question.distinct("subject", {
       exam: req.params.exam,
     });
 
-    if (isGuest) {
-      subjects = subjects.slice(0, 1);
-    }
-
+    // 🟢 CORRECTION : On retire le slice(0, 1) qui forçait la matière SVT au retour en arrière
     res.json(subjects);
   } catch (err) {
     console.error(err);
