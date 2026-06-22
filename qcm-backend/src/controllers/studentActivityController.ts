@@ -1,11 +1,16 @@
-import { Request, Response } from "express";
+// controllers/studentActivityController.ts
+import { Response } from "express";
 import StudentActivity from "../models/StudentActivity";
+// 🚨 NOUVEAU
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
 
-export const createStudentActivity = async (
-  req: Request,
-  res: Response
-) => {
+export const createStudentActivity = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    // 🛡️ SÉCURITÉ DE LA BASE DE DONNÉES : On n'enregistre rien pour l'invité
+    if (req.student?.role === "guest") {
+      return res.status(201).json({ message: "Activité simulée avec succès en mode Démo ✅" });
+    }
+
     const {
       type,
       subject,
@@ -34,8 +39,6 @@ export const createStudentActivity = async (
     res.status(201).json(activity);
   } catch (error) {
     console.error("❌ createStudentActivity:", error);
-    res.status(500).json({
-      message: "Erreur création activité",
-    });
+    res.status(500).json({ message: "Erreur création activité" });
   }
 };

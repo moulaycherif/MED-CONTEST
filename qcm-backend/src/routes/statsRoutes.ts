@@ -1,3 +1,4 @@
+// routes/statsRoutes.ts
 import express from "express";
 import {
   getStudentStats,
@@ -6,36 +7,15 @@ import {
   getSuccessEvolution,
 } from "../controllers/statsController";
 
-// ✅ Utilisez le middleware mis à jour avec la vérification de session unique
-import { authenticateStudent } from "../middleware/authMiddleware"; 
+// 🚨 MODIFIÉ : On importe aussi blockGuest
+import { authenticateStudent, blockGuest } from "../middleware/authMiddleware"; 
 
 const router = express.Router();
 
-// 📊 Dashboard complet
-router.get(
-  "/student",
-  authenticateStudent,
-  getStudentStats
-);
-
-// 📚 QCM par matière
-router.get(
-  "/qcm",
-  authenticateStudent,
-  getQcmStats
-);
-
-// 📈 Activité dans le temps
-router.get(
-  "/activity",
-  authenticateStudent,
-  getActivityStats
-);
-
-router.get(
-  "/success-evolution",
-  authenticateStudent,
-  getSuccessEvolution
-);
+// 📊 Dashboard complet (🔒 Bloqués pour l'invité)
+router.get("/student", authenticateStudent, blockGuest, getStudentStats);
+router.get("/qcm", authenticateStudent, blockGuest, getQcmStats);
+router.get("/activity", authenticateStudent, blockGuest, getActivityStats);
+router.get("/success-evolution", authenticateStudent, blockGuest, getSuccessEvolution);
 
 export default router;

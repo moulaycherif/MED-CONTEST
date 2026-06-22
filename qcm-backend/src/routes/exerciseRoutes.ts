@@ -3,6 +3,8 @@ import express, { Request, Response } from "express";
 import Exercise from "../models/Exercise";
 import { verifyAdmin } from "../middleware/verifyAdmin";
 import { authenticateAdmin } from "../middleware/authAdmin";
+// 🚨 NOUVEAU : On importe le middleware étudiant et son type
+import { authenticateStudent, AuthenticatedRequest } from "../middleware/authMiddleware";
 
 import multer from "multer";
 import path from "path";
@@ -38,10 +40,16 @@ const formatExcelMath = (text: any) => {
 };
 
 // ======================================================
-// 📋 Récupérer tous les exercices
+// 📋 Récupérer tous les exercices (Bridé pour l'invité)
 // ======================================================
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    // 🔍 Si c'est un invité, on ne lui donne que 2 exercices échantillons
+    if (req.student?.role === "guest") {
+      const sampleExercises = await Exercise.find().limit(2);
+      return res.json(sampleExercises);
+    }
+
     const exercises = await Exercise.find();
     res.json(exercises);
   } catch (error) {
@@ -191,16 +199,31 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
   }
 });
 
-// Les routes de filtres et suppressions restent inchangées...
-router.get("/by-subject/:subject", async (req: Request, res: Response) => {
+// ======================================================
+// 🔍 Filtrer par matière (Bridé pour l'invité)
+// ======================================================
+router.get("/by-subject/:subject", authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (req.student?.role === "guest") {
+      const sample = await Exercise.find({ subject: req.params.subject }).limit(1);
+      return res.json(sample);
+    }
+
     const exercises = await Exercise.find({ subject: req.params.subject });
     res.json(exercises);
   } catch (error) { res.status(500).json({ error: "Erreur" }); }
 });
 
-router.get("/:subject/:chapter", async (req: Request, res: Response) => {
+// ======================================================
+// 🔍 Filtrer par chapitre (Bridé pour l'invité)
+// ======================================================
+router.get("/:subject/:chapter", authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (req.student?.role === "guest") {
+      const sample = await Exercise.find({ subject: req.params.subject, chapter: req.params.chapter }).limit(1);
+      return res.json(sample);
+    }
+
     const exercises = await Exercise.find({ subject: req.params.subject, chapter: req.params.chapter });
     res.json(exercises);
   } catch (error) { res.status(500).json({ error: "Erreur" }); }

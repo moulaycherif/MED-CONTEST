@@ -6,13 +6,10 @@ import {
 } from "../controllers/astucesController";
 import Astuce from "../models/Astuce";
 import { supabase } from "../config/supabase";
-
 import multer from "multer";
-
+import { authenticateStudent } from "../middleware/authMiddleware";
 const upload = multer();
-
 const router = Router();
-
 
 /* 🔵 ADMIN — LISTE TOUTES LES ASTUCES */
 router.get("/", async (req, res) => {
@@ -93,6 +90,6 @@ router.get("/detail/:id", async (req, res) => {
 });
 
 /* 🟡 ÉTUDIANT — ASTUCES PAR CHAPITRE */
-router.get("/:chapter", getAstucesByChapter);
+router.get("/:chapter", authenticateStudent, getAstucesByChapter);
 
 export default router;

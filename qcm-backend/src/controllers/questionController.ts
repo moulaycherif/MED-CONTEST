@@ -4,16 +4,15 @@ import Exam from "../models/Exam";
 import QuestionGroup from "../models/QuestionGroup";
 import XLSX from "xlsx";
 
+// 🚨 NOUVEAU : Import du bon type
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
+
 /* ============================================================
     🔧 UTILITAIRES
 ============================================================ */
 
 const normalize = (s: string) =>
-  s
-    .replace(/\u00A0/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
+  s.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
 
 const getCell = (row: any, key: string) => {
   const expected = normalize(key);
@@ -27,15 +26,13 @@ const getCell = (row: any, key: string) => {
     📥 GET QUESTIONS
 ============================================================ */
 
-export const getQuestions = async (req: Request, res: Response) => {
+export const getQuestions = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { exam, subject } = req.query as {
       exam?: string;
       subject?: string;
     };
-
-    const isGuest = req.student && req.student.role === "guest"; // 🟢 Vérification invité
-
+    const isGuest = req.student?.role === "guest"; // 🟢 Utilisation propre et sûre
     const filter: any = {};
     if (exam) {
       filter.exam = { $regex: new RegExp(`^${exam.trim()}$`, "i") };
@@ -45,7 +42,7 @@ export const getQuestions = async (req: Request, res: Response) => {
     }
 
     // On prépare la requête de base
-    let query = Question.find(filter)
+   let query = Question.find(filter)
       .populate({
         path: "groupId",
         model: "QuestionGroup",
@@ -54,7 +51,7 @@ export const getQuestions = async (req: Request, res: Response) => {
       .sort({ "groupId.order": 1, _id: 1 })
       .lean();
 
-    // 🔒 SÉCURITÉ ABSOLUE : Si c'est un invité, il ne reçoit qu'UNE SEULE question
+    // 🔒 SÉCURITÉ : L'invité ne reçoit qu'UNE SEULE question
     if (isGuest) {
       query = query.limit(1) as any;
     }
@@ -211,14 +208,13 @@ export const importExcel = async (req: Request, res: Response) => {
     📚 AUTRES ROUTES
 ============================================================ */
 
-export const getExams = async (req: Request, res: Response) => {
+export const getExams = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const isGuest = req.student && req.student.role === "guest"; // 🟢
+    const isGuest = req.student?.role === "guest"; 
 
     let exams = await Question.distinct("exam");
     exams = exams.sort();
 
-    // 🔒 SÉCURITÉ : L'invité ne voit qu'un seul concours (le premier de la liste)
     if (isGuest) {
       exams = exams.slice(0, 1);
     }
@@ -235,15 +231,14 @@ export const getExams = async (req: Request, res: Response) => {
   }
 };
 
-export const getSubjectsByExam = async (req: Request, res: Response) => {
+export const getSubjectsByExam = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const isGuest = req.student && req.student.role === "guest"; // 🟢
+    const isGuest = req.student?.role === "guest"; 
 
     let subjects = await Question.distinct("subject", {
       exam: req.params.exam,
     });
 
-    // 🔒 SÉCURITÉ : L'invité ne voit qu'une seule matière
     if (isGuest) {
       subjects = subjects.slice(0, 1);
     }
@@ -255,11 +250,10 @@ export const getSubjectsByExam = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteAllQuestions = async (_req: Request, res: Response) => {
+export const deleteAllQuestions = async (_req: AuthenticatedRequest, res: Response) => {
   await Question.deleteMany({});
   await QuestionGroup.deleteMany({});
   res.json({ message: "✅ Toutes les questions supprimées" });
 };
 
-// Alias
 export const importQuestions = importExcel;

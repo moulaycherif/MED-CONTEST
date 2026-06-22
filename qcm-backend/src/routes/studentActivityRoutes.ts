@@ -1,9 +1,12 @@
+// routes/studentActivityRoutes.ts
 import express from "express";
-import { authenticateStudent } from "../middleware/authMiddleware";
+// 🚨 MODIFIÉ : Import de blockGuest
+import { authenticateStudent, blockGuest } from "../middleware/authMiddleware";
 import { createStudentActivity } from "../controllers/studentActivityController";
 
 const router = express.Router();
 
-router.post("/", authenticateStudent, createStudentActivity);
+// 🔒 Pas d'enregistrement d'activité pour le mode démo
+router.post("/", authenticateStudent, blockGuest, createStudentActivity);
 
 export default router;

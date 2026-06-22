@@ -1,9 +1,11 @@
 import Astuce from "../models/Astuce";
-import { Request, Response } from "express";
+import { Response } from "express";
 import { supabase } from "../config/supabase";
+// 🚨 NOUVEAU : Importation du bon type de requête
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
 
 /* 🔵 ASTUCES PAR CHAPITRE */
-export const getAstucesByChapter = async (req: Request, res: Response) => {
+export const getAstucesByChapter = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { chapter } = req.params;
 
@@ -21,6 +23,11 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
       cases: (tip.cases || []).filter(Boolean),
     }));
 
+    // 🟢 CORRECTION : On renvoie juste le 1er élément du tableau déjà nettoyé !
+    if (req.student?.role === "guest") {
+      return res.json(safeAstuces.slice(0, 1));
+    }
+
     res.json(safeAstuces);
   } catch (error) {
     console.error("Erreur getAstucesByChapter:", error);
@@ -28,10 +35,9 @@ export const getAstucesByChapter = async (req: Request, res: Response) => {
   }
 };
 
-/* 🟢 CRÉATION ASTUCE */
-export const createAstuce = async (req: Request, res: Response) => {
+/* 🟢 CRÉATION ASTUCE (Protégée par le routeur) */
+export const createAstuce = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    
     const { subject, chapter, title, description, cases, pdfUrl } = req.body;
 
     if (!subject || !chapter || !title) {
@@ -39,20 +45,20 @@ export const createAstuce = async (req: Request, res: Response) => {
     }
 
     const normalizedCases = (cases || [])
-  .filter((c: any) =>
-    c && (
-      (c.content && c.content.trim() !== "") ||
-      (c.explanation && c.explanation.trim() !== "") ||
-      (c.image && c.image.trim() !== "") // 🔥 AJOUT
-    )
-  )
-  .map((c: any) => ({
-    title: c.title || "",
-    content: c.content || c.explanation || "",
-    explanation: c.explanation || c.content || "",
-    example: c.example || "",
-    image: c.image || "", // 🔥 AJOUT
-  }));
+      .filter((c: any) =>
+        c && (
+          (c.content && c.content.trim() !== "") ||
+          (c.explanation && c.explanation.trim() !== "") ||
+          (c.image && c.image.trim() !== "")
+        )
+      )
+      .map((c: any) => ({
+        title: c.title || "",
+        content: c.content || c.explanation || "",
+        explanation: c.explanation || c.content || "",
+        example: c.example || "",
+        image: c.image || "", 
+      }));
 
     const astuce = new Astuce({
       subject,
@@ -64,7 +70,6 @@ export const createAstuce = async (req: Request, res: Response) => {
     });
 
     await astuce.save();
-
     res.status(201).json(astuce);
   } catch (error) {
     console.error("Erreur createAstuce:", error);
@@ -72,8 +77,8 @@ export const createAstuce = async (req: Request, res: Response) => {
   }
 };
 
-/* 📄 UPLOAD PDF */
-export const uploadAstucePdf = async (req: Request, res: Response) => {
+/* 📄 UPLOAD PDF (Protégée par le routeur) */
+export const uploadAstucePdf = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "Aucun fichier" });
@@ -97,7 +102,6 @@ export const uploadAstucePdf = async (req: Request, res: Response) => {
       .getPublicUrl(fileName);
 
     res.json({ pdfUrl: data.publicUrl });
-
   } catch (error) {
     console.error("❌ Upload PDF:", error);
     res.status(500).json({ message: "Erreur serveur" });
