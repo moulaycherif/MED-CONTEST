@@ -27,6 +27,7 @@ api.interceptors.request.use(
 );
 
 // 🔒 2. Intercepteur de Réponse
+// 🔒 2. Intercepteur de Réponse
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -34,12 +35,32 @@ api.interceptors.response.use(
       const status = error.response.status;
       const errorCode = error.response.data?.code;
 
-      // 🚨 CORRECTION : On vérifie le drapeau "isGuest" qu'on a posé dans le localStorage
+      // Vérifie le drapeau "isGuest" dans le localStorage
       const isGuest = localStorage.getItem("isGuest") === "true";
 
-      // 🛡️ SI ON EST EN MODE INVITÉ : On bloque TOUTES les expulsions automatiques !
+      // 🛡️ SI ON EST EN MODE INVITÉ
       if (isGuest) {
         console.warn("⚠️ Mode Démo : Requête restreinte ou en attente, ignorée pour la visite", error.config.url);
+        
+        const url = error.config.url || "";
+        
+        // 🔥 CORRECTION CRUCIALE : Si l'activité, les stats ou le logout échouent,
+        // on transforme le rejet en SUCCÈS simulé pour éviter que React ne perde les pédales et ne charge SVT.
+        if (
+          url.includes("/api/student-activity") || 
+          url.includes("/api/stats") || 
+          url.includes("/api/auth/logout")
+        ) {
+          return Promise.resolve({
+            status: 200,
+            statusText: "OK",
+            data: url.includes("/api/student-activity") ? { message: "Activité simulée Démo" } : {},
+            headers: error.response.headers,
+            config: error.config,
+          });
+        }
+
+        // Pour les autres vraies erreurs critiques (ex: chargement d'une image ou page inexistante)
         return Promise.reject(error);
       }
 
