@@ -930,9 +930,7 @@ export default function StudentPage() {
         if (exercises.length === 0) {
           return <p className="text-center mt-10">Aucun exercice trouvé</p>;
         }
-
         const totalQuestionsCount = exercises.reduce((acc, ex) => acc + (ex.subQuestions?.length || 0), 0);
-
         return (
           <div className="p-6 exercice-view-container">
             <style>{`
@@ -1151,7 +1149,34 @@ export default function StudentPage() {
     }
     return <StudentDashboardStats />;
   };
+const handleRetourArriere = () => {
+  // Étape 1 : Si on est dans le détail d'une action (Astuces, Résumé, Exercices)
+  if (selectedAction) {
+    setSelectedAction(null);
+    return;
+  }
 
+  // Étape 2 : Si on est sur le choix des actions d'un chapitre
+  if (selectedChapter) {
+    setSelectedChapter(null);
+    return;
+  }
+
+  // Étape 3 : Si on est en train de faire un QCM / Concours
+  if (section === "qcm") {
+    resetQcm();
+    // On recule vers la bonne section d'origine
+    setSection(selectedMatiere ? "matiere" : "concours");
+    return;
+  }
+
+  // Étape 4 : Si on est sur une liste de premier niveau (Chapitres ou Examens d'une matière)
+  if (section === "soutien" || section === "matiere" || section === "concours") {
+    setSelectedMatiere(null);
+    setSection("home");
+    return;
+  }
+};
   return (
     <div
       className="h-screen w-screen flex text-black overflow-hidden"
@@ -1229,20 +1254,15 @@ export default function StudentPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        {(section !== "home" || selectedMatiere || selectedChapter || selectedAction) && (
-          <button
-            onClick={() => {
-              if (selectedAction) return setSelectedAction(null);
-              if (selectedChapter) return setSelectedChapter(null);
-              if (selectedMatiere) return setSelectedMatiere(null);
-              resetQcm();
-              setSection("home");
-            }}
-            className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition z-10"
-          >
-            🔙 Retour
-          </button>
-        )}
+       {/* ✅ NOUVEAU BOUTON CORRIGÉ */}
+{(section !== "home" || selectedMatiere || selectedChapter || selectedAction || selectedTipId) && (
+  <button
+    onClick={handleRetourArriere}
+    className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition z-10 font-semibold shadow-md"
+  >
+    🔙 Retour
+  </button>
+)}
 
         {renderCenterContent()}
       </motion.div>

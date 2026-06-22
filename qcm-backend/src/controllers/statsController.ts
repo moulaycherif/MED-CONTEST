@@ -2,13 +2,19 @@
 import { Response } from "express";
 import mongoose from "mongoose";
 import StudentActivity from "../models/StudentActivity";
-// 🚨 NOUVEAU
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
 
 // 📊 QCM PAR MATIÈRE
 export const getQcmStats = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (req.student?.role === "guest") return res.json([]); // Garde-fou démo
+    // 🛡️ Mode invité : On renvoie des données fictives pour que le front liste les matières correctement
+    if (req.student?.role === "guest") {
+      return res.json([
+        { _id: "Physique", count: 12 },
+        { _id: "Chimie", count: 8 },
+        { _id: "SVT", count: 15 }
+      ]);
+    }
 
     const student = new mongoose.Types.ObjectId(req.student!._id);
     const stats = await StudentActivity.aggregate([
@@ -26,7 +32,7 @@ export const getQcmStats = async (req: AuthenticatedRequest, res: Response) => {
 // 📈 ACTIVITÉ DANS LE TEMPS
 export const getActivityStats = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (req.student?.role === "guest") return res.json([]); // Garde-fou démo
+    if (req.student?.role === "guest") return res.json([]); 
 
     const student = new mongoose.Types.ObjectId(req.student!._id);
     const stats = await StudentActivity.aggregate([
@@ -44,14 +50,23 @@ export const getActivityStats = async (req: AuthenticatedRequest, res: Response)
 // 🧠 DASHBOARD COMPLET
 export const getStudentStats = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // 🛡️ Si c'est un invité, on renvoie une structure vide pour éviter de faire planter le front
+    // 🛡️ Mode invité : Structure miroir complète peuplée avec de la Physique et de la Chimie
     if (req.student?.role === "guest") {
       return res.json({
-        qcmBySubject: [],
+        qcmBySubject: [
+          { _id: "Physique", count: 12 },
+          { _id: "Chimie", count: 8 },
+          { _id: "SVT", count: 15 }
+        ],
         timeline: [],
-        resources: [],
+        resources: [
+          { _id: "QCM", count: 35 }
+        ],
         ranking: [],
-        successEvolution: [],
+        successEvolution: [
+          { _id: { subject: "Physique", date: "2026-01-01" }, avgSuccess: 75 },
+          { _id: { subject: "Chimie", date: "2026-01-01" }, avgSuccess: 60 }
+        ],
       });
     }
 
@@ -97,7 +112,11 @@ export const getStudentStats = async (req: AuthenticatedRequest, res: Response) 
 // 📈 ROUTE DÉDIÉE ÉVOLUTION DES RÉSULTATS
 export const getSuccessEvolution = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (req.student?.role === "guest") return res.json([]); // Garde-fou démo
+    if (req.student?.role === "guest") {
+      return res.json([
+        { _id: { subject: "Physique", date: "2026-01-01" }, avgSuccess: 75 }
+      ]);
+    }
 
     const student = new mongoose.Types.ObjectId(req.student!._id);
     const stats = await StudentActivity.aggregate([
