@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginGuest = async () => {
     try {
       // 💡 On utilise 'api' ici aussi
-      const response = await api.post(`${API_BASE_URL}/api/auth/guest`);
+      const response = await api.post("/api/auth/guest");
       login(response.data.token, true);
     } catch (error: any) {
       console.error("❌ Raison exacte du refus :", error.response?.data || error.message);

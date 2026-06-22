@@ -1,15 +1,15 @@
-// src/axios.ts (ou le chemin correct de votre fichier)
+// src/axios.ts
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  });
+});
 
 // 🔹 1. Intercepteur de Requête Adaptatif (Admin ou Étudiant)
 api.interceptors.request.use(
   (config) => {
-    // 🔄 Récupère le token admin en priorité, sinon le token étudiant
+    // 🔄 Récupère le token admin en priorité, sinon le token étudiant/invité
     const token = localStorage.getItem("adminToken") || localStorage.getItem("token");
 
     if (token) {
@@ -26,7 +26,7 @@ api.interceptors.request.use(
   }
 );
 
-// 🔒 2. Intercepteur de Réponse (axios.ts)
+// 🔒 2. Intercepteur de Réponse
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -34,12 +34,12 @@ api.interceptors.response.use(
       const status = error.response.status;
       const errorCode = error.response.data?.code;
 
-      // Vérifier si l'utilisateur actuel est un invité démo
-      const isGuest = localStorage.getItem("token") === "guest_token";
+      // 🚨 CORRECTION : On vérifie le drapeau "isGuest" qu'on a posé dans le localStorage
+      const isGuest = localStorage.getItem("isGuest") === "true";
 
       // 🛡️ SI ON EST EN MODE INVITÉ : On bloque TOUTES les expulsions automatiques !
       if (isGuest) {
-        console.warn("⚠️ Mode Démo : Requête bloquée ou non autorisée mais ignorée pour la visite", error.config.url);
+        console.warn("⚠️ Mode Démo : Requête restreinte ou en attente, ignorée pour la visite", error.config.url);
         return Promise.reject(error);
       }
 
