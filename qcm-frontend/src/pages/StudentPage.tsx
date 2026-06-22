@@ -1149,34 +1149,43 @@ export default function StudentPage() {
     }
     return <StudentDashboardStats />;
   };
-const handleRetourArriere = () => {
-  // Étape 1 : Si on est dans le détail d'une action (Astuces, Résumé, Exercices)
-  if (selectedAction) {
-    setSelectedAction(null);
-    return;
-  }
+// 1️⃣ NOUVELLE FONCTION DE NAVIGATION PAR ÉTAPES
+  const handleRetourArriere = () => {
+    // Si le détail d'une astuce (Pop-up ou composant) est ouvert
+    if (selectedTipId) {
+      setSelectedTipId(null);
+      return;
+    }
 
-  // Étape 2 : Si on est sur le choix des actions d'un chapitre
-  if (selectedChapter) {
-    setSelectedChapter(null);
-    return;
-  }
+    // Si on est dans une sous-action de chapitre (Astuces, Résumé, Exercices)
+    if (selectedAction) {
+      setSelectedAction(null);
+      return;
+    }
 
-  // Étape 3 : Si on est en train de faire un QCM / Concours
-  if (section === "qcm") {
-    resetQcm();
-    // On recule vers la bonne section d'origine
-    setSection(selectedMatiere ? "matiere" : "concours");
-    return;
-  }
+    // Si on est sur l'affichage des actions d'un chapitre
+    if (selectedChapter) {
+      setSelectedChapter(null);
+      return;
+    }
 
-  // Étape 4 : Si on est sur une liste de premier niveau (Chapitres ou Examens d'une matière)
-  if (section === "soutien" || section === "matiere" || section === "concours") {
-    setSelectedMatiere(null);
-    setSection("home");
-    return;
-  }
-};
+    // Si on est EN TRAIN DE FAIRE un QCM / Concours
+    if (section === "qcm") {
+      resetQcm();
+      // CORRECTION ICI : On retourne à l'arborescence correcte (Matière ou Concours)
+      setSection(selectedMatiere ? "matiere" : "concours");
+      return;
+    }
+
+    // Si on est sur la liste des chapitres ou des examens d'une matière
+    if (section === "soutien" || section === "matiere" || section === "concours") {
+      setSelectedMatiere(null);
+      setSection("home");
+      return;
+    }
+  };
+
+  // 2️⃣ LE RENDU PRINCIPAL DU COMPOSANT
   return (
     <div
       className="h-screen w-screen flex text-black overflow-hidden"
@@ -1186,6 +1195,7 @@ const handleRetourArriere = () => {
         backgroundPosition: "center",
       }}
     >
+      {/* Barre latérale (Sidebar) */}
       <motion.div
         className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl overflow-y-auto"
         initial={{ x: -40, opacity: 0 }}
@@ -1249,20 +1259,21 @@ const handleRetourArriere = () => {
         </div>
       </motion.div>
 
+      {/* Contenu Central */}
       <motion.div
         className="flex-1 h-full bg-white/80 backdrop-blur-md rounded-l-3xl shadow-lg p-4 overflow-y-auto relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-       {/* ✅ NOUVEAU BOUTON CORRIGÉ */}
-{(section !== "home" || selectedMatiere || selectedChapter || selectedAction || selectedTipId) && (
-  <button
-    onClick={handleRetourArriere}
-    className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition z-10 font-semibold shadow-md"
-  >
-    🔙 Retour
-  </button>
-)}
+        {/* BOUTON RETOUR CORRIGÉ QUI APPELLE LA FONCTION PAR ÉTAPES */}
+        {(section !== "home" || selectedMatiere || selectedChapter || selectedAction || selectedTipId) && (
+          <button
+            onClick={handleRetourArriere}
+            className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition z-10 font-semibold shadow-md"
+          >
+            🔙 Retour
+          </button>
+        )}
 
         {renderCenterContent()}
       </motion.div>
