@@ -615,8 +615,8 @@ export default function StudentPage() {
       const chaptersBySubject: Record<string, string[]> = {
         Mathématique: [
           "Chapitre I : Suites & Sommes",
-          "Chapitre II : Étude de fonctions",
-          "Chapitre III : Équations différentielles",
+          "Chapitre II : Etude de fonctions",
+          "Chapitre III : Equations différentielles",
           "Chapitre IV : Nombres complexes",
           "Chapitre V : Intégrales",
           "Chapitre VI : Géométrie dans l'espace",
