@@ -1,3 +1,4 @@
+// src/pages/LoginPage.tsx (ou chemin correspondant)
 import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
 import { motion } from "framer-motion";
@@ -13,10 +14,8 @@ export default function LoginPage() {
   const [role, setRole] = useState<"admin" | "student" | null>(null);
   const [loading, setLoading] = useState(false);
   
-  // 🚨 ÉTAT NOUVEAU : Permet d'afficher le bouton "Forcer la connexion"
   const [showForceButton, setShowForceButton] = useState(false);
 
-  // 🔄 Auto-détection du rôle si un token existe déjà au chargement de la page
   useEffect(() => {
     if (localStorage.getItem("adminToken")) {
       setRole("admin");
@@ -25,13 +24,15 @@ export default function LoginPage() {
     }
   }, []);
 
-  // 🛠️ La fonction accepte désormais un paramètre "force" (par défaut à false)
   const handleLogin = async (e: React.FormEvent, force: boolean = false) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Si ce n'est pas une tentative forcée, on cache le bouton le temps de vérifier
+    // 👻 ANTI-FANTÔME : On détruit le mode invité avant même de contacter le serveur !
+    // Ainsi, l'intercepteur Axios laissera obligatoirement passer la requête.
+    localStorage.removeItem("isGuest");
+
     if (!force) setShowForceButton(false);
 
     try {
@@ -39,7 +40,7 @@ export default function LoginPage() {
       const adminRes = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, {
         email,
         password,
-        force, // 👈 On transmet le paramètre au backend
+        force,
       });
 
       localStorage.setItem("adminToken", adminRes.data.token);
@@ -47,18 +48,24 @@ export default function LoginPage() {
       setRole("admin");
       setLoading(false);
 
-      // ⚡ Déclencheur magique pour actualiser instantanément la Navbar
       window.dispatchEvent(new Event("authChange"));
       return;
     } catch (err: any) {
-      // 🚨 Si l'admin est déjà connecté (Erreur 409), on stoppe tout ici et on affiche le bouton !
+      // 🚨 Si l'admin est déjà connecté (Erreur 409)
       if (err.response?.status === 409) {
         setError(err.response?.data?.error || "Un administrateur est déjà connecté.");
         setShowForceButton(true);
         setLoading(false);
         return; 
       }
-      // Si c'est une autre erreur (ex: 401 mot de passe faux), on passe à l'essai étudiant
+      
+      // 🚨 NOUVEAU : Si c'est une vraie erreur serveur (Backend coupé ou 500), on s'arrête et on ne teste pas l'étudiant.
+      if (!err.response || err.response.status >= 500) {
+        setError("Erreur de connexion au serveur. Réessayez plus tard.");
+        setLoading(false);
+        return;
+      }
+      // Sinon (ex: 401 mauvais mot de passe), on passe à l'essai étudiant ci-dessous...
     }
 
     try {
@@ -66,7 +73,7 @@ export default function LoginPage() {
       const studentRes = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         email,
         password,
-        force, // 👈 On transmet le paramètre au backend
+        force,
       });
 
       localStorage.setItem("token", studentRes.data.token);
@@ -74,22 +81,18 @@ export default function LoginPage() {
       setRole("student");
       setLoading(false);
 
-      // ⚡ Déclencheur magique pour actualiser instantanément la Navbar
       window.dispatchEvent(new Event("authChange"));
     } catch (err: any) {
-      // 🚨 Si l'étudiant est déjà connecté (Erreur 409)
       if (err.response?.status === 409) {
         setError(err.response?.data?.error || "Ce compte est déjà connecté ailleurs.");
         setShowForceButton(true);
       } else {
-        // Erreur classique (Identifiants invalides, etc.)
         setError(err.response?.data?.error || "Email ou mot de passe incorrect ❌");
       }
       setLoading(false);
     }
   };
 
-  // 🔹 Redirection ou affichage dynamique après login
   if (token && role === "admin") return <AdminDashboard />;
   if (token && role === "student") return <StudentPage token={token} />;
 
@@ -102,7 +105,7 @@ export default function LoginPage() {
         className="bg-white shadow-xl rounded-2xl p-8 w-[90%] max-w-md"
       >
         <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">
-          🔐 Connexion à Med-Contest
+          🔐 Connexion
         </h1>
 
         <form onSubmit={(e) => handleLogin(e, false)} className="flex flex-col gap-4">
@@ -112,7 +115,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setShowForceButton(false); // Cache le bouton si l'utilisateur change d'adresse
+              setShowForceButton(false);
             }}
             className="border border-gray-300 text-gray-900 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
             required
@@ -123,13 +126,12 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              setShowForceButton(false); // Cache le bouton si l'utilisateur change de mot de passe
+              setShowForceButton(false);
             }}
             className="border border-gray-300 text-gray-900 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
             required
           />
 
-          {/* 🔘 Bouton de connexion standard */}
           {!showForceButton && (
             <button
               type="submit"
@@ -143,12 +145,10 @@ export default function LoginPage() {
           )}
         </form>
 
-        {/* 🚨 BLOC ERREUR CLASSIQUE */}
         {error && !showForceButton && (
           <p className="text-red-600 text-center mt-3 font-medium">{error}</p>
         )}
 
-        {/* ⚡ INTERFACE D'URGENCE : Apparaît uniquement en cas de double session (Code 409) */}
         {showForceButton && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
@@ -161,7 +161,7 @@ export default function LoginPage() {
             <button
               type="button"
               disabled={loading}
-              onClick={(e) => handleLogin(e, true)} // 👈 Relance handleLogin avec force = true
+              onClick={(e) => handleLogin(e, true)}
               className="bg-amber-600 text-white text-sm font-bold py-2.5 px-4 rounded-lg hover:bg-amber-700 transition shadow-sm"
             >
               {loading ? "Déconnexion forcée..." : "Forcer la déconnexion de l'autre appareil"}
