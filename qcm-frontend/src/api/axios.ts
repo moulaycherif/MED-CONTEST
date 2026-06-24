@@ -7,21 +7,59 @@ const api = axios.create({
 });
 
 // 🔹 1. Intercepteur de Requête Adaptatif (Admin ou Étudiant)
-api.interceptors.request.use(
-  (config) => {
-    // 🔄 Récupère le token admin en priorité, sinon le token étudiant/invité
-    const token = localStorage.getItem("adminToken") || localStorage.getItem("token");
+// 🔒 2. Intercepteur de Réponse
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      const status = error.response.status;
+      const errorCode = error.response.data?.code;
 
-    if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      } as any;
+      const isGuest = localStorage.getItem("isGuest") === "true";
+      const url = error.config.url || "";
+      
+      // 🟢 CORRECTION : On définit isLoginRequest AVANT de vérifier le mode invité
+      const isLoginRequest = url.includes("/api/auth/login") || url.includes("/api/auth/admin/login");
+
+      // 🛡️ SI ON EST EN MODE INVITÉ ET QUE CE N'EST PAS UNE TENTATIVE DE CONNEXION
+      if (isGuest && !isLoginRequest) {
+        console.warn("⚠️ Mode Démo : Requête restreinte ou en attente, ignorée pour la visite", url);
+        
+        if (
+          url.includes("/api/student-activity") || 
+          url.includes("/api/stats") || 
+          url.includes("/api/auth/logout")
+        ) {
+          return Promise.resolve({
+            status: 200,
+            statusText: "OK",
+            data: url.includes("/api/student-activity") ? { message: "Activité simulée Démo" } : {},
+            headers: error.response.headers,
+            config: error.config,
+          });
+        }
+
+        return Promise.reject(error);
+      }
+
+      // --- COMPORTEMENT NORMAL POUR LES VRAIS ÉTUDIANTS / ADMINS ---
+      if (!isLoginRequest && (status === 403 || status === 401 || errorCode === "SESSION_KICKED")) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("adminToken");
+        // On nettoie aussi le mode invité par sécurité lors d'une expulsion
+        localStorage.removeItem("isGuest"); 
+
+        if (status === 403 || errorCode === "SESSION_KICKED") {
+          alert("⚠️ Déconnexion : Accès refusé ou compte actif sur un autre appareil.");
+        } else {
+          alert("🔑 Votre session a expiré. Veuillez vous reconnecter.");
+        }
+
+        window.location.href = "/login";
+        return new Promise(() => {}); // Bloque la propagation
+      }
     }
 
-    return config;
-  },
-  (error) => {
     return Promise.reject(error);
   }
 );
