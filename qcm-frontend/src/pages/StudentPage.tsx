@@ -495,17 +495,17 @@ export default function StudentPage() {
                       {q.options.map((opt, i) => {
                         return (
                           <label
-                            key={i}
-                            className={`flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer transition-all ${
-                              submitted
-                                ? opt === q.reponseCorrecte
-                                  ? "bg-green-100 !border-green-500 font-medium"
-                                  : answers[q._id] === opt
-                                  ? "bg-red-100 !border-red-500 font-medium"
-                                  : "opacity-60"
-                                : "hover:bg-blue-50/50 hover:border-blue-400"
-                            }`}
-                          >
+  key={i}
+  className={`flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer transition-all ${
+    submitted
+      ? opt === q.reponseCorrecte
+        ? "bg-green-100 !border-green-500 font-medium"
+        : answers[q._id] === opt
+        ? "bg-red-100 !border-red-500 font-medium"
+        : "opacity-60"
+      : "hover:bg-blue-50/50 hover:border-blue-400"
+  }`}
+>
                             <input
                               type="radio"
                               name={q._id}
