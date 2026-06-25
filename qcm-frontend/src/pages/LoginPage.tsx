@@ -24,13 +24,12 @@ export default function LoginPage() {
     }
   }, []);
 
-  const handleLogin = async (e: React.FormEvent, force: boolean = false) => {
+ const handleLogin = async (e: React.FormEvent, force: boolean = false) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // 👻 ANTI-FANTÔME : On détruit le mode invité avant même de contacter le serveur !
-    // Ainsi, l'intercepteur Axios laissera obligatoirement passer la requête.
+    // 👻 ANTI-FANTÔME
     localStorage.removeItem("isGuest");
 
     if (!force) setShowForceButton(false);
@@ -43,6 +42,9 @@ export default function LoginPage() {
         force,
       });
 
+      // 🧹 NETTOYAGE : On s'assure qu'aucun compte étudiant n'interfère
+      localStorage.removeItem("token"); 
+      
       localStorage.setItem("adminToken", adminRes.data.token);
       setToken(adminRes.data.token);
       setRole("admin");
@@ -51,7 +53,6 @@ export default function LoginPage() {
       window.dispatchEvent(new Event("authChange"));
       return;
     } catch (err: any) {
-      // 🚨 Si l'admin est déjà connecté (Erreur 409)
       if (err.response?.status === 409) {
         setError(err.response?.data?.error || "Un administrateur est déjà connecté.");
         setShowForceButton(true);
@@ -59,13 +60,11 @@ export default function LoginPage() {
         return; 
       }
       
-      // 🚨 NOUVEAU : Si c'est une vraie erreur serveur (Backend coupé ou 500), on s'arrête et on ne teste pas l'étudiant.
       if (!err.response || err.response.status >= 500) {
         setError("Erreur de connexion au serveur. Réessayez plus tard.");
         setLoading(false);
         return;
       }
-      // Sinon (ex: 401 mauvais mot de passe), on passe à l'essai étudiant ci-dessous...
     }
 
     try {
@@ -75,6 +74,9 @@ export default function LoginPage() {
         password,
         force,
       });
+
+      // 🧹 NETTOYAGE : On s'assure qu'aucun compte admin n'interfère
+      localStorage.removeItem("adminToken");
 
       localStorage.setItem("token", studentRes.data.token);
       setToken(studentRes.data.token);
@@ -94,7 +96,7 @@ export default function LoginPage() {
   };
 
   if (token && role === "admin") return <AdminDashboard />;
-  if (token && role === "student") return <StudentPage token={token} />;
+  if (token && role === "student") return <StudentPage />;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">

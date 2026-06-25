@@ -42,6 +42,7 @@ export default function Navbar() {
       // Nettoyage complet
       localStorage.removeItem("token");
       localStorage.removeItem("adminToken");
+      localStorage.removeItem("isGuest");
       setIsAuthenticated(false); 
       navigate("/");
     }
