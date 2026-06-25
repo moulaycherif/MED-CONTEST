@@ -11,33 +11,6 @@ router.get("/ping", (req, res) => {
   res.json({ message: "pong admin" });
 });
 
-import Admin from "../models/Admin"; // Vérifiez que le chemin vers votre modèle Admin est bon
-
-// 🚨 ROUTE SECRÈTE TEMPORAIRE POUR CRÉER L'ADMIN
-router.get("/force-create-admin", async (req, res) => {
-  try {
-    // Vérifie s'il existe déjà pour éviter les doublons
-    const existingAdmin = await Admin.findOne({ email: "lamchich@uca.ac.ma" });
-    if (existingAdmin) {
-      return res.send("L'admin existe déjà !");
-    }
-
-    // Crypte le mot de passe (Mettez le mot de passe de votre choix ici)
-    const hashedPassword = await bcrypt.hash("Moulaycherif@2020", 10); 
-
-    // Création de l'admin
-    const newAdmin = await Admin.create({
-      email: "lamchich@uca.ac.ma", // Mettez votre vrai email admin
-      password: hashedPassword,
-      role: "admin" // Si votre modèle requiert un rôle
-    });
-
-    res.send("✅ Compte Admin créé avec succès ! Vous pouvez vous connecter.");
-  } catch (error: any) {
-    res.status(500).send("Erreur : " + error.message);
-  }
-});
-
 // 🔹 Créer un étudiant (ADMIN)
 router.post("/create-student", authenticateAdmin, async (req, res) => {
   try {
