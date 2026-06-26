@@ -41,6 +41,9 @@ export default function DemoPage() {
     }
   };
 
+  // 🛑 VARIABLE MAGIQUE : Mettre à 'true' plus tard pour réactiver la visite guidée
+  const isTourEnabled = false;
+
   return (
     <BackgroundWrapper>
       <Navbar />
@@ -77,45 +80,58 @@ export default function DemoPage() {
           Explorez l'interface réelle utilisée par nos étudiants. En mode invité, vous pourrez parcourir librement les différentes sections (Concours, Matières, Soutien), mais l'affichage sera limité à un seul échantillon et les interactions seront restreintes.
         </motion.p>
         
-        {/* Bouton d'action principal dynamique */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <button 
-            onClick={handleStartDemo}
-            disabled={isLoading} // 🔒 Désactive le bouton pendant le chargement
-            className={`px-8 py-4 text-white text-xl font-bold rounded-2xl shadow-xl transition transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-200 flex items-center justify-center gap-3 ${
-              isLoading 
-                ? "bg-gray-400 cursor-not-allowed scale-100" 
-                : "bg-green-600 hover:bg-green-700 hover:scale-105 cursor-pointer"
-            }`}
+        {/* Bouton d'action principal dynamique ou Message d'indisponibilité */}
+        {isTourEnabled ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
           >
-            {isLoading ? (
-              <>
-                {/* Petit spinner SVG de chargement */}
-                <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Démarrage du serveur (~45s)...</span>
-              </>
-            ) : (
-              "Lancer la visite guidée"
-            )}
-          </button>
-        </motion.div>
+            <button 
+              onClick={handleStartDemo}
+              disabled={isLoading} // 🔒 Désactive le bouton pendant le chargement
+              className={`px-8 py-4 text-white text-xl font-bold rounded-2xl shadow-xl transition transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-200 flex items-center justify-center gap-3 ${
+                isLoading 
+                  ? "bg-gray-400 cursor-not-allowed scale-100" 
+                  : "bg-green-600 hover:bg-green-700 hover:scale-105 cursor-pointer"
+              }`}
+            >
+              {isLoading ? (
+                <>
+                  {/* Petit spinner SVG de chargement */}
+                  <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Démarrage du serveur (~45s)...</span>
+                </>
+              ) : (
+                "Lancer la visite guidée"
+              )}
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="px-8 py-4 bg-gray-100 text-gray-500 border border-gray-200 text-lg font-bold rounded-2xl shadow-inner inline-flex items-center justify-center gap-3"
+          >
+            🚧 La visite guidée sera très bientôt disponible
+          </motion.div>
+        )}
 
         {/* Note de réassurance */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-xs text-gray-400 mt-4 italic"
-        >
-          Aucune inscription ni carte bancaire requise.
-        </motion.p>
+        {isTourEnabled && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-xs text-gray-400 mt-4 italic"
+          >
+            Aucune inscription ni carte bancaire requise.
+          </motion.p>
+        )}
 
       </main>
       
