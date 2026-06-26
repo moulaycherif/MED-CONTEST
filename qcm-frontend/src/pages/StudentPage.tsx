@@ -479,8 +479,13 @@ export default function StudentPage() {
                     <h3 className="font-semibold mb-3 text-lg mt-1 flex items-start gap-1">
                       <span className="text-blue-900 font-bold">Q{originalIdx + 1}) </span>
                       <div className="flex-1">
-                        <MixedContentRenderer text={q.texte || q.questionText || q.question || ""} />
-                      </div>
+  <MixedContentRenderer text={q.texte || q.questionText || q.question || ""} />
+  
+  {/* 🐛 LIGNE À AJOUTER TEMPORAIREMENT : Affiche les vraies données du serveur */}
+  <div className="bg-red-100 text-red-800 text-xs p-2 mt-2 font-mono rounded">
+    DEBUG: {JSON.stringify(q)}
+  </div>
+</div>
                       <span className="text-purple-700 shrink-0 text-sm bg-purple-50 px-2 py-0.5 rounded-full font-medium">({q.note} pt)</span>
                     </h3>
 

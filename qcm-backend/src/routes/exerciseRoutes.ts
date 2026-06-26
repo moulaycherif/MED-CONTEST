@@ -147,7 +147,14 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
     for (const row of sheetData) {
       const cleanRow: any = {};
       Object.keys(row).forEach((key) => {
-        const cleanKey = key.trim().toLowerCase().replace(/[\s_\-\r\n\t]/g, "");
+        // 🪄 CORRECTION : On supprime les accents (é -> e, à -> a) avant de lire la colonne !
+        const cleanKey = key
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "") 
+          .trim()
+          .toLowerCase()
+          .replace(/[\s_\-\r\n\t]/g, "");
+          
         cleanRow[cleanKey] = row[key];
       });
 
