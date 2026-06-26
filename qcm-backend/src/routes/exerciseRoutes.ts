@@ -58,6 +58,19 @@ router.get("/", authenticateStudent, async (req: AuthenticatedRequest, res: Resp
 });
 
 // ======================================================
+// 📋 Récupérer TOUS les exercices (DÉDIÉ À L'ADMIN)
+// ======================================================
+router.get("/admin/all", authenticateAdmin, verifyAdmin, async (req: Request, res: Response) => {
+  try {
+    // L'admin a besoin de tout voir, sans aucune limite ni restriction d'invité
+    const exercises = await Exercise.find();
+    res.json(exercises);
+  } catch (error) {
+    res.status(500).json({ error: "Erreur serveur lors de la récupération admin" });
+  }
+});
+
+// ======================================================
 // 🖼 Upload d'image depuis l'éditeur riche (Quill)
 // ======================================================
 router.post("/upload-editor-image", authenticateAdmin, verifyAdmin, upload.single("image"), (req: Request, res: Response): void => {

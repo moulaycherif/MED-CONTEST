@@ -60,9 +60,16 @@ const AdminExercises: React.FC = () => {
     fetchExercises();
   }, []);
 
-  const fetchExercises = async () => {
+ const fetchExercises = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/exercises`);
+      // 🔓 CORRECTION : On pointe vers la route Admin et on force l'envoi du token Admin
+      const adminToken = localStorage.getItem("adminToken");
+      const res = await axios.get(`${API_BASE_URL}/api/exercises/admin/all`, {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+        },
+      });
+      
       const data: Exercise[] = res.data;
       setExercises(data);
       const uniqueSubjects = Array.from(new Set(data.map((q) => q.subject)));
