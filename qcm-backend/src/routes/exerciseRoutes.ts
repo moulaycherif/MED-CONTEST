@@ -119,54 +119,51 @@ router.post("/", authenticateAdmin, verifyAdmin, upload.single("contextImage"), 
 });
 
 // ======================================================
-// 📥 Importation fichier Excel (.xlsx / .xls) - STABLE ET SÉCURISÉ (AVEC MATHS)
+// 📥 Importation fichier Excel (.xlsx / .xls) - MULTI-QUESTIONS INTELLIGENT
 // ======================================================
-router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<void> => {
+router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single("excelFile"), async (req: Request, res: Response): Promise<any> => {
   try {
     const { subject, chapter } = req.body;
-    if (!req.file) {
-      res.status(400).json({ error: "Veuillez fournir un fichier Excel." });
-      return;
-    }
-    if (!subject || !chapter) {
-      res.status(400).json({ error: "La matière et le chapitre sont obligatoires." });
-      return;
-    }
+    if (!req.file) return res.status(400).json({ error: "Fichier manquant" } as any);
+    if (!subject || !chapter) return res.status(400).json({ error: "Matière et chapitre obligatoires" } as any);
 
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    const sheetData: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const sheetData: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-    if (sheetData.length === 0) {
-      res.status(400).json({ error: "Le fichier Excel est vide." });
-      return;
-    }
+    if (sheetData.length === 0) return res.status(400).json({ error: "Fichier vide" } as any);
 
-    let importedCount = 0;
+    const exercisesToSave: any[] = [];
+    let currentExercise: any = null;
+    let currentEnonceText = ""; 
 
     for (const row of sheetData) {
       const cleanRow: any = {};
       Object.keys(row).forEach((key) => {
-        // 🪄 CORRECTION : On supprime les accents (é -> e, à -> a) avant de lire la colonne !
-        const cleanKey = key
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "") 
-          .trim()
-          .toLowerCase()
-          .replace(/[\s_\-\r\n\t]/g, "");
-          
+        // 🪄 Nettoyage total des accents et espaces pour les noms de colonnes
+        const cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/[\s_\-\r\n\t]/g, "");
         cleanRow[cleanKey] = row[key];
       });
 
-      // 🎯 APPLICATION DU TRADUCTEUR LATEX SUR TOUS LES TEXTES
-      const enonce = formatExcelMath(cleanRow["enonce"] || cleanRow["contexte"] || "Généralités");
+      const rawEnonce = String(cleanRow["enonce"] || cleanRow["contexte"] || "").trim();
       const questionText = formatExcelMath(cleanRow["question"] || cleanRow["text"] || "");
       const typeQuestion = String(cleanRow["type"] || "qcm").toLowerCase().trim();
+      const imageCol = String(cleanRow["image"] || cleanRow["img"] || "").trim();
 
+      // 🧠 1. SAUVEGARDE DU CONTEXTE (Même si la ligne n'a pas de question !)
+      if (rawEnonce !== "") {
+        // Si on lit un nouvel énoncé, on archive le groupe de questions précédent
+        if (currentExercise && rawEnonce !== currentEnonceText) {
+          exercisesToSave.push(currentExercise);
+          currentExercise = null;
+        }
+        currentEnonceText = rawEnonce;
+      }
+
+      // 🚫 2. Si pas de question, on s'arrête là pour cette ligne
       if (!questionText || questionText.trim() === "") continue;
 
+      // 🎯 3. Traitement des options
       let optionsArray: string[] = [];
-
       if (typeQuestion === "vrai_faux") {
         optionsArray = ["Vrai", "Faux"];
       } else {
@@ -174,48 +171,48 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
         const optB = cleanRow["optionb"] || cleanRow["optb"] || "";
         const optC = cleanRow["optionc"] || cleanRow["optc"] || "";
         const optD = cleanRow["optiond"] || cleanRow["optd"] || "";
-        const optE = cleanRow["optione"] || cleanRow["opte"] || ""; // 👈 AJOUT
-
-        // 👈 On ajoute optE dans le tableau
-        optionsArray = [optA, optB, optC, optD, optE] 
-          .map((o) => formatExcelMath(String(o).trim())) 
-          .filter((o) => o !== "undefined" && o !== "");
+        const optE = cleanRow["optione"] || cleanRow["opte"] || ""; 
+        optionsArray = [optA, optB, optC, optD, optE].map(o => formatExcelMath(String(o).trim())).filter(o => o !== "undefined" && o !== "");
       }
-
-      if (optionsArray.length < 2) {
-        optionsArray = ["Option A par défaut", "Option B par défaut"];
-      }
+      if (optionsArray.length < 2) optionsArray = ["Option A par défaut", "Option B par défaut"];
 
       let bonneReponseRaw = cleanRow["bonnereponse"] || cleanRow["correctanswer"] || cleanRow["reponsecorrecte"] || cleanRow["reponse"] || "";
-      let correctAnswerText = formatExcelMath(String(bonneReponseRaw).trim()); // Conversion de la réponse correcte
+      let correctAnswerText = formatExcelMath(String(bonneReponseRaw).trim());
+      if (!correctAnswerText && optionsArray.length > 0) correctAnswerText = optionsArray[0];
 
-      if (!correctAnswerText && optionsArray.length > 0) {
-        correctAnswerText = optionsArray[0];
+      const subQuestion = {
+        questionText,
+        qType: typeQuestion === "vrai_faux" ? "vrai_faux" : "qcm",
+        options: optionsArray,
+        correctAnswer: correctAnswerText,
+        explanation: formatExcelMath(cleanRow["explication"] || cleanRow["explanation"] || ""),
+        image: imageCol
+      };
+
+      // 🧠 4. ATTACHEMENT DE LA QUESTION AU CONTEXTE
+      if (!currentExercise) {
+        currentExercise = {
+          subject,
+          chapter,
+          contextText: formatExcelMath(currentEnonceText || "Contexte général"),
+          contextImage: "",
+          subQuestions: [subQuestion]
+        };
+      } else {
+        currentExercise.subQuestions.push(subQuestion);
       }
-
-      const explanationText = formatExcelMath(cleanRow["explication"] || cleanRow["explanation"] || "Valable"); // Conversion de l'explication
-
-      await Exercise.create({
-        subject,
-        chapter,
-        contextText: enonce,
-        contextImage: "",
-        subQuestions: [{
-          questionText,
-          qType: typeQuestion === "vrai_faux" ? "vrai_faux" : "qcm",
-          options: optionsArray,
-          correctAnswer: correctAnswerText,
-          explanation: explanationText
-        }]
-      });
-
-      importedCount++;
     }
 
-    res.status(200).json({ success: true, message: `Importation réussie de ${importedCount} exercices.` });
+    if (currentExercise) exercisesToSave.push(currentExercise);
+
+    if (exercisesToSave.length > 0) {
+      await Exercise.insertMany(exercisesToSave);
+    }
+
+    res.status(200).json({ success: true, message: `Importation réussie : ${exercisesToSave.length} énoncés créés.` } as any);
   } catch (error) {
     console.error("Erreur import Excel :", error);
-    res.status(500).json({ error: "Erreur interne lors du traitement du fichier Excel." });
+    res.status(500).json({ error: "Erreur interne lors du traitement." } as any);
   }
 });
 
