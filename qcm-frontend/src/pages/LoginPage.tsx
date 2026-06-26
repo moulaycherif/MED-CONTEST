@@ -26,6 +26,10 @@ export default function LoginPage() {
 
  const handleLogin = async (e: React.FormEvent, force: boolean = false) => {
     e.preventDefault();
+    // 🧼 Nettoyage préventif pour éviter que l'ancienne session étudiant ne pollue l'admin
+  localStorage.removeItem("token");
+  localStorage.removeItem("adminToken");
+  localStorage.removeItem("isGuest");
     setError("");
     setLoading(true);
 
