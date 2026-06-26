@@ -112,12 +112,8 @@ export const loginAdmin = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
-    // 🚨 VERROUILLAGE STRICT ADMIN 🚨
-    if (admin.currentSessionId) {
-      return res.status(403).json({ 
-        error: "Un administrateur est déjà connecté. Déconnexion préalable requise." 
-      });
-    }
+    // 🔓 CORRECTION : On supprime le bloc "if (admin.currentSessionId)" qui bloquait tout.
+    // Désormais, si l'admin se reconnecte, on génère un nouvel ID et on écrase l'ancien sans planter !
 
     const newSessionId = crypto.randomUUID();
     const userIp = (req.headers["x-forwarded-for"] as string) || req.ip || "0.0.0.0";
