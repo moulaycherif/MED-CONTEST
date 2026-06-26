@@ -1,20 +1,21 @@
+// 1️⃣ TOUJOURS EN PREMIER : Charger les variables d'environnement
+import dotenv from "dotenv";
+dotenv.config({ path: "./.env" }); 
+
+// 2️⃣ En second : Les modules externes et vos fichiers locaux
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-import app from "./app";
+import app from "./app"; // Désormais, "app" aura accès aux vraies variables !
 import http from "http";
 import { initRankingSocket } from "./websocket/rankingSocket";
 import path from "path";
 import studentActivityRoutes from "./routes/studentActivityRoutes";
 import { ensureUploadDirs } from "./utils/ensureUploadDirs";
 
-// 🚨 IMPORTATION DU MODÈLE ET DE BCRYPT POUR LE SEED
-import Admin from "./models/Admin"; // 👈 /!\ À VÉRIFIER : Ajustez le chemin vers votre modèle Admin
+import Admin from "./models/Admin";
 import bcrypt from "bcrypt";
 
 ensureUploadDirs();
-
-dotenv.config({ path: "./.env" });
 
 app.use(
   "/uploads",
