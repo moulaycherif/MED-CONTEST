@@ -479,13 +479,8 @@ export default function StudentPage() {
                     <h3 className="font-semibold mb-3 text-lg mt-1 flex items-start gap-1">
                       <span className="text-blue-900 font-bold">Q{originalIdx + 1}) </span>
                       <div className="flex-1">
-  <MixedContentRenderer text={q.texte || q.questionText || q.question || ""} />
-  
-  {/* 🐛 LIGNE À AJOUTER TEMPORAIREMENT : Affiche les vraies données du serveur */}
-  <div className="bg-red-100 text-red-800 text-xs p-2 mt-2 font-mono rounded">
-    DEBUG: {JSON.stringify(q)}
-  </div>
-</div>
+                          <MixedContentRenderer text={q.texte || q.questionText || q.question || ""} /> 
+                      </div>
                       <span className="text-purple-700 shrink-0 text-sm bg-purple-50 px-2 py-0.5 rounded-full font-medium">({q.note} pt)</span>
                     </h3>
 
@@ -694,8 +689,8 @@ export default function StudentPage() {
                 <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">Énoncé</h3>
                   <div className="text-lg font-medium text-gray-900">
-                    <MixedContentRenderer text={currentEx?.contextText || ""} />
-                  </div>
+  <MixedContentRenderer text={currentEx?.contextText || currentEx?.enonce || currentEx?.texte || ""} />
+</div>
                   {currentEx?.contextImage && (
                     <img 
                       src={getImageUrl(currentEx.contextImage)} 
@@ -712,8 +707,8 @@ export default function StudentPage() {
                       <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
                         <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
                         <div className="flex-1 text-lg font-medium text-gray-900">
-                          <MixedContentRenderer text={subQ.questionText || ""} />
-                        </div>
+  <MixedContentRenderer text={subQ.questionText || subQ.question || subQ.texte || ""} />
+</div>
                       </div>
 
                       <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -963,8 +958,8 @@ export default function StudentPage() {
               <div className="mb-4 border-b pb-4 bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wide">Énoncé</h3>
                 <div className="text-base font-medium text-gray-800">
-                  <MixedContentRenderer text={currentEx.contextText || ""} />
-                </div>
+  <MixedContentRenderer text={currentEx.contextText || currentEx.enonce || currentEx.texte || ""} />
+</div>
                 {currentEx.contextImage && (
                   <img 
                     src={getImageUrl(currentEx.contextImage)} 
@@ -986,8 +981,8 @@ export default function StudentPage() {
                           Q{index + 1}
                         </span>
                         <div className="flex-1 text-lg font-medium text-gray-900">
-                          <MixedContentRenderer text={subQ.questionText || ""} />
-                        </div>
+  <MixedContentRenderer text={subQ.questionText || subQ.question || subQ.texte || ""} />
+</div>
                       </div>
 
                       {subQ.image && (
