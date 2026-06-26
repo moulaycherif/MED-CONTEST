@@ -4,16 +4,15 @@ import Exam from "../models/Exam";
 import QuestionGroup from "../models/QuestionGroup";
 import XLSX from "xlsx";
 
+// 🚨 NOUVEAU : Import du bon type
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
+
 /* ============================================================
     🔧 UTILITAIRES
 ============================================================ */
 
 const normalize = (s: string) =>
-  s
-    .replace(/\u00A0/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
+  s.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
 
 const getCell = (row: any, key: string) => {
   const expected = normalize(key);
@@ -27,15 +26,14 @@ const getCell = (row: any, key: string) => {
     📥 GET QUESTIONS
 ============================================================ */
 
-export const getQuestions = async (req: Request, res: Response) => {
+export const getQuestions = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { exam, subject } = req.query as {
       exam?: string;
       subject?: string;
     };
-
+    const isGuest = req.student?.role === "guest"; // 🟢 Utilisation propre et sûre
     const filter: any = {};
-
     if (exam) {
       filter.exam = { $regex: new RegExp(`^${exam.trim()}$`, "i") };
     }
@@ -43,7 +41,8 @@ export const getQuestions = async (req: Request, res: Response) => {
       filter.subject = { $regex: new RegExp(`^${subject.trim()}$`, "i") };
     }
 
-    const questions = await Question.find(filter)
+    // On prépare la requête de base
+   let query = Question.find(filter)
       .populate({
         path: "groupId",
         model: "QuestionGroup",
@@ -52,6 +51,12 @@ export const getQuestions = async (req: Request, res: Response) => {
       .sort({ "groupId.order": 1, _id: 1 })
       .lean();
 
+    // 🔒 SÉCURITÉ : L'invité ne reçoit qu'UNE SEULE question
+    if (isGuest) {
+      query = query.limit(1) as any;
+    }
+
+    const questions = await query;
     res.json(questions);
   } catch (err) {
     console.error("❌ getQuestions error:", err);
@@ -203,17 +208,19 @@ export const importExcel = async (req: Request, res: Response) => {
     📚 AUTRES ROUTES
 ============================================================ */
 
-export const getExams = async (_req: Request, res: Response) => {
+export const getExams = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const exams = await Question.distinct("exam");
+    let exams = await Question.distinct("exam");
+    exams = exams.sort();
+
+    // 🟢 CORRECTION : On ne coupe plus la liste pour éviter de casser le menu React
+    // L'invité peut voir les concours, mais getQuestions bloquera le contenu.
 
     res.json(
-      exams
-        .sort()
-        .map((title) => ({
-          _id: title,
-          title,
-        }))
+      exams.map((title) => ({
+        _id: title,
+        title,
+      }))
     );
   } catch (err) {
     console.error(err);
@@ -221,18 +228,24 @@ export const getExams = async (_req: Request, res: Response) => {
   }
 };
 
-export const getSubjectsByExam = async (req: Request, res: Response) => {
-  const subjects = await Question.distinct("subject", {
-    exam: req.params.exam,
-  });
-  res.json(subjects);
+export const getSubjectsByExam = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    let subjects = await Question.distinct("subject", {
+      exam: req.params.exam,
+    });
+
+    // 🟢 CORRECTION : On retire le slice(0, 1) qui forçait la matière SVT au retour en arrière
+    res.json(subjects);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur matières" });
+  }
 };
 
-export const deleteAllQuestions = async (_req: Request, res: Response) => {
+export const deleteAllQuestions = async (_req: AuthenticatedRequest, res: Response) => {
   await Question.deleteMany({});
   await QuestionGroup.deleteMany({});
   res.json({ message: "✅ Toutes les questions supprimées" });
 };
 
-// Alias
 export const importQuestions = importExcel;

@@ -5,6 +5,9 @@ export interface IStudent extends Document {
   email: string;
   password: string;
   isAdmin: boolean;
+  // 🔒 Propriétés ajoutées pour la sécurité de session unique
+  currentSessionId?: string | null;
+  currentIp?: string | null;
 }
 
 const StudentSchema = new Schema<IStudent>(
@@ -13,6 +16,9 @@ const StudentSchema = new Schema<IStudent>(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isAdmin: { type: Boolean, default: false },
+    // 🔒 Champs stockés en base de données pour valider le poste de connexion
+    currentSessionId: { type: String, default: null },
+    currentIp: { type: String, default: null },
   },
   { timestamps: true }
 );

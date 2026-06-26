@@ -1,5 +1,7 @@
 import express from "express";
-import { authenticateStudent } from "../middleware/auth";   // 🔥
+
+// 🚨 MODIFIÉ : On importe aussi blockGuest
+import { authenticateStudent, blockGuest } from "../middleware/authMiddleware";   
 import generateResumeBuffer from "../scripts/generateResume";
 import Resume from "../models/resume";
 import { supabase } from "../config/supabase";
@@ -12,9 +14,20 @@ const router = express.Router();
 
 const bucket = process.env.SUPABASE_BUCKET!;
 
+// 🟢 L'invité peut voir la liste pour découvrir l'interface
 router.get("/by-subject/:subject", authenticateStudent, getResumesBySubject);
-router.get("/signed/:id", authenticateStudent, getSignedResumeUrl);
 
+// 🔒 BLOCAGE TOTAL : L'invité ne peut pas obtenir le lien de téléchargement du vrai PDF
+router.get("/signed/:id", authenticateStudent, blockGuest, getSignedResumeUrl);
+
+// 🔒 BLOCAGE TOTAL : L'invité ne peut pas générer ou uploader de fichiers
+router.post("/generate", authenticateStudent, blockGuest, upload.none(), async (req, res) => {
+  // ... votre code de génération actuel ...
+});
+
+router.post("/upload", authenticateStudent, blockGuest, upload.single("file"), async (req, res) => {
+  // ... votre code d'upload actuel ...
+});
 
 // ------------------------------------------------------
 // 🟦  GÉNÉRER un PDF → upload Supabase → enregistrer Mongo

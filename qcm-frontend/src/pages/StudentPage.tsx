@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import axios from "../api/axios"; // Ajustez le chemin relatif vers votre fichier axios.ts
+import axios from "../api/axios"; 
 import { useNavigate } from "react-router-dom";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.bubble.css";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import Latex from "react-latex-next";
 import { API_BASE_URL } from "../config";
 import { fetchAstucesByChapter } from "../api/astuces.api";
 import concoursImg from "../assets/CONCOURS.jfif";
@@ -18,10 +15,8 @@ import bgImage from "/Image3.jfif";
 import StudentDashboardStats from "../components/stats/StudentDashboardStats";
 import StudentAstuceDetail from "./StudentAstuceDetail";
 import PdfViewer from "../components/PdfViewer";
-import ChemStructure from "../components/ChemStructure";
-import { renderWithMath } from "../utils/mathUtils";
 
-// Indispensable pour que React-Quill puisse interpréter les formules
+// Indispensable pour l'interprétation globale
 (window as any).katex = katex;
 
 // --- Interfaces ---
@@ -70,6 +65,8 @@ export default function StudentPage() {
   const [answers, setAnswers] = useState<{ [id: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  
+  // États pour les exercices
   const [exercises, setExercises] = useState<any[]>([]);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [exerciseAnswers, setExerciseAnswers] = useState<{ [id: string]: string }>({});
@@ -77,6 +74,8 @@ export default function StudentPage() {
   const [exerciseScore, setExerciseScore] = useState<number | null>(null);
   const [wrongExercises, setWrongExercises] = useState<any[]>([]);
   const [exerciseAttempt, setExerciseAttempt] = useState(1);
+  const [whiteExams, setWhiteExams] = useState<any[]>([]);
+  
   const [astuces, setAstuces] = useState<Astuce[]>([]);
   const [resumes, setResumes] = useState<any[]>([]);
   const [selectedResume, setSelectedResume] = useState<any | null>(null);
@@ -164,20 +163,71 @@ export default function StudentPage() {
   }, [selectedAction, selectedChapter]);
 
   useEffect(() => {
-    if (selectedAction === "Exercises" && selectedChapter && selectedMatiere) {
+    const isExerciseAction = selectedAction === "Exercises";
+    const isWhiteExamAction = selectedAction === "Astuces" && selectedMatiere === "SVT";
+
+    if ((isExerciseAction || isWhiteExamAction) && selectedChapter && selectedMatiere) {
       const token = localStorage.getItem("token");
+      const isWhiteExamParam = isWhiteExamAction ? "true" : "false";
+
       axios
-        .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}`, {
+        .get(`${API_BASE_URL}/api/exercises/${encodeURIComponent(selectedMatiere)}/${encodeURIComponent(selectedChapter)}?isWhiteExam=${isWhiteExamParam}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         .then((res) => {
-          setExercises(res.data || []);
+          const rawExercises = res.data || [];
+          
+          const normalizeForCompare = (val?: string) => {
+            if (!val) return "";
+            return val
+              .replace(/<[^>]*>?/gm, '') 
+              .replace(/&nbsp;/gi, '')   
+              .replace(/\s+/g, '')       
+              .toLowerCase()             
+              .trim();
+          };
+
+          const groupedExercises: any[] = [];
+          
+          rawExercises.forEach((ex: any) => {
+            const exText = normalizeForCompare(ex.contextText);
+            const exImg = (ex.contextImage || "").trim();
+
+            const existingGroup = groupedExercises.find((g) => {
+              const gText = normalizeForCompare(g.contextText);
+              const gImg = (g.contextImage || "").trim();
+              return gText === exText && gImg === exImg;
+            });
+            
+            if (existingGroup) {
+              existingGroup.subQuestions = [
+                ...existingGroup.subQuestions, 
+                ...(ex.subQuestions || [])
+              ];
+            } else {
+              groupedExercises.push({ 
+                ...ex, 
+                subQuestions: [...(ex.subQuestions || [])] 
+              });
+            }
+          });
+
+          if (isWhiteExamAction) {
+            setWhiteExams(groupedExercises);
+          } else {
+            setExercises(groupedExercises);
+          }
+
           setExerciseIndex(0);
           setExerciseAnswers({});
           setExerciseSubmitted(false);
           setExerciseScore(null);
         })
-        .catch(() => setExercises([]));
+        .catch((err) => {
+          console.error("❌ Erreur de récupération", err);
+          if (isWhiteExamAction) setWhiteExams([]);
+          else setExercises([]);
+        });
     }
   }, [selectedAction, selectedChapter, selectedMatiere]);
 
@@ -190,98 +240,108 @@ export default function StudentPage() {
     setScore(null);
   };
 
-  function cleanLatex(content?: string) {
-    if (!content) return "";
-    return content
-      .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, "")
-      .replace(/\\section\*\{([^}]*)\}/g, "**$1**")
-      .replace(/\\captionsetup\{[^}]*\}/g, "")
-      .replace(/<\/?p>/g, "")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&amp;/g, "&")
-      .replace(/\\\(/g, "$")
-      .replace(/\\\)/g, "$")
-      .replace(/\\?below\s*\{([^}]*)\}/g, "_{$1}")
-      .replace(/\\?below/g, "_")
-      .replace(/\\aleph/g, "\\mathbb{N}")
-      .replace(/\\rightarrow/g, "\\to")
-      .replace(/lim\s*n\s*(?:-->|→|\\to)\s*(?:infini|∞)/gi, "\\(\\displaystyle \\lim_{n \\to \\infty}\\)")
-      .replace(/\\lim_\{/g, "\\displaystyle \\lim_{") 
-      .replace(/\\ /g, " ")
-      .replace(/\\\s+/g, " ")
-      .replace(/\s+/g, " ");   
-  }
-
+  // =========================================================================
+  // 🌟 NOUVEAU MOTEUR NATIF INFAILLIBLE : KATEX PUR SANS BIBLIOTHEQUE EXTERNE
+  // =========================================================================
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
 
-    let processedText = text;
-    if (processedText.includes("<smiles>")) {
-      processedText = processedText.replace(/<smiles>[\s\S]*?<\/smiles>/g, "");
-    }
+    // 1. Nettoyage de base (garde les balises utiles comme <p>, <br>)
+    let processedText = text
+      .replace(/&nbsp;/gi, " ")
+      .replace(/<smiles>[\s\S]*?<\/smiles>/gi, "");
 
-    if (!processedText.includes("<img")) {
-      return <Latex>{cleanLatex(processedText)}</Latex>;
-    }
-
+    // 2. Extraction sécurisée de l'image (pour ne pas casser LaTeX)
+    let imgSrc = "";
+    let imgClass = "max-h-24 object-contain inline-block my-2 rounded shadow-sm";
     const imgStart = processedText.indexOf("<img");
-    const imgEnd = processedText.indexOf("/>", imgStart);
-
-    if (imgStart === -1 || imgEnd === -1) {
-      return <Latex>{cleanLatex(processedText)}</Latex>;
+    if (imgStart !== -1) {
+      const imgEnd = processedText.indexOf(">", imgStart);
+      if (imgEnd !== -1) {
+        const rawImgTag = processedText.substring(imgStart, imgEnd + 1);
+        const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
+        if (srcMatch) imgSrc = srcMatch[1];
+        const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
+        if (classMatch) imgClass = classMatch[1];
+        processedText = processedText.replace(rawImgTag, " [[IMAGE_PLACEHOLDER]] ");
+      }
     }
 
-    const textBefore = processedText.substring(0, imgStart);
-    const rawImgTag = processedText.substring(imgStart, imgEnd + 2);
-    const textAfter = processedText.substring(imgEnd + 2);
-
-    const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
-    const imgSrc = srcMatch ? srcMatch[1] : "";
-
-    const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
-    const imgClass = classMatch ? classMatch[1] : "max-h-24 object-contain inline-block";
+    // 3. Découpage chirurgical (Sépare le texte normal des équations)
+    const mathRegex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<!\\)\$[\s\S]*?(?<!\\)\$)/g;
+    const parts = processedText.split(mathRegex);
 
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center items-start gap-3 w-full my-1 flex-wrap text-justify">
-        {textBefore.trim().length > 0 && (
-          <span className="text-gray-800 font-medium text-justify block w-full">
-            <Latex>{cleanLatex(textBefore)}</Latex>
-          </span>
-        )}
+      <span className="w-full inline-block text-justify text-gray-800">
+        {parts.map((part, index) => {
+          if (!part) return null;
 
-        {imgSrc && (
-          <div className="bg-white rounded-lg p-2 border border-gray-100 shadow-sm transition-transform hover:scale-105 inline-block">
-            <img 
-              src={imgSrc} 
-              alt="Structure chimique" 
-              className={`${imgClass} rounded`}
-              loading="lazy"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          </div>
-        )}
+          // Rendu de l'image
+          if (part.includes("[[IMAGE_PLACEHOLDER]]")) {
+            return imgSrc ? (
+              <div key={index} className="w-full flex justify-center my-3">
+                <img src={imgSrc} className={imgClass} alt="Illustration" loading="lazy" />
+              </div>
+            ) : null;
+          }
 
-        {textAfter.trim().length > 0 && (
-          <span className="text-gray-600 text-sm text-justify block w-full">
-            <Latex>{cleanLatex(textAfter)}</Latex>
-          </span>
-        )}
-      </div>
+          let isMath = false;
+          let mathContent = part;
+          let isBlock = false;
+
+          // Identification automatique des balises
+          if (part.startsWith("$$") && part.endsWith("$$")) {
+            isMath = true; isBlock = true; mathContent = part.slice(2, -2);
+          } else if (part.startsWith("\\[") && part.endsWith("\\]")) {
+            isMath = true; isBlock = true; mathContent = part.slice(2, -2);
+          } else if (part.startsWith("\\(") && part.endsWith("\\)")) {
+            isMath = true; mathContent = part.slice(2, -2);
+          } else if (part.startsWith("$") && part.endsWith("$")) {
+            isMath = true; mathContent = part.slice(1, -1);
+          }
+
+          // Rendu KaTeX
+          if (isMath) {
+            try {
+              // SÉCURITÉ ABSOLUE : Détruit tout HTML infiltré DANS la formule (Le bug de la colonne Question)
+              let safeMath = mathContent
+                .replace(/<[^>]*>/g, "") 
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&amp;/g, "&");
+
+              const html = katex.renderToString(safeMath, {
+                displayMode: isBlock,
+                throwOnError: false,
+                strict: false,
+              });
+
+              return (
+                <span 
+                  key={index} 
+                  dangerouslySetInnerHTML={{ __html: html }} 
+                  className={isBlock ? "block my-2 text-center overflow-x-auto" : "inline-block"} 
+                />
+              );
+            } catch (e) {
+              return <span key={index} className="text-red-500">{part}</span>;
+            }
+          }
+
+          // Rendu du texte normal et des balises HTML inoffensives (<p>, <br>)
+          return <span key={index} dangerouslySetInnerHTML={{ __html: part }} />;
+        })}
+      </span>
     );
   }
 
+  // =========================================================================
   function renderContent(content?: string) {
     if (!content) return null;
     return (
-      <div
-        className="prose max-w-none"
-        dangerouslySetInnerHTML={{
-          __html: cleanLatex(content),
-        }}
-      />
+      <div className="prose max-w-none text-gray-800">
+        <MixedContentRenderer text={content} />
+      </div>
     );
   }
 
@@ -348,7 +408,6 @@ export default function StudentPage() {
       return <StudentDashboardStats />;
     }
     
-    // 🧩 Cas 1 : Affichage ordonné des questions (QCE par Concours / Matière)
     if (section === "qcm" && currentExam) {
       if (questions.length === 0) {
         return (
@@ -375,7 +434,6 @@ export default function StudentPage() {
           
           {renderingBlocks.map((block, bIdx) => (
             <div key={bIdx} className="mb-8">
-              {/* En-tête de la composante / matière */}
               <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white px-4 py-3 rounded-xl font-bold shadow-md mb-4 flex justify-between items-center text-md md:text-lg">
                 <span>{block.label}</span>
                 {block.coeff !== null && (
@@ -396,10 +454,8 @@ export default function StudentPage() {
                     key={q._id}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    // ⬛ Trait du cadre de la question tracé proprement en NOIR (border-gray-950)
                     className="p-5 mb-5 bg-white rounded-xl border-2 border-gray-950 shadow-sm"
                   >
-                    {/* En-tête de groupe sécurisé (sans image brisée s'il n'y en a pas) */}
                     {q.groupId?._id && isNewGroup && (
                       <div className="mb-6 p-4 bg-gray-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
                         {q.groupId?.intro && (
@@ -418,7 +474,6 @@ export default function StudentPage() {
                       </div>
                     )}
 
-                    {/* Contenu textuel de la question */}
                     <h3 className="font-semibold mb-3 text-lg mt-1 flex items-start gap-1">
                       <span className="text-blue-900 font-bold">Q{originalIdx + 1}) </span>
                       <div className="flex-1">
@@ -436,23 +491,21 @@ export default function StudentPage() {
                       />
                     )}
                     
-                    {/* Options (Boutons de réponse) */}
                     <div className="space-y-2 mt-3">
                       {q.options.map((opt, i) => {
                         return (
                           <label
-                            key={i}
-                            // 🔲 Traits des cadres des options tracés proprement en GRIS (border-gray-300) par défaut
-                            className={`flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer transition-all ${
-                              submitted
-                                ? opt === q.reponseCorrecte
-                                  ? "bg-green-100 !border-green-500 font-medium"
-                                  : answers[q._id] === opt
-                                  ? "bg-red-100 !border-red-500 font-medium"
-                                  : "opacity-60"
-                                : "hover:bg-blue-50/50 hover:border-blue-400"
-                            }`}
-                          >
+  key={i}
+  className={`flex items-start p-3 border-2 border-gray-300 rounded-lg cursor-pointer transition-all ${
+    submitted
+      ? opt === q.reponseCorrecte
+        ? "bg-green-100 !border-green-500 font-medium"
+        : answers[q._id] === opt
+        ? "bg-red-100 !border-red-500 font-medium"
+        : "opacity-60"
+      : "hover:bg-blue-50/50 hover:border-blue-400"
+  }`}
+>
                             <input
                               type="radio"
                               name={q._id}
@@ -492,7 +545,6 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 2 : QCE par concours
     if (section === "concours") {
       return (
         <motion.div
@@ -506,7 +558,10 @@ export default function StudentPage() {
               whileHover={{ scale: 1.05 }}
               className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
               onClick={() => {
-                resetQcm(); setSection("qcm"); setCurrentExam(exam.title); setCurrentExamId(exam._id);
+                resetQcm();
+                setSection("qcm");
+                setCurrentExam(exam.title);
+                setCurrentExamId(exam._id);
               }}
             >
               <img src={concoursImg} className="w-48 h-48 object-cover" alt={exam.title} />
@@ -519,7 +574,6 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 3 : QCE par matière
     if (section === "matiere" && selectedMatiere) {
       const matiereImage = subjectImages[selectedMatiere];
       const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
@@ -534,14 +588,22 @@ export default function StudentPage() {
             <motion.div
               key={exam._id}
               whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all w-48 h-48 shrink-0"
               onClick={() => {
-                resetQcm(); setSection("qcm"); setCurrentExam(exam.title); setCurrentExamId(exam._id);
+                resetQcm();
+                setSection("qcm");
+                setCurrentExam(exam.title);
+                setCurrentExamId(exam._id);
               }}
             >
-              <img src={matiereImage} alt={`${selectedMatiere} — ${exam.title}`} className="w-48 h-48 object-cover" />
-              <div className="absolute bottom-0 left-0 right-0 bg-green-700/60 text-white text-center py-2 font-semibold">
-                {selectedMatiere} — {exam.title}
+              <img src={matiereImage} alt={`${selectedMatiere} — ${exam.title}`} className="w-full h-full object-cover" />
+              <div
+                className="absolute bottom-0 left-0 right-0 bg-green-700/75 text-white text-center px-1 py-1.5 font-medium text-[10px] leading-tight max-h-[44px] flex items-center justify-center overflow-hidden"
+                title={`${selectedMatiere} — ${exam.title}`}
+              >
+                <span className="line-clamp-2 break-words">
+                  {selectedMatiere} — {exam.title}
+                </span>
               </div>
             </motion.div>
           ))}
@@ -549,38 +611,190 @@ export default function StudentPage() {
       );
     }
 
-    // 🧩 Cas 4 : Soutien
     if (section === "soutien" && selectedMatiere) {
       const chaptersBySubject: Record<string, string[]> = {
         Mathématique: [
           "Chapitre I : Suites & Sommes",
-          "Chapitre II : Limites, Continuité & Dérivabilité",
-          "Chapitre III : Étude de fonctions",
+          "Chapitre II : Etude de fonctions",
+          "Chapitre III : Equations différentielles",
           "Chapitre IV : Nombres complexes",
           "Chapitre V : Intégrales",
           "Chapitre VI : Géométrie dans l'espace",
           "Chapitre VII : Probabilité",
         ],
         Physique: [
-          "Chapitre I : Cinématique",
-          "Chapitre II : Dynamique",
-          "Chapitre III : Travail & Énergie",
-          "Chapitre IV : Électricité",
-          "Chapitre V : Optique",
+          "Chapitre I : Les ondes",
+          "Chapitre II : Nucléaire",
+          "Chapitre III : Electricité",
+          "Chapitre IV : Lois de Newton & Théorème d'énergie cinétique",
+          "Chapitre V : Système oscillant & Pendule élastique",
         ],
         Chimie: [
-          "Chapitre I : Combustion",
-          "Chapitre II : Oxydoréduction",
-          "Chapitre III : Acides & Bases",
-          "Chapitre IV : Solutions",
+          "Chapitre I : Chimie des solutions",
+          "Chapitre II : Cinétique chimique",
+          "Chapitre III : Les piles",
+          "Chapitre IV : Chimie organique",
         ],
-        SVT: ["Chapitre I : Génétique", "Chapitre II : Immunologie", "Chapitre III : Métabolisme"],
+        SVT: [
+          "Chapitre 1 : Les réactions responsables de la libération de l'énergie emmagasinée dans la matière organique",
+          "Chapitre 2 : Rôle du muscle strié squelettique dans la conversion de l'énergie",
+          "Chapitre 3 : L'information génétique",
+          "Chapitre 4 : Le génie génétique",
+          "Chapitre 5 : La génétique humaine",
+          "Chapitre 6 : La génétique des populations",
+          "Chapitre 7 : L'immunité"
+        ],
       };
 
       const chapters = chaptersBySubject[selectedMatiere] || [];
 
-      // 👉 1) ASTUCES
       if (selectedChapter && selectedAction === "Astuces") {
+        
+        if (selectedMatiere === "SVT") {
+          const currentEx = whiteExams[exerciseIndex];
+
+          if (!whiteExams || whiteExams.length === 0) {
+            return (
+              <div className="p-6 text-center">
+                <h2 className="text-3xl font-bold text-center mb-8 text-red-600">📝 {selectedChapter} — Examen blanc</h2>
+                <p className="text-gray-500 bg-white p-6 rounded-xl shadow inline-block">
+                  Aucun examen blanc trouvé pour ce chapitre…
+                </p>
+              </div>
+            );
+          }
+
+          return (
+            <div className="p-6 exercice-view-container">
+              <style>{`
+                .exercice-view-container img, .ql-editor img {
+                  max-height: 260px !important;
+                  width: auto !important;
+                  max-width: 100% !important;
+                  margin: 0 auto;
+                  display: block;
+                  object-fit: contain;
+                  border-radius: 8px;
+                }
+              `}</style>
+
+              <div className="mb-4 text-center">
+                <h2 className="text-3xl font-bold mb-2 text-red-600">📝 Examen Blanc</h2>
+                <p className="font-semibold text-gray-600">Question {exerciseIndex + 1} / {whiteExams.length}</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow border-t-4 border-red-500">
+                <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">Énoncé</h3>
+                  <div className="text-lg font-medium text-gray-900">
+                    <MixedContentRenderer text={currentEx?.contextText || ""} />
+                  </div>
+                  {currentEx?.contextImage && (
+                    <img 
+                      src={getImageUrl(currentEx.contextImage)} 
+                      alt="Contexte Examen" 
+                      className="mt-4 mx-auto block object-contain max-h-[260px]" 
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {currentEx?.subQuestions?.map((subQ: any, index: number) => (
+                    <div key={subQ._id} className="pl-2 border-l-2 border-red-200 py-1">
+                      <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
+                        <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
+                        <div className="flex-1 text-lg font-medium text-gray-900">
+                          <MixedContentRenderer text={subQ.questionText || ""} />
+                        </div>
+                      </div>
+
+                      <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {subQ.options.map((opt: string, i: number) => {
+                          const isSelected = exerciseAnswers[subQ._id] === opt;
+                          const isCorrect = opt === subQ.correctAnswer;
+                          return (
+                            <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : "bg-gray-50 opacity-50" : "hover:bg-red-50 border-gray-200"}`}>
+                              <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
+                              <div className="flex-1 w-full">
+                                <MixedContentRenderer text={opt} />
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
+                        <div className="ml-6 mt-2 px-3 py-2 bg-red-50 text-red-900 rounded-md border border-red-100 text-sm">  
+                          <span className="font-bold flex items-center mb-1">💡 Correction :</span>
+                          <div className="prose max-w-none text-gray-800">
+                            <MixedContentRenderer text={subQ.explanation || ""} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-between mt-4">
+                <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">⬅️ Précédent</button>
+                <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, whiteExams.length - 1)} className="px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50">➡️ Suivant</button>
+              </div>
+
+              {!exerciseSubmitted && (
+                <button
+                  onClick={async () => {
+                    let score = 0;
+                    let totalQuestions = 0;
+                    whiteExams.forEach((ex) => {
+                      ex.subQuestions?.forEach((subQ: any) => {
+                        totalQuestions++;
+                        if (exerciseAnswers[subQ._id] === subQ.correctAnswer) { score++; }
+                      });
+                    });
+                    const wrong = whiteExams.filter((ex) => ex.subQuestions?.some((subQ: any) => exerciseAnswers[subQ._id] !== subQ.correctAnswer));
+                    setExerciseScore(score);
+                    try {
+                      const token = localStorage.getItem("token");
+                      await axios.post(`${API_BASE_URL}/api/student-activity`, {
+                        type: "EXERCISE", 
+                        subject: selectedMatiere,
+                        chapter: selectedChapter,
+                        score,
+                        totalQuestions: whiteExams.length,
+                        successRate: totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0,
+                      }, { headers: { Authorization: `Bearer ${token}` } });
+                    } catch (err) { console.error(err); }
+                    setExerciseSubmitted(true); setWrongExercises(wrong);
+                  }}
+                  className="mt-6 px-6 py-2 bg-green-600 text-white rounded font-semibold shadow hover:bg-green-700 transition"
+                >
+                  ✅ Soumettre mes réponses
+                </button>
+              )}
+
+              {exerciseSubmitted && (
+                <div className="mt-4 text-center font-bold text-red-600 bg-red-50 py-2 rounded-xl border border-red-100">
+                  Note finale de l'examen : {exerciseScore} / {whiteExams.length}
+                </div>
+              )}
+              
+              {exerciseSubmitted && wrongExercises.length > 0 && (
+                <button
+                  onClick={() => {
+                    setExerciseAttempt((prev) => prev + 1);
+                    setWhiteExams(wrongExercises); setExerciseIndex(0); setExerciseAnswers({}); setExerciseSubmitted(false); setExerciseScore(null);
+                  }}
+                  className="mt-4 px-6 py-2 bg-orange-500 text-white rounded w-full md:w-auto shadow hover:bg-orange-600 transition"
+                >
+                  🔁 Corriger mes erreurs
+                </button>
+              )}
+            </div>
+          );
+        }
+
         return (
           <div className="p-6 relative">
             <h2 className="text-3xl font-bold text-center mb-8">💡 {selectedChapter} — Astuces</h2>
@@ -614,7 +828,6 @@ export default function StudentPage() {
               </div>
             )}
 
-            {/* 🔥 MODAL ASTUCES */}
             {selectedTip && (
               <motion.div
                 className={`fixed inset-0 flex items-center justify-center z-50 transition ${
@@ -654,7 +867,7 @@ export default function StudentPage() {
                           </div>
                         )}
                         {c.content && (
-                          <div className="prose prose-lg max-w-none bg-white p-6 rounded-xl shadow">
+                          <div className="bg-white p-6 rounded-xl shadow">
                             {renderContent(c.content || "")}
                           </div>
                         )}
@@ -667,13 +880,12 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 2) RÉSUMÉS
       if (selectedChapter && selectedAction === "Résumé") {
         return (
           <div className="p-6 relative">
             <h2 className="text-3xl font-bold text-center mb-8">📘 {selectedChapter} — Résumés</h2>
             {resumes.length === 0 ? (
-              <p className="text-center text-gray-500">Aucun résumé trouvé…</p>
+              <p className="text-center text-gray-500 font-bold">En option (sur demande)…</p>
             ) : (
               <div className="flex flex-wrap gap-3 justify-center">
                 {resumes.map((sum) => (
@@ -699,7 +911,6 @@ export default function StudentPage() {
               </div>
             )}
 
-            {/* 🔥 MODAL RÉSUMÉS */}
             {selectedResume && (
               <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setSelectedResume(null)}>
                 <div onClick={(e) => e.stopPropagation()} className={`bg-white rounded-2xl shadow-2xl w-full max-w-2xl ${isShortResume ? "max-h-[55vh]" : "max-h-[75vh]"} flex flex-col`}>
@@ -714,22 +925,12 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 3) EXERCICES
       if (selectedChapter && selectedAction === "Exercises") {
         const currentEx = exercises[exerciseIndex];
         if (exercises.length === 0) {
           return <p className="text-center mt-10">Aucun exercice trouvé</p>;
         }
-
-        const processQuillText = (text?: string) => {
-          if (!text) return "";
-          return text
-            .replace(/\\?below\s*\{/g, "_{")
-            .replace(/\\?below/g, "_")
-            .replace(/lim\s*n\s*(?:--&gt;|-->|→)\s*(?:infini|∞)/gi, '<span class="ql-formula" data-value="\\displaystyle \\lim_{n \\to \\infty}"></span>')
-            .replace(/data-value="\\lim_/g, 'data-value="\\displaystyle \\lim_');
-        };
-
+        const totalQuestionsCount = exercises.reduce((acc, ex) => acc + (ex.subQuestions?.length || 0), 0);
         return (
           <div className="p-6 exercice-view-container">
             <style>{`
@@ -743,39 +944,66 @@ export default function StudentPage() {
                 border-radius: 8px;
               }
             `}</style>
+            
             <div className="mb-4 text-center">
-              <p className="font-semibold text-gray-600">Problème {exerciseIndex + 1} / {exercises.length}</p>
+              <p className="font-semibold text-gray-600">
+                Énoncé {exerciseIndex + 1} / {exercises.length} <span className="text-sm font-normal">(Total : {totalQuestionsCount} questions)</span>
+              </p>
             </div>
-            <div className="bg-white p-6 rounded-xl shadow border-t-4 border-blue-600">
-              <div className="mb-8 border-b-2 border-gray-100 pb-6 bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-bold text-gray-800 mb-2 uppercase tracking-wide">Énoncé</h3>
-                <div className="text-lg [&_.ql-editor]:text-md [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:mb-2">
-                  <ReactQuill value={processQuillText(currentEx.contextText)} readOnly={true} theme="bubble" />
+            
+            <div className="bg-white p-4 rounded-xl shadow border-t-4 border-blue-600">
+              
+              <div className="mb-4 border-b pb-4 bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wide">Énoncé</h3>
+                <div className="text-base font-medium text-gray-800">
+                  <MixedContentRenderer text={currentEx.contextText || ""} />
                 </div>
                 {currentEx.contextImage && (
                   <img 
                     src={getImageUrl(currentEx.contextImage)} 
                     alt="Contexte" 
-                    className="mt-4 mx-auto block object-contain max-h-[260px]" 
+                    className="mt-2 mx-auto block object-contain max-h-[150px]" 
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 )}
               </div>
-              <div className="space-y-3">
+              
+              <div className="space-y-6">
                 {currentEx.subQuestions?.map((subQ: any, index: number) => (
                   <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">
-                    <div className="font-medium mb-2 flex items-start text-md leading-relaxed">
-                      <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[11px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
-                      <div className="flex-1 text-lg [&_.ql-editor]:p-0 [&_.ql-editor]:min-h-0 [&_.ql-editor]:text-md [&_.ql-editor]:leading-relaxed [&_.ql-editor]:font-medium [&_.ql-editor_p]:my-1">
-                        <ReactQuill value={processQuillText(subQ.questionText)} readOnly={true} theme="bubble" />
+                    
+                    <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">
+                      
+                      <div className="flex items-start w-full">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0 font-bold">
+                          Q{index + 1}
+                        </span>
+                        <div className="flex-1 text-lg font-medium text-gray-900">
+                          <MixedContentRenderer text={subQ.questionText || ""} />
+                        </div>
                       </div>
+
+                      {subQ.image && (
+                        <div className="mt-3 w-full">
+                          <img 
+                            src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image}`} 
+                            alt="Illustration de question" 
+                            className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
+                            onError={(e) => { 
+                              console.error("Image non trouvée :", e.currentTarget.src);
+                              e.currentTarget.style.display = 'none'; 
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
-                    <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-1">
+                    
+                    <div className="ml-8 grid grid-cols-1 md:grid-cols-2 gap-2">
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
                         const isCorrect = opt === subQ.correctAnswer;
                         return (
-                          <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-sm transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : isCorrect ? "bg-green-50 border-green-300 border-dashed" : "bg-gray-50 opacity-50" : "hover:bg-blue-50 border-gray-200"}`}>
+                          <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : "bg-gray-50 opacity-50" : "hover:bg-red-50 border-gray-200"}`}>
                             <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
                             <div className="flex-1 w-full">
                               <MixedContentRenderer text={opt} />
@@ -784,28 +1012,33 @@ export default function StudentPage() {
                         );
                       })}
                     </div>
+                    
                     {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
-                      <div className="ml-6 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
+                      <div className="ml-8 mt-2 px-3 py-2 bg-blue-50 text-blue-800 rounded-md border border-blue-100 text-sm">  
                         <span className="font-bold flex items-center mb-1">💡 Correction :</span>
-                        <div className="prose max-w-none text-gray-800">{renderWithMath(subQ.explanation)}</div>
+                        <div className="prose max-w-none text-gray-800">
+                          <MixedContentRenderer text={subQ.explanation || ""} />
+                        </div>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
             </div>
+            
             <div className="flex justify-between mt-4">
-              <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">⬅️ Précédent</button>
-              <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, exercises.length - 1)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">➡️ Suivant</button>
+              <button onClick={() => setExerciseIndex((i) => i - 1)} disabled={exerciseIndex === 0} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 font-semibold">⬅️ Énoncé Précédent</button>
+              <button onClick={() => setExerciseIndex((i) => i + 1)} disabled={exerciseIndex === Math.max(0, exercises.length - 1)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50 font-semibold">Énoncé Suivant ➡️</button>
             </div>
+            
             {!exerciseSubmitted && (
               <button
                 onClick={async () => {
                   let score = 0;
-                  let totalQuestions = 0;
+                  let totalQ = 0;
                   exercises.forEach((ex) => {
                     ex.subQuestions?.forEach((subQ: any) => {
-                      totalQuestions++;
+                      totalQ++;
                       if (exerciseAnswers[subQ._id] === subQ.correctAnswer) { score++; }
                     });
                   });
@@ -818,56 +1051,64 @@ export default function StudentPage() {
                       subject: selectedMatiere,
                       chapter: selectedChapter,
                       score,
-                      totalQuestions: exercises.length,
-                      successRate: totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0,
+                      totalQuestions: totalQ,
+                      successRate: totalQ > 0 ? Math.round((score / totalQ) * 100) : 0,
                     }, { headers: { Authorization: `Bearer ${token}` } });
                   } catch (err) { console.error(err); }
                   setExerciseSubmitted(true); setWrongExercises(wrong);
                 }}
-                className="mt-6 px-6 py-2 bg-green-600 text-white rounded"
+                className="mt-6 px-6 py-2 bg-green-600 text-white rounded font-bold w-full md:w-auto shadow"
               >
-                ✅ Terminer
+                ✅ Valider ce chapitre
               </button>
             )}
 
             {exerciseSubmitted && (
-              <div className="mt-4 text-center font-bold text-blue-700">
-                Score : {exerciseScore} / {exercises.length} ({exerciseAttempt === 1 ? "1er essai" : `${exerciseAttempt}ème essai`})
+              <div className="mt-4 text-center font-bold text-blue-700 bg-blue-50 py-3 rounded-lg border border-blue-200">
+                Score : {exerciseScore} / {totalQuestionsCount} ({exerciseAttempt === 1 ? "1er essai" : `${exerciseAttempt}ème essai`})
               </div>
             )}
             {exerciseSubmitted && wrongExercises.length > 0 && (
               <button
                 onClick={() => {
                   setExerciseAttempt((prev) => prev + 1);
-                  setExercises(wrongExercises); setExerciseIndex(0); setExerciseAnswers({}); setExerciseSubmitted(false); setExerciseScore(null);
+                  setExercises(wrongExercises); 
+                  setExerciseIndex(0); 
+                  setExerciseAnswers({}); 
+                  setExerciseSubmitted(false); 
+                  setExerciseScore(null);
                 }}
-                className="mt-4 px-6 py-2 bg-orange-500 text-white rounded w-full md:w-auto"
+                className="mt-4 px-6 py-2 bg-orange-500 text-white rounded w-full md:w-auto font-bold shadow"
               >
-                🔁 Refaire mes erreurs
+                🔁 Refaire uniquement les énoncés avec erreurs
               </button>
             )}
           </div>
         );
       }
 
-      // 👉 4) Boutons d’actions par chapitre
       if (selectedChapter) {
         const actions = [
-          { label: "💡 Astuces", color: "bg-yellow-400" },
-          { label: "📘 Résumé", color: "bg-blue-400" },
-          { label: "🧩 Exercises", color: "bg-green-400" },
+          { 
+            label: selectedMatiere === "SVT" ? "📝 Examen blanc" : "💡 Astuces", 
+            value: "Astuces",
+            color: selectedMatiere === "SVT" ? "bg-red-400 text-white" : "bg-yellow-400 text-black" 
+          },
+          { label: "📘 Résumé", value: "Résumé", color: "bg-blue-400 text-black" },
+          { label: "🧩 Exercises", value: "Exercises", color: "bg-green-400 text-black" },
         ];
+
         return (
           <div className="flex flex-col items-center justify-center gap-8 mt-20">
-            <h2 className="text-2xl font-bold text-gray-800">{selectedChapter}</h2>
+            <h2 className="text-2xl font-bold text-gray-800 text-center max-w-2xl px-4">{selectedChapter}</h2>
             <div className="flex gap-8">
               {actions.map((action, index) => (
                 <motion.button
                   key={index}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedAction(action.label.replace(/[💡📘🧩]/g, "").trim())}
-                  className={`${action.color} text-black font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
+                  onClick={() => setSelectedAction(action.value)}
+                  className={`${action.color} font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-2xl transition`}
                 >
                   {action.label}
                 </motion.button>
@@ -877,23 +1118,29 @@ export default function StudentPage() {
         );
       }
 
-      // 👉 5) Liste des chapitres
       return (
-        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full">
+        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full p-4">
           {chapters.map((chapter, index) => (
             <motion.div
               key={index}
               whileHover={{ scale: 1.05 }}
-              className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/90 hover:bg-white transition-all"
+              className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white border border-gray-100 flex flex-col transition-all"
               onClick={() => setSelectedChapter(chapter)}
             >
-              <img 
-                src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
-                alt={chapter} 
-                className="w-48 h-48 object-cover" 
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-yellow-300/80 text-black text-center py-2 font-semibold">
-                {chapter}
+              <div className="w-48 h-48 bg-gray-50 shrink-0 overflow-hidden">
+                <img 
+                  src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
+                  alt={chapter} 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+              <div 
+                className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
+                title={chapter}
+              >
+                <span className="line-clamp-3 break-words leading-tight">
+                  {chapter}
+                </span>
               </div>
             </motion.div>
           ))}
@@ -902,7 +1149,43 @@ export default function StudentPage() {
     }
     return <StudentDashboardStats />;
   };
+// 1️⃣ NOUVELLE FONCTION DE NAVIGATION PAR ÉTAPES
+  const handleRetourArriere = () => {
+    // Si le détail d'une astuce (Pop-up ou composant) est ouvert
+    if (selectedTipId) {
+      setSelectedTipId(null);
+      return;
+    }
 
+    // Si on est dans une sous-action de chapitre (Astuces, Résumé, Exercices)
+    if (selectedAction) {
+      setSelectedAction(null);
+      return;
+    }
+
+    // Si on est sur l'affichage des actions d'un chapitre
+    if (selectedChapter) {
+      setSelectedChapter(null);
+      return;
+    }
+
+    // Si on est EN TRAIN DE FAIRE un QCM / Concours
+    if (section === "qcm") {
+      resetQcm();
+      // CORRECTION ICI : On retourne à l'arborescence correcte (Matière ou Concours)
+      setSection(selectedMatiere ? "matiere" : "concours");
+      return;
+    }
+
+    // Si on est sur la liste des chapitres ou des examens d'une matière
+    if (section === "soutien" || section === "matiere" || section === "concours") {
+      setSelectedMatiere(null);
+      setSection("home");
+      return;
+    }
+  };
+
+  // 2️⃣ LE RENDU PRINCIPAL DU COMPOSANT
   return (
     <div
       className="h-screen w-screen flex text-black overflow-hidden"
@@ -912,7 +1195,7 @@ export default function StudentPage() {
         backgroundPosition: "center",
       }}
     >
-      {/* Menu Latéral */}
+      {/* Barre latérale (Sidebar) */}
       <motion.div
         className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl overflow-y-auto"
         initial={{ x: -40, opacity: 0 }}
@@ -923,7 +1206,6 @@ export default function StudentPage() {
           <button
             onClick={() => {
               resetQcm();
-              setCurrentExam(null);
               setSection("concours");
               setSelectedMatiere(null);
               setSelectedChapter(null);
@@ -983,16 +1265,11 @@ export default function StudentPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        {(section !== "home" || selectedMatiere || selectedChapter || selectedAction) && (
+        {/* BOUTON RETOUR CORRIGÉ QUI APPELLE LA FONCTION PAR ÉTAPES */}
+        {(section !== "home" || selectedMatiere || selectedChapter || selectedAction || selectedTipId) && (
           <button
-            onClick={() => {
-              if (selectedAction) return setSelectedAction(null);
-              if (selectedChapter) return setSelectedChapter(null);
-              if (selectedMatiere) return setSelectedMatiere(null);
-              resetQcm();
-              setSection("home");
-            }}
-            className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition z-10"
+            onClick={handleRetourArriere}
+            className="absolute top-4 right-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition z-10 font-semibold shadow-md"
           >
             🔙 Retour
           </button>

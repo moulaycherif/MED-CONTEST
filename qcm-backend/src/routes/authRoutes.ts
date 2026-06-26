@@ -1,17 +1,35 @@
 import express from "express";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import Student from "../models/Student";
+import jwt from "jsonwebtoken";
+
 import Admin from "../models/Admin";
-import { verifyAdmin } from "../middleware/verifyAdmin";
-import { authenticateStudent, AuthenticatedRequest } from "../middleware/authMiddleware";
+import Student from "../models/Student";
+
+// 🛡️ Vos middlewares de sécurité
+import { authenticateAdmin } from "../middleware/authAdmin"; 
+import { authenticateStudent } from "../middleware/authMiddleware";
+
+// 📦 Importation de TOUTES les fonctions centralisées et sécurisées du contrôleur
+// 👈 CORRECTION 1 : loginGuest ajouté proprement dans cette liste
+import { 
+  loginStudent, 
+  logoutStudent, 
+  loginAdmin,   
+  logoutAdmin,  
+  createStudent, 
+  getStudents, 
+  deleteStudent,
+  loginGuest 
+} from "../controllers/authController";
 
 dotenv.config();
 const router = express.Router();
-const SECRET = process.env.JWT_SECRET || "super_secret_key";
 
-// 🔹 Créer admin (initialisation)
+// ==========================================
+// 🔑 ROUTES ADMINISTRATEUR (ADMIN)
+// ==========================================
+
 router.post("/create-admin", async (req, res) => {
   try {
     const existingAdmin = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
@@ -22,46 +40,78 @@ router.post("/create-admin", async (req, res) => {
       name: process.env.ADMIN_NAME,
       email: process.env.ADMIN_EMAIL,
       password: hashedPassword,
-      role: "admin",
+      currentSessionId: null, 
+      currentIp: null
     });
     await admin.save();
     res.json({ message: "Admin créé ✅", admin });
   } catch (err) {
-    res.status(500).json({ error: "Erreur serveur" });
+    res.status(500).json({ error: "Erreur serveur lors de la création initiale de l'admin" });
   }
 });
 
-// 🔹 Login admin
-router.post("/admin/login", async (req, res) => {
+router.post("/admin/login", loginAdmin);
+router.post("/admin/logout", authenticateAdmin, logoutAdmin);
+
+// ==========================================
+// 🎓 ROUTES ÉTUDIANTS (STUDENT) & PANEL ADMIN
+// ==========================================
+
+router.post("/login", loginStudent);
+router.post("/logout", authenticateStudent, logoutStudent);
+
+// 🛠️ Gestion des étudiants par l'administrateur
+router.get("/students", authenticateAdmin, getStudents);
+router.post("/students", authenticateAdmin, createStudent);
+router.delete("/students/:id", authenticateAdmin, deleteStudent);
+
+// 🚀 Route pour la Démo
+router.post("/guest", loginGuest);
+
+// ==========================================
+// 🛡️ VÉRIFICATION DE SESSION (/me)
+// ==========================================
+router.get("/me", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Non authentifié" });
+
   try {
-    const { email, password } = req.body;
-    const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(400).json({ error: "Admin introuvable" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "votre_secret_jwt_super_securise") as any;
+    
+    if (decoded.isAdmin) {
+      // Vérification côté Admin
+      const admin = await Admin.findById(decoded.userId);
+      if (!admin || admin.currentSessionId !== decoded.sessionId) {
+        return res.status(403).json({ code: "SESSION_KICKED", error: "Session admin invalide" });
+      }
+      return res.json({ id: admin._id, name: admin.name, email: admin.email, isAdmin: true });
+      
+    } else if (decoded.isGuest) {
+      // 👈 CORRECTION 2 : On valide l'invité directement sans chercher dans la base !
+      return res.json({ 
+        id: decoded.userId, 
+        name: "Invité", 
+        email: "demo@med-contest.com", 
+        isAdmin: false,
+        isGuest: true 
+      });
 
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) return res.status(400).json({ error: "Mot de passe incorrect" });
-
-    const token = jwt.sign({ id: admin._id, role: "admin" }, SECRET, { expiresIn: "7d" });
-    res.json({ message: "Connexion admin ✅", token, admin: { id: admin._id, name: admin.name, email: admin.email } });
+    } else {
+      // Vérification côté Étudiant
+      const student = await Student.findById(decoded.userId);
+      if (!student || student.currentSessionId !== decoded.sessionId) {
+        return res.status(403).json({ code: "SESSION_KICKED", error: "Session étudiante invalide" });
+      }
+      return res.json({ 
+        id: student._id, 
+        name: student.name, 
+        email: student.email, 
+        isAdmin: false,
+        isGuest: false
+      });
+    }
   } catch (err) {
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
-
-// 🔹 Login étudiant
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const student = await Student.findOne({ email });
-    if (!student) return res.status(400).json({ error: "Étudiant non trouvé" });
-
-    const isMatch = await bcrypt.compare(password, student.password);
-    if (!isMatch) return res.status(400).json({ error: "Mot de passe incorrect" });
-
-    const token = jwt.sign({ id: student._id, email: student.email, role: "student" }, SECRET, { expiresIn: "2h" });
-    res.json({ message: "Connexion étudiant ✅", token });
-  } catch (err) {
-    res.status(500).json({ error: "Erreur serveur" });
+    return res.status(401).json({ error: "Session expirée ou invalide" });
   }
 });
 

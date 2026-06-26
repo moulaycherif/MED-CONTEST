@@ -7,7 +7,7 @@ import {
   getSubjectsByExam,
   deleteAllQuestions,
 } from "../controllers/questionController";
-
+import { authenticateStudent } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
@@ -18,13 +18,13 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post("/import", upload.single("file"), importExcel);
 
 // 📄 Questions (filtrables exam / matière)
-router.get("/", getQuestions);
+router.get("/", authenticateStudent, getQuestions);
 
 // 🎓 Examens
-router.get("/exams", getExams);
+router.get("/exams", authenticateStudent, getExams);
 
 // 📘 Matières par examen
-router.get("/subjects/:exam", getSubjectsByExam);
+router.get("/subjects/:exam", authenticateStudent, getSubjectsByExam);
 
 // 🧹 Suppression globale
 router.delete("/all", deleteAllQuestions);

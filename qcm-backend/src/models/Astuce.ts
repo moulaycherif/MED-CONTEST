@@ -6,22 +6,19 @@ const AstuceSchema = new mongoose.Schema(
     chapter: { type: String, required: true },
     title: { type: String, required: false, default: "" },
     description: { type: String },
-
     cases: {
       type: [
         {
           title: { type: String, default: "" },
           content: { type: String },
-           image: { type: String }, // 🔥 AJOUT ICI
+          image: { type: String }, 
         },
       ],
-      default: [], // 🔥 TRÈS IMPORTANT
+      default: [], 
     },
-    pdfUrl: {
-  type: String,
-},
-
+    pdfUrl: { type: String },
     order: { type: Number, default: 0 },
+    isFree: { type: Boolean, default: false }, // 👈 AJOUT ICI
   },
   { timestamps: true }
 );

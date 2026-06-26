@@ -1,4 +1,3 @@
-// src/pages/AdminDashboard.tsx
 import React, { useEffect, useState } from "react";
 import axios from "../api/axios";
 import { API_BASE_URL } from "../config";
@@ -56,7 +55,7 @@ const AdminDashboard: React.FC = () => {
   const [message, setMessage] = useState("");
 
   // ===============================================
-  // STATE : IMPORT DES QUESTIONS
+  // STATE : IMPORT DES QUESTIONS (Modifié & Enrichi)
   // ===============================================
   const [exams, setExams] = useState<Exam[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -65,6 +64,7 @@ const AdminDashboard: React.FC = () => {
   const [details, setDetails] = useState<ImportResult[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedExam, setSelectedExam] = useState<string>("");
+  const [importSubject, setImportSubject] = useState<string>(""); // 👈 Ajout pour lier la matière à l'import
 
   // ===============================================
   // STATE : RÉSUMÉS
@@ -159,21 +159,28 @@ const AdminDashboard: React.FC = () => {
   };
 
   // ===============================================
-  // ACTIONS : IMPORT DES QUESTIONS
+  // ACTIONS : IMPORT DES QUESTIONS (Adapté)
   // ===============================================
   const handleUpload = async () => {
+    if (!selectedExam) {
+      setImportMessage("⚠️ Veuillez sélectionner un Concours / Examen cible.");
+      return;
+    }
+
+    if (!importSubject.trim()) {
+      setImportMessage("⚠️ Veuillez renseigner la Matière associée aux exercices.");
+      return;
+    }
+
     if (!file) {
-      setImportMessage("⚠️ Veuillez choisir un fichier Excel");
+      setImportMessage("⚠️ Veuillez choisir un fichier Excel.");
       return;
     }
 
     const formData = new FormData();
     formData.append("file", file);
-    
-    // 🔥 Correction : Envoi de l'examen sélectionné au backend s'il est choisi
-    if (selectedExam) {
-      formData.append("exam", selectedExam);
-    }
+    formData.append("exam", selectedExam);
+    formData.append("subject", importSubject.trim()); // 👈 Transmission de la matière au backend
 
     try {
       const res = await axios.post(
@@ -384,64 +391,88 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ----------- Onglet Import ----------- */}
+      {/* ----------- Onglet Import (Refondu selon vos exigences) ----------- */}
       {activeTab === "import" && (
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-2xl font-bold mb-6">📂 Importer des questions via Excel</h2>
+        <div className="bg-white p-6 rounded shadow border border-gray-200">
+          <h2 className="text-2xl font-bold mb-2 text-gray-800">📂 Importer des questions via Excel</h2>
+          <p className="text-sm text-gray-500 mb-6">Associez d'abord votre fichier à un concours et une matière spécifique avant de lancer l'import.</p>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border">
+            {/* 1. Sélection du Concours */}
+            <div>
+              <label className="font-semibold block mb-2 text-gray-700">🏆 Concours / Examen cible :</label>
+              <select
+                value={selectedExam}
+                onChange={e => setSelectedExam(e.target.value)}
+                className="border px-3 py-2.5 rounded bg-white shadow-sm w-full focus:ring-2 focus:ring-blue-300 outline-none"
+              >
+                <option value="">-- Sélectionnez un concours --</option>
+                {exams.map(exam => (
+                  <option key={exam._id} value={exam.title}>
+                    {exam.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 2. Saisie de la Matière */}
+            <div>
+              <label className="font-semibold block mb-2 text-gray-700">🧬 Matière d'association :</label>
+              <input
+                type="text"
+                placeholder="Ex: Anatomie, Physiologie..."
+                value={importSubject}
+                onChange={e => setImportSubject(e.target.value)}
+                className="border px-3 py-2 rounded bg-white shadow-sm w-full focus:ring-2 focus:ring-blue-300 outline-none"
+              />
+            </div>
+          </div>
+
+          {/* 3. Choix du mode d'importation */}
           <div className="mb-6">
+            <label className="font-semibold block mb-2 text-gray-700">⚙️ Mode de traitement des données :</label>
+            <div className="flex flex-wrap gap-6 bg-gray-50/50 p-3 rounded-lg border border-dashed">
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                <input type="radio" value="append" checked={mode === "append"} onChange={() => setMode("append")} className="w-4 h-4 text-blue-600" /> 
+                <span>Ajouter à la suite (append)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                <input type="radio" value="replace" checked={mode === "replace"} onChange={() => setMode("replace")} className="w-4 h-4 text-blue-600" /> 
+                <span>Remplacer l'identique (replace)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                <input type="radio" value="replace-global" checked={mode === "replace-global"} onChange={() => setMode("replace-global")} className="w-4 h-4 text-blue-600" /> 
+                <span>Remplacer globalement</span>
+              </label>
+            </div>
+          </div>
+
+          {/* 4. Zone d'upload du fichier */}
+          <div className="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50/30 text-center">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">📄 Fichier Excel (.xlsx, .xls)</label>
             <input
               type="file"
               accept=".xlsx,.xls"
               onChange={e => setFile(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="mx-auto block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
             />
           </div>
 
-          <div className="mb-6 flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="append" checked={mode === "append"} onChange={() => setMode("append")} className="w-4 h-4 text-blue-600" /> 
-              <span>Ajouter (append)</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="replace" checked={mode === "replace"} onChange={() => setMode("replace")} className="w-4 h-4 text-blue-600" /> 
-              <span>Remplacer (replace)</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="replace-global" checked={mode === "replace-global"} onChange={() => setMode("replace-global")} className="w-4 h-4 text-blue-600" /> 
-              <span>Remplacer global</span>
-            </label>
-          </div>
-
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
-            <label className="font-semibold">Associer à un examen (Optionnel) :</label>
-            <select
-              value={selectedExam}
-              onChange={e => setSelectedExam(e.target.value)}
-              className="border px-3 py-2 rounded bg-white shadow-sm flex-1 max-w-sm"
-            >
-              <option value="">-- Aucun examen spécifique --</option>
-              {exams.map(exam => (
-                <option key={exam._id} value={exam.title}>
-                  {exam.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
+          {/* Bouton d'action principal */}
           <button
             onClick={handleUpload}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors font-semibold"
+            className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-bold text-base shadow"
           >
-            Lancer l'import
+            🚀 Lancer l'importation de l'exercice
           </button>
 
           {importMessage && (
-            <p className={`mt-4 font-semibold p-3 rounded border ${importMessage.includes('❌') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+            <p className={`mt-4 font-semibold p-3 rounded border ${importMessage.includes('❌') || importMessage.includes('⚠️') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
               {importMessage}
             </p>
           )}
 
+          {/* Tableau de restitution des détails */}
           {details.length > 0 && (
             <div className="mt-8">
               <h2 className="text-xl font-bold mb-4">📊 Détails de l'import</h2>
