@@ -195,7 +195,7 @@ router.post("/import-excel", authenticateAdmin, verifyAdmin, excelUpload.single(
           subject,
           chapter,
           contextText: formatExcelMath(currentEnonceText || "Contexte général"),
-          contextImage: "",
+          contextImage: imageCol,
           subQuestions: [subQuestion]
         };
       } else {

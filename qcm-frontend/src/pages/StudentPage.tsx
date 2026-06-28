@@ -953,23 +953,27 @@ export default function StudentPage() {
               </p>
             </div>
             
-            <div className="bg-white p-4 rounded-xl shadow border-t-4 border-blue-600">
+           <div className="bg-white p-4 rounded-xl shadow border-t-4 border-blue-600">
               
+              {/* --- 1. BLOC ÉNONCÉ --- */}
               <div className="mb-4 border-b pb-4 bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wide">Énoncé</h3>
                 <div className="text-base font-medium text-gray-800">
-  <MixedContentRenderer text={currentEx.contextText || currentEx.enonce || currentEx.texte || ""} />
-</div>
+                  <MixedContentRenderer text={currentEx.contextText || currentEx.enonce || currentEx.texte || ""} />
+                </div>
+                
+                {/* 🖼️ Affichage de l'image de l'énoncé (Unique et Corrigé) */}
                 {currentEx.contextImage && (
                   <img 
-                    src={getImageUrl(currentEx.contextImage)} 
-                    alt="Contexte" 
-                    className="mt-2 mx-auto block object-contain max-h-[150px]" 
+                    src={`/images/${currentEx.contextImage.replace(/^\/images\//, '')}`} 
+                    alt="Illustration de l'énoncé" 
+                    className="max-h-48 block mx-auto my-5 rounded-lg shadow-sm border border-gray-200" 
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 )}
               </div>
               
+              {/* --- 2. BLOC QUESTIONS --- */}
               <div className="space-y-6">
                 {currentEx.subQuestions?.map((subQ: any, index: number) => (
                   <div key={subQ._id} className="pl-2 border-l-2 border-blue-200 py-1">
@@ -981,10 +985,11 @@ export default function StudentPage() {
                           Q{index + 1}
                         </span>
                         <div className="flex-1 text-lg font-medium text-gray-900">
-  <MixedContentRenderer text={subQ.questionText || subQ.question || subQ.texte || ""} />
-</div>
+                          <MixedContentRenderer text={subQ.questionText || subQ.question || subQ.texte || ""} />
+                        </div>
                       </div>
 
+                      {/* 🖼️ Affichage de l'image de la question (Déjà existant et correct !) */}
                       {subQ.image && (
                         <div className="mt-3 w-full">
                           <img 
@@ -1000,6 +1005,7 @@ export default function StudentPage() {
                       )}
                     </div>
                     
+                    {/* --- BLOC OPTIONS ET CORRECTION (Inchangé) --- */}
                     <div className="ml-8 grid grid-cols-1 md:grid-cols-2 gap-2">
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
