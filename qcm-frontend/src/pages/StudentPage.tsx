@@ -470,7 +470,6 @@ export default function StudentPage() {
                             src={getImageUrl(q.groupId.image)}
                             className="max-w-lg mx-auto my-2 rounded shadow block object-contain max-h-[300px]"
                             alt="Illustration du groupe"
-                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
                           />
                         )}
                       </div>
@@ -489,7 +488,7 @@ export default function StudentPage() {
                         src={getImageUrl(q.image)}
                         className="max-w-lg my-3 rounded shadow mx-auto block object-contain max-h-[300px]"
                         alt="Illustration"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        
                       />
                     )}
                     
@@ -696,7 +695,7 @@ export default function StudentPage() {
                       src={getImageUrl(currentEx.contextImage)} 
                       alt="Contexte Examen" 
                       className="mt-4 mx-auto block object-contain max-h-[260px]" 
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      
                     />
                   )}
                 </div>
@@ -864,7 +863,7 @@ export default function StudentPage() {
                               src={c.image} 
                               className="max-h-72 object-contain rounded-xl shadow mx-auto" 
                               alt={c.title} 
-                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              
                             />
                           </div>
                         )}
@@ -968,7 +967,7 @@ export default function StudentPage() {
                     src={`/images/${currentEx.contextImage.replace(/^\/images\//, '')}`} 
                     alt="Illustration de l'énoncé" 
                     className="max-h-48 block mx-auto my-5 rounded-lg shadow-sm border border-gray-200" 
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    
                   />
                 )}
               </div>
