@@ -703,20 +703,53 @@ export default function StudentPage() {
                 <div className="space-y-3">
                   {currentEx?.subQuestions?.map((subQ: any, index: number) => (
                     <div key={subQ._id} className="pl-2 border-l-2 border-red-200 py-1">
-                      <div className="font-medium mb-2 flex items-start text-lg leading-relaxed">
-                        <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0">Q{index + 1}</span>
-                        <div className="flex-1 text-lg font-medium text-gray-900">
-  <MixedContentRenderer text={subQ.questionText || subQ.question || subQ.texte || ""} />
-</div>
+                      
+                      {/* --- En-tête de la question --- */}
+                      <div className="font-medium mb-2 flex flex-col items-start text-lg leading-relaxed">
+                        <div className="flex items-start w-full">
+                          <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[12px] mr-2 mt-0.5 shrink-0 font-bold">
+                            Q{index + 1}
+                          </span>
+                          <div className="flex-1 text-lg font-medium text-gray-900">
+                            <MixedContentRenderer text={subQ.questionText || subQ.question || subQ.texte || ""} />
+                          </div>
+                        </div>
+
+                        {/* 🖼️ LA CORRECTION EST ICI : Image de la question (Anti-doublon) */}
+                        {subQ.image && (!currentEx.contextImage || subQ.image.trim() !== currentEx.contextImage.trim()) && (
+                          <div className="mt-3 w-full">
+                            <img 
+                              src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image.trim()}`} 
+                              alt="Illustration de question" 
+                              className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
+                            />
+                          </div>
+                        )}
                       </div>
 
-                      <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {subQ.options.map((opt: string, i: number) => {
+                      {/* --- Options de réponses --- */}
+                      <div className="ml-8 grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {subQ.options?.map((opt: string, i: number) => {
                           const isSelected = exerciseAnswers[subQ._id] === opt;
                           const isCorrect = opt === subQ.correctAnswer;
+                          
+                          // Couleurs spécifiques SVT (rouge)
+                          let labelClass = "hover:bg-red-50 border-gray-200";
+                          if (exerciseSubmitted) {
+                            if (isSelected && isCorrect) labelClass = "bg-green-100 border-green-500 shadow-sm";
+                            else if (isSelected && !isCorrect) labelClass = "bg-red-100 border-red-500 shadow-sm";
+                            else labelClass = "bg-gray-50 opacity-50";
+                          }
+
                           return (
-                            <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${exerciseSubmitted ? isSelected && isCorrect ? "bg-green-100 border-green-500 shadow-sm" : isSelected && !isCorrect ? "bg-red-100 border-red-500 shadow-sm" : "bg-gray-50 opacity-50" : "hover:bg-red-50 border-gray-200"}`}>
-                              <input type="radio" checked={isSelected} disabled={exerciseSubmitted} onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} className="mt-1 mr-3 shrink-0" />
+                            <label key={i} className={`flex items-start px-3 py-2 border rounded-md cursor-pointer text-base transition-all leading-snug ${labelClass}`}>
+                              <input 
+                                type="radio" 
+                                checked={isSelected} 
+                                disabled={exerciseSubmitted} 
+                                onChange={() => setExerciseAnswers((prev) => ({ ...prev, [subQ._id]: opt }))} 
+                                className="mt-1 mr-3 shrink-0" 
+                              />
                               <div className="flex-1 w-full">
                                 <MixedContentRenderer text={opt} />
                               </div>
@@ -725,14 +758,16 @@ export default function StudentPage() {
                         })}
                       </div>
 
+                      {/* --- Correction SVT --- */}
                       {exerciseSubmitted && exerciseAnswers[subQ._id] !== subQ.correctAnswer && (
-                        <div className="ml-6 mt-2 px-3 py-2 bg-red-50 text-red-900 rounded-md border border-red-100 text-sm">  
+                        <div className="ml-8 mt-2 px-3 py-2 bg-red-50 text-red-800 rounded-md border border-red-100 text-sm">  
                           <span className="font-bold flex items-center mb-1">💡 Correction :</span>
                           <div className="prose max-w-none text-gray-800">
                             <MixedContentRenderer text={subQ.explanation || ""} />
                           </div>
                         </div>
                       )}
+                      
                     </div>
                   ))}
                 </div>
@@ -988,23 +1023,18 @@ export default function StudentPage() {
                         </div>
                       </div>
 
-                      {/* 🖼️ Affichage de l'image de la question (Corrigé pour éviter le doublon avec l'énoncé) */}
-{subQ.image && subQ.image !== currentEx.contextImage && (
-  <div className="mt-3 w-full">
-    <img 
-      src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image}`} 
-      alt="Illustration de question" 
-      className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
-      onError={(e) => { 
-        console.error("Image non trouvée :", e.currentTarget.src);
-        e.currentTarget.style.display = 'none'; 
-      }}
-    />
-  </div>
-)}
+                      {/* 🖼️ CORRECTION FINALE : On affiche l'image UNIQUEMENT si elle est différente de celle de l'énoncé */}
+                      {subQ.image && (!currentEx.contextImage || subQ.image.trim() !== currentEx.contextImage.trim()) && (
+                        <div className="mt-3 w-full">
+                          <img 
+                            src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image.trim()}`} 
+                            alt="Illustration de question" 
+                            className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
+                          />
+                        </div>
+                      )}
                     </div>
                     
-                    {/* --- BLOC OPTIONS ET CORRECTION (Inchangé) --- */}
                     <div className="ml-8 grid grid-cols-1 md:grid-cols-2 gap-2">
                       {subQ.options.map((opt: string, i: number) => {
                         const isSelected = exerciseAnswers[subQ._id] === opt;
