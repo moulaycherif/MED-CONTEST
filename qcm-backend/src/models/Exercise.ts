@@ -6,10 +6,11 @@ import mongoose, { Document, Schema } from "mongoose";
 // ======================================================
 export interface ISubQuestion {
   questionText: string;
-  qType: 'qcm' | 'vrai_faux'; // 👈 Nouveau : Type de la sous-question
+  qType: 'qcm' | 'vrai_faux'; // Type de la sous-question
   options: string[];
   correctAnswer: string;
   explanation: string;
+  image: string; // 🖼️ AJOUT ICI : Nom de l'image spécifique à la question
 }
 
 export interface IExercise extends Document {
@@ -20,7 +21,7 @@ export interface IExercise extends Document {
   subQuestions: ISubQuestion[];
   difficulty: 'facile' | 'moyen' | 'difficile';
   isWhiteExam: boolean; 
-  isFree: boolean; // 👈 AJOUT ICI pour la gestion des invités
+  isFree: boolean; // Gestion des invités
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,7 +38,7 @@ const subQuestionSchema = new Schema<ISubQuestion>({
   qType: {
     type: String,
     enum: ['qcm', 'vrai_faux'],
-    default: 'qcm', // 👈 Par défaut, reste au format QCM
+    default: 'qcm', // Par défaut, reste au format QCM
   },
   options: {
     type: [String],
@@ -59,6 +60,11 @@ const subQuestionSchema = new Schema<ISubQuestion>({
     required: [true, "La bonne réponse est requise"],
   },
   explanation: {
+    type: String,
+    default: "",
+  },
+  // 🖼️ AJOUT ICI : Champ image pour stocker les images insérées sur les lignes des questions
+  image: {
     type: String,
     default: "",
   },
@@ -99,13 +105,10 @@ const exerciseSchema = new Schema<IExercise>(
       enum: ['facile', 'moyen', 'difficile'],
       default: 'moyen',
     },
-    
     isWhiteExam: {
       type: Boolean,
       default: false, // Par défaut, c'est un exercice normal
     },
-
-    // 🚨 AJOUT DU CHAMP ICI :
     isFree: {
       type: Boolean,
       default: false, // Par défaut, l'exercice est payant / premium
