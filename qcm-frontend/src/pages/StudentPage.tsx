@@ -988,20 +988,20 @@ export default function StudentPage() {
                         </div>
                       </div>
 
-                      {/* 🖼️ Affichage de l'image de la question (Déjà existant et correct !) */}
-                      {subQ.image && (
-                        <div className="mt-3 w-full">
-                          <img 
-                            src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image}`} 
-                            alt="Illustration de question" 
-                            className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
-                            onError={(e) => { 
-                              console.error("Image non trouvée :", e.currentTarget.src);
-                              e.currentTarget.style.display = 'none'; 
-                            }}
-                          />
-                        </div>
-                      )}
+                      {/* 🖼️ Affichage de l'image de la question (Corrigé pour éviter le doublon avec l'énoncé) */}
+{subQ.image && subQ.image !== currentEx.contextImage && (
+  <div className="mt-3 w-full">
+    <img 
+      src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image}`} 
+      alt="Illustration de question" 
+      className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
+      onError={(e) => { 
+        console.error("Image non trouvée :", e.currentTarget.src);
+        e.currentTarget.style.display = 'none'; 
+      }}
+    />
+  </div>
+)}
                     </div>
                     
                     {/* --- BLOC OPTIONS ET CORRECTION (Inchangé) --- */}
