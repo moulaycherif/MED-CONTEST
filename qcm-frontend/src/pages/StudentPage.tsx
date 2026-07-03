@@ -715,16 +715,19 @@ export default function StudentPage() {
                           </div>
                         </div>
 
-                        {/* 🖼️ LA CORRECTION EST ICI : Image de la question (Anti-doublon) */}
-                        {subQ.image && (!currentEx.contextImage || subQ.image.trim() !== currentEx.contextImage.trim()) && (
-                          <div className="mt-3 w-full">
-                            <img 
-                              src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image.trim()}`} 
-                              alt="Illustration de question" 
-                              className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
-                            />
-                          </div>
-                        )}
+                        {/* 🖼️ IMAGE DE LA QUESTION (COMPARAISON INFAILLIBLE) */}
+{subQ.image && (
+  !currentEx.contextImage || 
+  subQ.image.replace(/^\/images\//, '').trim() !== currentEx.contextImage.replace(/^\/images\//, '').trim()
+) && (
+  <div className="mt-3 w-full">
+    <img 
+      src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image.replace(/^\/images\//, '').trim()}`} 
+      alt="Illustration de question" 
+      className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
+    />
+  </div>
+)}
                       </div>
 
                       {/* --- Options de réponses --- */}
@@ -1023,16 +1026,19 @@ export default function StudentPage() {
                         </div>
                       </div>
 
-                      {/* 🖼️ CORRECTION FINALE : On affiche l'image UNIQUEMENT si elle est différente de celle de l'énoncé */}
-                      {subQ.image && (!currentEx.contextImage || subQ.image.trim() !== currentEx.contextImage.trim()) && (
-                        <div className="mt-3 w-full">
-                          <img 
-                            src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image.trim()}`} 
-                            alt="Illustration de question" 
-                            className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
-                          />
-                        </div>
-                      )}
+                      {/* 🖼️ IMAGE DE LA QUESTION (COMPARAISON INFAILLIBLE) */}
+{subQ.image && (
+  !currentEx.contextImage || 
+  subQ.image.replace(/^\/images\//, '').trim() !== currentEx.contextImage.replace(/^\/images\//, '').trim()
+) && (
+  <div className="mt-3 w-full">
+    <img 
+      src={subQ.image.startsWith('/') ? subQ.image : `/images/${subQ.image.replace(/^\/images\//, '').trim()}`} 
+      alt="Illustration de question" 
+      className="max-h-[200px] object-contain mx-auto block rounded-lg shadow-sm border border-gray-100"
+    />
+  </div>
+)}
                     </div>
                     
                     <div className="ml-8 grid grid-cols-1 md:grid-cols-2 gap-2">
