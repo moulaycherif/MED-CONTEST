@@ -242,35 +242,18 @@ export default function StudentPage() {
     setScore(null);
   };
 
-  // =========================================================================
-  // 🌟 NOUVEAU MOTEUR NATIF INFAILLIBLE : KATEX PUR SANS BIBLIOTHEQUE EXTERNE
+ // =========================================================================
+  // 🌟 MOTEUR NATIF SIMPLIFIÉ ET INFAILLIBLE : KATEX PUR
   // =========================================================================
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
 
-    // 1. Nettoyage de base (garde les balises utiles comme <p>, <br>)
-    let processedText = text
+    // 1. Nettoyage de base
+    const processedText = text
       .replace(/&nbsp;/gi, " ")
       .replace(/<smiles>[\s\S]*?<\/smiles>/gi, "");
 
-    // 2. Extraction sécurisée de l'image (pour ne pas casser LaTeX)
-    let imgSrc = "";
-    let imgClass = "max-h-24 object-contain inline-block my-2 rounded shadow-sm";
-    const imgStart = processedText.indexOf("<img");
-    if (imgStart !== -1) {
-      const imgEnd = processedText.indexOf(">", imgStart);
-      if (imgEnd !== -1) {
-        const rawImgTag = processedText.substring(imgStart, imgEnd + 1);
-        const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
-        if (srcMatch) imgSrc = srcMatch[1];
-        // Note : On gère aussi bien 'class=' que 'className=' pour plus de flexibilité avec Excel
-        const classMatch = rawImgTag.match(/class(Name)?=["']([^"']+)["']/);
-        if (classMatch) imgClass = classMatch[2]; // Le groupe 2 contient la classe
-        processedText = processedText.replace(rawImgTag, "[[IMAGE_PLACEHOLDER]]");
-      }
-    }
-
-    // 3. Découpage chirurgical (Sépare le texte normal des équations)
+    // 2. Découpage chirurgical (Sépare UNIQUEMENT le texte normal des équations)
     const mathRegex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<!\\)\$[\s\S]*?(?<!\\)\$)/g;
     const parts = processedText.split(mathRegex);
 
@@ -279,33 +262,11 @@ export default function StudentPage() {
         {parts.map((part, index) => {
           if (!part) return null;
 
-          // 🚨 CORRECTION MAJEURE ICI : On affiche l'image SANS supprimer le texte autour !
-          if (part.includes("[[IMAGE_PLACEHOLDER]]")) {
-            const subParts = part.split("[[IMAGE_PLACEHOLDER]]");
-            return (
-              <span key={index}>
-                {subParts.map((sub, i) => (
-                  <span key={i}>
-                    {/* On affiche le texte avant et après l'image */}
-                    <span dangerouslySetInnerHTML={{ __html: sub }} />
-                    
-                    {/* On glisse l'image à l'endroit exact où elle était */}
-                    {i < subParts.length - 1 && imgSrc && (
-                      <span className="w-full flex justify-center my-3 block">
-                        <img src={imgSrc} className={imgClass} alt="Illustration" loading="lazy" />
-                      </span>
-                    )}
-                  </span>
-                ))}
-              </span>
-            );
-          }
-
           let isMath = false;
           let mathContent = part;
           let isBlock = false;
 
-          // Identification automatique des balises
+          // Identification automatique des balises mathématiques
           if (part.startsWith("$$") && part.endsWith("$$")) {
             isMath = true; isBlock = true; mathContent = part.slice(2, -2);
           } else if (part.startsWith("\\[") && part.endsWith("\\]")) {
@@ -319,7 +280,7 @@ export default function StudentPage() {
           // Rendu KaTeX
           if (isMath) {
             try {
-              // SÉCURITÉ ABSOLUE
+              // Sécurité pour les formules
               let safeMath = mathContent
                 .replace(/<[^>]*>/g, "") 
                 .replace(/&lt;/g, "<")
@@ -344,7 +305,8 @@ export default function StudentPage() {
             }
           }
 
-          // Rendu du texte normal et des balises HTML inoffensives (<p>, <br>)
+          // 🚨 LA SOLUTION EST ICI : Rendu du texte normal et des images HTML natives
+          // Le navigateur lit votre <img /> et l'affiche à sa place exacte, sans rien supprimer !
           return <span key={index} dangerouslySetInnerHTML={{ __html: part }} />;
         })}
       </span>
