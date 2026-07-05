@@ -263,9 +263,10 @@ export default function StudentPage() {
         const rawImgTag = processedText.substring(imgStart, imgEnd + 1);
         const srcMatch = rawImgTag.match(/src=["']([^"']+)["']/);
         if (srcMatch) imgSrc = srcMatch[1];
-        const classMatch = rawImgTag.match(/class=["']([^"']+)["']/);
-        if (classMatch) imgClass = classMatch[1];
-        processedText = processedText.replace(rawImgTag, " [[IMAGE_PLACEHOLDER]] ");
+        // Note : On gère aussi bien 'class=' que 'className=' pour plus de flexibilité avec Excel
+        const classMatch = rawImgTag.match(/class(Name)?=["']([^"']+)["']/);
+        if (classMatch) imgClass = classMatch[2]; // Le groupe 2 contient la classe
+        processedText = processedText.replace(rawImgTag, "[[IMAGE_PLACEHOLDER]]");
       }
     }
 
@@ -278,13 +279,26 @@ export default function StudentPage() {
         {parts.map((part, index) => {
           if (!part) return null;
 
-          // Rendu de l'image
+          // 🚨 CORRECTION MAJEURE ICI : On affiche l'image SANS supprimer le texte autour !
           if (part.includes("[[IMAGE_PLACEHOLDER]]")) {
-            return imgSrc ? (
-              <div key={index} className="w-full flex justify-center my-3">
-                <img src={imgSrc} className={imgClass} alt="Illustration" loading="lazy" />
-              </div>
-            ) : null;
+            const subParts = part.split("[[IMAGE_PLACEHOLDER]]");
+            return (
+              <span key={index}>
+                {subParts.map((sub, i) => (
+                  <span key={i}>
+                    {/* On affiche le texte avant et après l'image */}
+                    <span dangerouslySetInnerHTML={{ __html: sub }} />
+                    
+                    {/* On glisse l'image à l'endroit exact où elle était */}
+                    {i < subParts.length - 1 && imgSrc && (
+                      <span className="w-full flex justify-center my-3 block">
+                        <img src={imgSrc} className={imgClass} alt="Illustration" loading="lazy" />
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </span>
+            );
           }
 
           let isMath = false;
@@ -305,7 +319,7 @@ export default function StudentPage() {
           // Rendu KaTeX
           if (isMath) {
             try {
-              // SÉCURITÉ ABSOLUE : Détruit tout HTML infiltré DANS la formule (Le bug de la colonne Question)
+              // SÉCURITÉ ABSOLUE
               let safeMath = mathContent
                 .replace(/<[^>]*>/g, "") 
                 .replace(/&lt;/g, "<")
