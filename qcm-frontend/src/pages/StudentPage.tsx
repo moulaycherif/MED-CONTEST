@@ -243,18 +243,18 @@ export default function StudentPage() {
   };
 
 // =========================================================================
-  // 🌟 MOTEUR NATIF INFAILLIBLE : KATEX + BALISES IMAGES PERSONNALISÉES
+  // 🌟 MOTEUR NATIF ULTRA-TOLÉRANT : KATEX + CORRECTION RETOURS À LA LIGNE IMAGES
   // =========================================================================
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
 
-    // 1. Nettoyage de base
+    // 1. Nettoyage de base + Uniformisation des espaces
     const processedText = text
       .replace(/&nbsp;/gi, " ")
       .replace(/<smiles>[\s\S]*?<\/smiles>/gi, "");
 
-    // 2. Découpage chirurgical (LaTeX ET notre balise secrète [[IMG=...]])
-    const combinedRegex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<![\\<])\$[^$\n<>]+?\$|\[\[IMG=[^\]]+\]\])/gi;
+    // 2. Regex ultra-tolérante (gère les espaces et retours à la ligne autour de [[IMG=...]])
+    const combinedRegex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<![\\<])\$[^$\n<>]+?\$|\[\[\s*IMG\s*=\s*[^\]]+\s*\]\])/gi;
     const parts = processedText.split(combinedRegex);
 
     return (
@@ -262,15 +262,23 @@ export default function StudentPage() {
         {parts.map((part, index) => {
           if (!part) return null;
 
-          // 🌟 INTERCEPTION DE NOTRE BALISE IMAGE SECRÈTE
-          if (part.toUpperCase().startsWith("[[IMG=") && part.endsWith("]]")) {
-            const filename = part.substring(6, part.length - 2).trim();
+          const trimmedPart = part.trim();
+
+          // 🌟 RECONNAISSANCE AMÉLIORÉE DE LA BALISE IMAGE
+          if (trimmedPart.toUpperCase().startsWith("[[IMG=") && trimmedPart.endsWith("]]")) {
+            // Extraction propre du nom de fichier
+            const filename = trimmedPart.substring(6, trimmedPart.length - 2).trim();
+            
             return (
-              <span key={index} className="w-full flex justify-center my-4 block">
+              <span key={index} className="w-full flex justify-center my-4 block clearfix">
                 <img 
                   src={`/images/${filename.replace(/^\/images\//, '')}`} 
-                  alt="Illustration insérée" 
-                  className="max-h-48 object-contain rounded-lg shadow-sm border border-gray-200" 
+                  alt="Illustration" 
+                  className="max-h-64 object-contain rounded-lg shadow-sm border border-gray-200"
+                  onError={(e) => {
+                    // Optionnel : affiche un message si le fichier physique est introuvable dans /public/images/
+                    console.error("Image introuvable dans le dossier public :", filename);
+                  }}
                 />
               </span>
             );
@@ -280,21 +288,20 @@ export default function StudentPage() {
           let mathContent = part;
           let isBlock = false;
 
-          // Identification automatique des balises
-          if (part.startsWith("$$") && part.endsWith("$$")) {
-            isMath = true; isBlock = true; mathContent = part.slice(2, -2);
-          } else if (part.startsWith("\\[") && part.endsWith("\\]")) {
-            isMath = true; isBlock = true; mathContent = part.slice(2, -2);
-          } else if (part.startsWith("\\(") && part.endsWith("\\)")) {
-            isMath = true; mathContent = part.slice(2, -2);
-          } else if (part.startsWith("$") && part.endsWith("$")) {
-            if (!part.includes("<") && !part.includes(">")) {
+          // Identification des blocs Mathématiques
+          if (trimmedPart.startsWith("$$") && trimmedPart.endsWith("$$")) {
+            isMath = true; isBlock = true; mathContent = trimmedPart.slice(2, -2);
+          } else if (trimmedPart.startsWith("\\[") && trimmedPart.endsWith("\\]")) {
+            isMath = true; isBlock = true; mathContent = trimmedPart.slice(2, -2);
+          } else if (trimmedPart.startsWith("\\(") && trimmedPart.endsWith("\\)")) {
+            isMath = true; mathContent = trimmedPart.slice(2, -2);
+          } else if (trimmedPart.startsWith("$") && trimmedPart.endsWith("$")) {
+            if (!trimmedPart.includes("<") && !trimmedPart.includes(">")) {
               isMath = true; 
-              mathContent = part.slice(1, -1);
+              mathContent = trimmedPart.slice(1, -1);
             }
           }
 
-          // Rendu KaTeX
           if (isMath) {
             try {
               let safeMath = mathContent
@@ -321,7 +328,7 @@ export default function StudentPage() {
             }
           }
 
-          // Rendu du texte normal
+          // Rendu du texte normal et du HTML résiduel (<br>, <b>, etc.)
           return <span key={index} dangerouslySetInnerHTML={{ __html: part }} />;
         })}
       </span>
