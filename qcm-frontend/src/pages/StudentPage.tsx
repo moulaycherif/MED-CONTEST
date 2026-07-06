@@ -242,8 +242,8 @@ export default function StudentPage() {
     setScore(null);
   };
 
- // =========================================================================
-  // 🌟 MOTEUR NATIF SIMPLIFIÉ ET INFAILLIBLE : KATEX PUR
+// =========================================================================
+  // 🌟 MOTEUR NATIF INFAILLIBLE : KATEX + PROTECTION BALISES HTML (IMG)
   // =========================================================================
   function MixedContentRenderer({ text }: { text: string }) {
     if (!text) return null;
@@ -253,8 +253,10 @@ export default function StudentPage() {
       .replace(/&nbsp;/gi, " ")
       .replace(/<smiles>[\s\S]*?<\/smiles>/gi, "");
 
-    // 2. Découpage chirurgical (Sépare UNIQUEMENT le texte normal des équations)
-    const mathRegex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<!\\)\$[\s\S]*?(?<!\\)\$)/g;
+    // 2. Découpage chirurgical TRÈS SÉCURISÉ
+    // Cette regex capture les blocs $$...$$, \[...\], \(...\) et $...$ 
+    // tout en s'assurant qu'on ne découpe pas des dollars coincés dans des attributs HTML (ex: src="...")
+    const mathRegex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<![\\<])\$[^$\n<>]+?\$)/g;
     const parts = processedText.split(mathRegex);
 
     return (
@@ -266,7 +268,7 @@ export default function StudentPage() {
           let mathContent = part;
           let isBlock = false;
 
-          // Identification automatique des balises mathématiques
+          // Identification automatique des balises
           if (part.startsWith("$$") && part.endsWith("$$")) {
             isMath = true; isBlock = true; mathContent = part.slice(2, -2);
           } else if (part.startsWith("\\[") && part.endsWith("\\]")) {
@@ -274,13 +276,16 @@ export default function StudentPage() {
           } else if (part.startsWith("\\(") && part.endsWith("\\)")) {
             isMath = true; mathContent = part.slice(2, -2);
           } else if (part.startsWith("$") && part.endsWith("$")) {
-            isMath = true; mathContent = part.slice(1, -1);
+            // Double vérification pour s'assurer que ce n'est pas un morceau de balise HTML rescapé
+            if (!part.includes("<") && !part.includes(">")) {
+              isMath = true; 
+              mathContent = part.slice(1, -1);
+            }
           }
 
           // Rendu KaTeX
           if (isMath) {
             try {
-              // Sécurité pour les formules
               let safeMath = mathContent
                 .replace(/<[^>]*>/g, "") 
                 .replace(/&lt;/g, "<")
@@ -305,8 +310,7 @@ export default function StudentPage() {
             }
           }
 
-          // 🚨 LA SOLUTION EST ICI : Rendu du texte normal et des images HTML natives
-          // Le navigateur lit votre <img /> et l'affiche à sa place exacte, sans rien supprimer !
+          // Rendu du texte normal ET des images natives HTML (SANS interférence avec KaTeX)
           return <span key={index} dangerouslySetInnerHTML={{ __html: part }} />;
         })}
       </span>
