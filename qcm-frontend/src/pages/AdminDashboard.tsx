@@ -186,7 +186,12 @@ const AdminDashboard: React.FC = () => {
       const res = await axios.post(
         `${API_BASE_URL}/api/questions/import?mode=${mode}`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { 
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${adminToken}` // 👈 AJOUT INDISPENSABLE ICI
+          } 
+        }
       );
 
       setImportMessage(res.data.message || "✅ Import réussi");
