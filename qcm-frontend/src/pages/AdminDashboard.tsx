@@ -94,7 +94,11 @@ const AdminDashboard: React.FC = () => {
 
   const fetchExams = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/questions/exams`);
+      const res = await axios.get(`${API_BASE_URL}/api/questions/exams`, {
+        headers: { 
+          Authorization: `Bearer ${adminToken}` // 👈 L'oubli était là aussi !
+        }
+      });
       setExams(res.data);
     } catch (err) {
       console.error("Erreur récupération examens :", err);
