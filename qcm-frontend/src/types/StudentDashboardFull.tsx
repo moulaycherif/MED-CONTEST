@@ -13,11 +13,15 @@ interface Question {
 }
 
 export default function StudentDashboardFull() {
-  const [view, setView] = useState<"accueil" | "concoursList" | "matiereList" | "questions">("accueil");
+  // 1️⃣ Ajout de "concoursBlancList" dans les états de vue
+  const [view, setView] = useState<"accueil" | "concoursList" | "matiereList" | "questions" | "concoursBlancList">("accueil");
   const [exams, setExams] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
+
+  // 1. Ajoutez un nouvel état en haut avec les autres
+const [concoursBlancs, setConcoursBlancs] = useState<string[]>([]);
 
   const subjects = ["Mathématique", "Physique", "Chimie", "SVT"];
 
@@ -26,22 +30,34 @@ export default function StudentDashboardFull() {
       .get(`${API_BASE_URL}/api/questions/exams`)
       .then((res) => setExams(res.data || []))
       .catch(console.error);
+      // NOUVEAU : Chargement des numéros de concours blancs
+  axios.get(`${API_BASE_URL}/api/questions/exams/blancs`) // La route créée à l'étape 3
+    .then((res) => setConcoursBlancs(res.data || []))
+    .catch(console.error);
   }, []);
 
-  const loadQuestions = (exam: string, subject?: string) => {
-    const params: any = { exam };
-    if (subject) params.subject = subject;
-    axios
-      .get(`${API_BASE_URL}/api/questions`, { params })
-      .then((res) => {
-        setQuestions(res.data || []);
-        setSelectedExam(exam);
-        setSelectedSubject(subject || null);
-        setView("questions");
-      })
-      .catch(console.error);
-  };
+  // 3. Modifiez la fonction loadQuestions pour supporter le numéro de concours blanc
+const loadQuestions = (exam: string, subject?: string, isBlanc: boolean = false) => {
+  const params: any = {};
+  
+  if (isBlanc) {
+    params.numeroConcoursBlanc = exam;
+    params.typeEpreuve = 'blanc';
+  } else {
+    params.exam = exam;
+  }
+  
+  if (subject) params.subject = subject;
 
+  axios.get(`${API_BASE_URL}/api/questions`, { params })
+    .then((res) => {
+      setQuestions(res.data || []);
+      setSelectedExam(exam);
+      setSelectedSubject(subject || null);
+      setView("questions");
+    })
+    .catch(console.error);
+};
   return (
     <div
       className="flex min-h-screen text-white"
@@ -97,6 +113,17 @@ export default function StudentDashboardFull() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* 2️⃣ Ajout du 4ème bloc pour les Concours Blancs */}
+        <div>
+          <h2 className="text-[#facc15] font-bold text-lg mb-3">📝 CONCOURS BLANCS</h2>
+          <button
+            onClick={() => setView("concoursBlancList")}
+            className="w-full py-2 bg-[#9333ea] hover:bg-[#a855f7] rounded-lg font-semibold transition shadow-md"
+          >
+            📋 Concours Blancs
+          </button>
         </div>
       </motion.div>
 
@@ -156,6 +183,32 @@ export default function StudentDashboardFull() {
                   <p className="text-center py-3 font-semibold">{exam}</p>
                 </motion.div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* 3️⃣ Ajout de la vue Centrale pour les Concours Blancs */}
+        {view === "concoursBlancList" && (
+          <div>
+            <h2 className="text-2xl font-bold text-center mb-6 text-[#facc15]">📝 Liste des Concours Blancs</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {/* Espace prévu pour afficher la liste des concours blancs plus tard */}
+             {/* Rendu des concours blancs */}
+{concoursBlancs.map((num) => (
+  <motion.div
+    key={num}
+    whileHover={{ scale: 1.05 }}
+    className="cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white/10 hover:bg-white/20 transition"
+    onClick={() => loadQuestions(num, undefined, true)} // true indique que c'est un concours blanc
+  >
+    <img
+      src={`/src/assets/concours_blanc.jfif`} // Mettez une image dédiée si vous le souhaitez
+      alt={`Concours Blanc ${num}`}
+      className="w-full h-36 object-cover"
+    />
+    <p className="text-center py-3 font-semibold text-xl">Concours Blanc n°{num}</p>
+  </motion.div>
+))}
             </div>
           </div>
         )}

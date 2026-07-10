@@ -6,11 +6,13 @@ export interface IQuestion extends Document {
   options?: string[];
   reponseCorrecte?: string;
   subject: string;
-  exam: string;
+  exam?: string; // 👈 Modifié : devient optionnel
   note?: number;
   isGroup: boolean;
   groupId?: mongoose.Types.ObjectId | null;
-  isFree: boolean; // 👈 AJOUT ICI
+  isFree: boolean;
+  typeEpreuve: string; // 👈 AJOUT : "officiel" ou "blanc"
+  numeroConcoursBlanc?: string; // 👈 AJOUT : Le numéro du concours blanc
 }
 
 const questionSchema = new Schema<IQuestion>(
@@ -20,11 +22,13 @@ const questionSchema = new Schema<IQuestion>(
     options: { type: [String], default: [] },
     reponseCorrecte: { type: String, default: null },
     subject: { type: String, required: true },
-    exam: { type: String, required: true },
+    exam: { type: String, default: "Concours Blanc" }, // 👈 Modifié
     note: { type: Number, default: 1 },
     isGroup: { type: Boolean, default: false },
     groupId: { type: Schema.Types.ObjectId, ref: "QuestionGroup", default: null },
-    isFree: { type: Boolean, default: false }, // 👈 AJOUT ICI
+    isFree: { type: Boolean, default: false },
+    typeEpreuve: { type: String, default: "officiel" }, // 👈 AJOUT
+    numeroConcoursBlanc: { type: String, default: null }, // 👈 AJOUT
   },
   { timestamps: true }
 );

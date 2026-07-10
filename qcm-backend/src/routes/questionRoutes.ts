@@ -4,6 +4,7 @@ import {
   getQuestions,
   importExcel,
   getExams,
+  getConcoursBlancs, // 👈 AJOUT de l'import
   getSubjectsByExam,
   deleteAllQuestions,
 } from "../controllers/questionController";
@@ -11,17 +12,19 @@ import { authenticateStudent } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-// ⬅️ memoryStorage OBLIGATOIRE pour XLSX
 const upload = multer({ storage: multer.memoryStorage() });
 
 // 📥 Import Excel
 router.post("/import", upload.single("file"), importExcel);
 
-// 📄 Questions (filtrables exam / matière)
+// 📄 Questions (filtrables)
 router.get("/", authenticateStudent, getQuestions);
 
-// 🎓 Examens
+// 🎓 Examens officiels
 router.get("/exams", authenticateStudent, getExams);
+
+// 📋 👈 NOUVEAU : Liste des numéros de concours blancs
+router.get("/exams/blancs", authenticateStudent, getConcoursBlancs);
 
 // 📘 Matières par examen
 router.get("/subjects/:exam", authenticateStudent, getSubjectsByExam);
