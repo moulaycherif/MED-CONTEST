@@ -64,8 +64,7 @@ const AdminDashboard: React.FC = () => {
   const [details, setDetails] = useState<ImportResult[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedExam, setSelectedExam] = useState<string>("");
-  const [importSubject, setImportSubject] = useState<string>(""); // 👈 Ajout pour lier la matière à l'import
-
+  
   // ===============================================
   // STATE : RÉSUMÉS
   // ===============================================
@@ -92,27 +91,12 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const fetchExams = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/questions/exams`, {
-        headers: { 
-          Authorization: `Bearer ${adminToken}` // 👈 L'oubli était là aussi !
-        }
-      });
-      setExams(res.data);
-    } catch (err) {
-      console.error("Erreur récupération examens :", err);
-    }
-  };
-
   useEffect(() => {
     if (activeTab === "students") {
       if (adminToken) {
         fetchStudents();
       }
-    } else if (activeTab === "import") {
-      fetchExams();
-    }
+    } 
   }, [activeTab]);
 
   // ===============================================
@@ -165,17 +149,7 @@ const AdminDashboard: React.FC = () => {
   // ===============================================
   // ACTIONS : IMPORT DES QUESTIONS (Adapté)
   // ===============================================
-  const handleUpload = async () => {
-    if (!selectedExam) {
-      setImportMessage("⚠️ Veuillez sélectionner un Concours / Examen cible.");
-      return;
-    }
-
-    if (!importSubject.trim()) {
-      setImportMessage("⚠️ Veuillez renseigner la Matière associée aux exercices.");
-      return;
-    }
-
+ const handleUpload = async () => {
     if (!file) {
       setImportMessage("⚠️ Veuillez choisir un fichier Excel.");
       return;
@@ -183,8 +157,6 @@ const AdminDashboard: React.FC = () => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("exam", selectedExam);
-    formData.append("subject", importSubject.trim()); // 👈 Transmission de la matière au backend
 
     try {
       const res = await axios.post(
@@ -193,7 +165,7 @@ const AdminDashboard: React.FC = () => {
         { 
           headers: { 
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${adminToken}` // 👈 AJOUT INDISPENSABLE ICI
+            Authorization: `Bearer ${adminToken}`
           } 
         }
       );
@@ -201,7 +173,6 @@ const AdminDashboard: React.FC = () => {
       setImportMessage(res.data.message || "✅ Import réussi");
       setDetails(res.data.details || []);
       setCurrentPage(1);
-      fetchExams();
     } catch (error: any) {
       console.error("❌ Erreur import :", error.response?.data || error.message);
       setImportMessage("❌ Erreur lors de l'import");
@@ -400,44 +371,15 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ----------- Onglet Import (Refondu selon vos exigences) ----------- */}
+     {/* ----------- Onglet Import ----------- */}
       {activeTab === "import" && (
         <div className="bg-white p-6 rounded shadow border border-gray-200">
           <h2 className="text-2xl font-bold mb-2 text-gray-800">📂 Importer des questions via Excel</h2>
-          <p className="text-sm text-gray-500 mb-6">Associez d'abord votre fichier à un concours et une matière spécifique avant de lancer l'import.</p>
+          <p className="text-sm text-gray-500 mb-6">
+            Le système lira automatiquement les matières et les concours depuis les colonnes de votre fichier Excel.
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border">
-            {/* 1. Sélection du Concours */}
-            <div>
-              <label className="font-semibold block mb-2 text-gray-700">🏆 Concours / Examen cible :</label>
-              <select
-                value={selectedExam}
-                onChange={e => setSelectedExam(e.target.value)}
-                className="border px-3 py-2.5 rounded bg-white shadow-sm w-full focus:ring-2 focus:ring-blue-300 outline-none"
-              >
-                <option value="">-- Sélectionnez un concours --</option>
-                {exams.map(exam => (
-                  <option key={exam._id} value={exam.title}>
-                    {exam.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 2. Saisie de la Matière */}
-            <div>
-              <label className="font-semibold block mb-2 text-gray-700">🧬 Matière d'association :</label>
-              <input
-                type="text"
-                placeholder="Ex: Anatomie, Physiologie..."
-                value={importSubject}
-                onChange={e => setImportSubject(e.target.value)}
-                className="border px-3 py-2 rounded bg-white shadow-sm w-full focus:ring-2 focus:ring-blue-300 outline-none"
-              />
-            </div>
-          </div>
-
-          {/* 3. Choix du mode d'importation */}
+          {/* Choix du mode d'importation */}
           <div className="mb-6">
             <label className="font-semibold block mb-2 text-gray-700">⚙️ Mode de traitement des données :</label>
             <div className="flex flex-wrap gap-6 bg-gray-50/50 p-3 rounded-lg border border-dashed">
@@ -456,7 +398,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* 4. Zone d'upload du fichier */}
+          {/* Zone d'upload du fichier */}
           <div className="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50/30 text-center">
             <label className="block text-sm font-semibold text-gray-700 mb-2">📄 Fichier Excel (.xlsx, .xls)</label>
             <input
@@ -472,7 +414,7 @@ const AdminDashboard: React.FC = () => {
             onClick={handleUpload}
             className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-bold text-base shadow"
           >
-            🚀 Lancer l'importation de l'exercice
+            🚀 Lancer l'importation du fichier
           </button>
 
           {importMessage && (
