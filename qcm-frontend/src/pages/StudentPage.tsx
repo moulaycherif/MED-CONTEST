@@ -577,9 +577,14 @@ export default function StudentPage() {
                   whileHover={{ scale: 1.05 }}
                   className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-white to-gray-100 hover:from-red-50 hover:to-white transition-all border-l-4 border-red-500 w-64 h-48 flex flex-col items-center justify-center p-4 text-center"
                   onClick={() => {
+                    // 1. On affiche l'objet exam complet dans la console du navigateur
+  console.log("🔎 EXAMEN CLIQUÉ :", exam);
                     resetQcm();
                     setSection("qcm");
-                    setCurrentExam(exam.title || "Examen sans titre");
+                    // On récupère le vrai nom ou on force la correspondance avec la base de données
+  const examName = exam.title || "Concours Blanc 1";
+  
+  setCurrentExam(examName);
                     setCurrentExamId(exam._id);
                   }}
                 >
