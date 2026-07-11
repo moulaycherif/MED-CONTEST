@@ -56,7 +56,8 @@ interface Question {
 
 export default function StudentPage() {
   const navigate = useNavigate();
-  const [section, setSection] = useState<"home" | "concours" | "matiere" | "soutien" | "qcm">("home");
+  const [section, setSection] = useState<"home" | "concours" | "matiere" | "soutien" | "qcm" | "blancs">("home");
+  const [blancsExams, setBlancsExams] = useState<{ _id: string; title: string }[]>([]);
   const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
@@ -120,6 +121,16 @@ export default function StudentPage() {
       })
       .then((res) => setExams(res.data))
       .catch((err) => console.error("❌ Exams load error", err));
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    axios
+      .get(`${API_BASE_URL}/api/questions/exams/blancs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then((res) => setBlancsExams(res.data))
+      .catch((err) => console.error("❌ Erreur chargement concours blancs", err));
   }, []);
 
   useEffect(() => {
@@ -539,6 +550,49 @@ export default function StudentPage() {
             <div className="mt-6 text-center text-xl font-bold text-blue-800 bg-blue-50 border border-blue-200 py-3 rounded-xl max-w-md mx-auto shadow-sm">
               🏁 Score total du concours : {score} / {questions.reduce((sum, q) => sum + q.note, 0)}
             </div>
+          )}
+        </div>
+      );
+    }
+
+    if (section === "blancs") {
+      return (
+        <div className="p-6">
+          <h2 className="text-3xl font-bold text-center mb-8 text-red-700 border-b-2 border-red-200 pb-4">📝 Concours Blancs</h2>
+          {blancsExams.length === 0 ? (
+            <div className="text-center mt-10">
+              <p className="text-gray-500 text-lg bg-gray-50 p-8 rounded-xl border border-gray-200 inline-block shadow-sm">
+                Aucun concours blanc n'est disponible pour le moment.
+              </p>
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-wrap gap-6 justify-center items-start min-h-full"
+            >
+              {blancsExams.map((exam) => (
+                <motion.div
+                  key={exam._id}
+                  whileHover={{ scale: 1.05 }}
+                  className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-white to-gray-100 hover:from-red-50 hover:to-white transition-all border-l-4 border-red-500 w-64 h-48 flex flex-col items-center justify-center p-4 text-center"
+                  onClick={() => {
+                    resetQcm();
+                    setSection("qcm");
+                    setCurrentExam(exam.title);
+                    setCurrentExamId(exam._id);
+                  }}
+                >
+                  <span className="text-5xl mb-4">⏱️</span>
+                  <div className="font-bold text-red-800 text-lg">
+                    {exam.title}
+                  </div>
+                  <div className="mt-2 text-xs font-semibold text-gray-500 bg-gray-200 px-3 py-1 rounded-full">
+                    Conditions réelles
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
           )}
         </div>
       );
@@ -1219,7 +1273,7 @@ export default function StudentPage() {
     }
 
     // Si on est sur la liste des chapitres ou des examens d'une matière
-    if (section === "soutien" || section === "matiere" || section === "concours") {
+    if (section === "soutien" || section === "matiere" || section === "concours" || section === "blancs") {
       setSelectedMatiere(null);
       setSection("home");
       return;
@@ -1298,6 +1352,23 @@ export default function StudentPage() {
             ))}
           </div>
         </div>
+
+<div>
+          <h3 className="font-bold text-lg mb-3 mt-4 text-red-300">📝 Concours Blancs</h3>
+          <button
+            onClick={() => {
+              resetQcm();
+              setSection("blancs");
+              setSelectedMatiere(null);
+              setSelectedChapter(null);
+              setSelectedAction(null);
+            }}
+            className="py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition w-full shadow-md flex justify-center items-center gap-2"
+          >
+            <span>Passer un examen</span>
+          </button>
+        </div>
+
       </motion.div>
 
       {/* Contenu Central */}
