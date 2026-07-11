@@ -1292,7 +1292,7 @@ export default function StudentPage() {
     >
       {/* Barre latérale (Sidebar) */}
       <motion.div
-        className="w-1/8 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-8 shadow-2xl overflow-y-auto"
+        className="w-64 bg-blue-900/40 backdrop-blur-md p-4 flex flex-col gap-4 shadow-2xl overflow-y-auto"
         initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
