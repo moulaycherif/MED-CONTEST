@@ -65,8 +65,8 @@ export const importExcel = async (req: Request, res: Response) => {
     const sheetName = workbook.SheetNames[0];
     const rows = XLSX.utils.sheet_to_json<any>(workbook.Sheets[sheetName], { defval: "" });
 
-    await Question.deleteMany({});
-    await QuestionGroup.deleteMany({});
+    //await Question.deleteMany({});
+    //await QuestionGroup.deleteMany({});
 
     let lastSubject = "";
     let lastExam = "";
@@ -185,13 +185,22 @@ export const getExams = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-// 🌟 NOUVELLE FONCTION : Récupérer la liste des numéros de concours blancs
+// 🌟 FONCTION CORRIGÉE : Récupérer la liste des concours blancs au bon format
 export const getConcoursBlancs = async (req: AuthenticatedRequest, res: Response) => {
   try {
     let blancs = await Question.distinct("numeroConcoursBlanc", { typeEpreuve: "blanc" });
+    
     // Trier les numéros correctement (ex: 1, 2, 3...)
     blancs = blancs.filter(Boolean).sort((a: any, b: any) => Number(a) - Number(b));
-    res.json(blancs);
+    
+    // 👈 NOUVEAU : On transforme les simples numéros en objets avec _id et title
+    // C'est ce qui règle définitivement le problème "Examen sans titre" sur le frontend !
+    const formattedBlancs = blancs.map((num) => ({
+      _id: String(num), // L'identifiant (ex: "1")
+      title: `Concours Blanc ${num}` // Le joli titre affiché (ex: "Concours Blanc 1")
+    }));
+
+    res.json(formattedBlancs);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erreur concours blancs" });

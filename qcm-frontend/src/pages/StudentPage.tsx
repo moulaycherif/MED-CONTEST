@@ -581,16 +581,16 @@ export default function StudentPage() {
   console.log("🔎 EXAMEN CLIQUÉ :", exam);
                     resetQcm();
                     setSection("qcm");
-                    // On récupère le vrai nom ou on force la correspondance avec la base de données
-  const examName = exam.title || "Concours Blanc 1";
+                    // On utilise exam._id si exam.title n'existe pas
+  const examName = exam.title || exam._id; 
   
   setCurrentExam(examName);
                     setCurrentExamId(exam._id);
                   }}
                 >
                   <span className="text-5xl mb-4">⏱️</span>
-                  <div className="font-bold text-red-800 text-lg">
-  {exam.title || "Examen sans titre (À vérifier)"}
+                 <div className="font-bold text-red-800 text-lg">
+  {exam.title || exam._id}
 </div>
                   <div className="mt-2 text-xs font-semibold text-gray-500 bg-gray-200 px-3 py-1 rounded-full">
                     Conditions réelles
