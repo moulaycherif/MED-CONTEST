@@ -579,14 +579,14 @@ export default function StudentPage() {
                   onClick={() => {
                     resetQcm();
                     setSection("qcm");
-                    setCurrentExam(exam.title);
+                    setCurrentExam(exam.title || "Examen sans titre");
                     setCurrentExamId(exam._id);
                   }}
                 >
                   <span className="text-5xl mb-4">⏱️</span>
                   <div className="font-bold text-red-800 text-lg">
-                    {exam.title}
-                  </div>
+  {exam.title || "Examen sans titre (À vérifier)"}
+</div>
                   <div className="mt-2 text-xs font-semibold text-gray-500 bg-gray-200 px-3 py-1 rounded-full">
                     Conditions réelles
                   </div>
@@ -629,7 +629,7 @@ export default function StudentPage() {
 
     if (section === "matiere" && selectedMatiere) {
       const matiereImage = subjectImages[selectedMatiere];
-      const filteredExams = exams.filter((e) => e.title.startsWith("MEDECINE"));
+      const filteredExams = exams.filter((e) => e.title && e.title.startsWith("MEDECINE"));
 
       return (
         <motion.div
