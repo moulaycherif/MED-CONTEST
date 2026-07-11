@@ -578,7 +578,7 @@ export default function StudentPage() {
                   className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-white to-gray-100 hover:from-red-50 hover:to-white transition-all border-l-4 border-red-500 w-64 h-48 flex flex-col items-center justify-center p-4 text-center"
                   onClick={() => {
                     // 1. On affiche l'objet exam complet dans la console du navigateur
-  console.log("🔎 EXAMEN CLIQUÉ :", exam);
+  
                     resetQcm();
                     setSection("qcm");
                     // On utilise exam._id si exam.title n'existe pas
@@ -1359,7 +1359,7 @@ export default function StudentPage() {
         </div>
 
 <div>
-          <h3 className="font-bold text-lg mb-3 mt-4 text-red-300">📝 Concours Blancs</h3>
+          <h3 className="font-bold text-lg mb-3 mt-4 text-yellow-200">📝 Concours Blancs</h3>
           <button
             onClick={() => {
               resetQcm();
