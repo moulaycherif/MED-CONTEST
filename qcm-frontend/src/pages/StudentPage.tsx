@@ -1243,33 +1243,34 @@ export default function StudentPage() {
       }
 
       return (
-        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full p-4">
-          {chapters.map((chapter, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.05 }}
-              className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white border border-gray-100 flex flex-col transition-all"
-              onClick={() => setSelectedChapter(chapter)}
-            >
-              <div className="w-48 h-48 bg-gray-50 shrink-0 overflow-hidden">
-                <img 
-                  src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
-                  alt={chapter} 
-                  className="w-full h-full object-cover" 
-                />
-              </div>
-              <div 
-                className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
-                title={chapter}
-              >
-                <span className="line-clamp-3 break-words leading-tight">
-                  {chapter}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+  <div className="flex flex-wrap gap-5 justify-start items-start min-h-full p-4">
+    {chapters.map((chapter, index) => (
+      <motion.div
+        key={index}
+        whileHover={{ scale: 1.05 }}
+        className="w-40 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
+        onClick={() => setSelectedChapter(chapter)}
+      >
+        {/* Hauteur réduite à h-28 (112px) au lieu de h-48 (192px) */}
+        <div className="w-full h-28 bg-gray-50 shrink-0 overflow-hidden">
+          <img 
+            src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
+            alt={chapter} 
+            className="w-full h-full object-cover" 
+          />
         </div>
-      );
+        <div 
+          className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
+          title={chapter}
+        >
+          <span className="line-clamp-3 break-words leading-tight">
+            {chapter}
+          </span>
+        </div>
+      </motion.div>
+    ))}
+  </div>
+);
     }
     return <StudentDashboardStats />;
   };
