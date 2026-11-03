@@ -1,4 +1,4 @@
-// src/pages/LoginPage.tsx (ou chemin correspondant)
+// src/pages/LoginPage.tsx
 import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
 import { motion } from "framer-motion";
@@ -14,6 +14,8 @@ export default function LoginPage() {
   const [role, setRole] = useState<"admin" | "student" | null>(null);
   const [loading, setLoading] = useState(false);
   
+  // 🆕 NOUVEAU : État pour savoir si on tente une connexion Admin ou Étudiant
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [showForceButton, setShowForceButton] = useState(false);
 
   useEffect(() => {
@@ -24,70 +26,43 @@ export default function LoginPage() {
     }
   }, []);
 
- const handleLogin = async (e: React.FormEvent, force: boolean = false) => {
+  const handleLogin = async (e: React.FormEvent, force: boolean = false) => {
     e.preventDefault();
-    // 🧼 Nettoyage préventif pour éviter que l'ancienne session étudiant ne pollue l'admin
-  localStorage.removeItem("token");
-  localStorage.removeItem("adminToken");
-  localStorage.removeItem("isGuest");
+    // 🧼 Nettoyage préventif
+    localStorage.removeItem("token");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("isGuest");
     setError("");
     setLoading(true);
-
-    // 👻 ANTI-FANTÔME
-    localStorage.removeItem("isGuest");
 
     if (!force) setShowForceButton(false);
 
     try {
-      // 1️⃣ Tentative de connexion admin
-      const adminRes = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, {
-        email,
-        password,
-        force,
-      });
-
-      // 🧹 NETTOYAGE : On s'assure qu'aucun compte étudiant n'interfère
-      localStorage.removeItem("token"); 
-      
-      localStorage.setItem("adminToken", adminRes.data.token);
-      setToken(adminRes.data.token);
-      setRole("admin");
-      setLoading(false);
-
-      window.dispatchEvent(new Event("authChange"));
-      return;
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        setError(err.response?.data?.error || "Un administrateur est déjà connecté.");
-        setShowForceButton(true);
-        setLoading(false);
-        return; 
+      if (isAdminLogin) {
+        // 1️⃣ Tentative de connexion UNIQUEMENT admin
+        const adminRes = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, {
+          email,
+          password,
+          force,
+        });
+        localStorage.setItem("adminToken", adminRes.data.token);
+        setToken(adminRes.data.token);
+        setRole("admin");
+      } else {
+        // 2️⃣ Tentative de connexion UNIQUEMENT étudiant
+        const studentRes = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+          email,
+          password,
+          force,
+        });
+        localStorage.setItem("token", studentRes.data.token);
+        setToken(studentRes.data.token);
+        setRole("student");
       }
       
-      if (!err.response || err.response.status >= 500) {
-        setError("Erreur de connexion au serveur. Réessayez plus tard.");
-        setLoading(false);
-        return;
-      }
-    }
-
-    try {
-      // 2️⃣ Tentative de connexion étudiant
-      const studentRes = await axios.post(`${API_BASE_URL}/api/auth/login`, {
-        email,
-        password,
-        force,
-      });
-
-      // 🧹 NETTOYAGE : On s'assure qu'aucun compte admin n'interfère
-      localStorage.removeItem("adminToken");
-
-      localStorage.setItem("token", studentRes.data.token);
-      setToken(studentRes.data.token);
-      setRole("student");
       setLoading(false);
-
       window.dispatchEvent(new Event("authChange"));
+
     } catch (err: any) {
       if (err.response?.status === 409) {
         setError(err.response?.data?.error || "Ce compte est déjà connecté ailleurs.");
@@ -137,6 +112,17 @@ export default function LoginPage() {
             className="border border-gray-300 text-gray-900 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
             required
           />
+
+          {/* 🆕 NOUVEAU : Case à cocher pour séparer les étudiants des admins */}
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+            <input 
+              type="checkbox" 
+              checked={isAdminLogin}
+              onChange={(e) => setIsAdminLogin(e.target.checked)}
+              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+            />
+            Je suis un administrateur
+          </label>
 
           {!showForceButton && (
             <button
