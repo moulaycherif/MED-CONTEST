@@ -13,7 +13,7 @@ const ProgressSchema = new Schema<IProgress>({
   qcmId: { type: String, required: true },
   currentQuestion: { type: Number, default: 0 },
   totalQuestions: { type: Number, required: true },
-  progressPercent: { type: Number, default: 0 }
+  progressPercent: { type: Number, default: 0 },
 });
 
 export default mongoose.model<IProgress>("Progress", ProgressSchema);

@@ -1,35 +1,32 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IQuestion extends Document {
-  texte: string;
-  options: string[];
-  reponseCorrecte: string;
+  texte?: string;
+  image?: string | null;
+  options?: string[];
+  reponseCorrecte?: string;
   subject: string;
   exam: string;
-  note: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  note?: number;
+  isGroup: boolean;
+  groupId?: mongoose.Types.ObjectId | null;
+  isFree: boolean; // 👈 AJOUT ICI
 }
 
 const questionSchema = new Schema<IQuestion>(
   {
-    texte: { type: String, required: true, trim: true },
-    options: {
-      type: [String],
-      validate: [
-        (v: string[]) => v.length > 0,
-        "Les options ne peuvent pas être vides",
-      ],
-    },
-    reponseCorrecte: { type: String, required: true, trim: true },
-    subject: { type: String, required: true, trim: true },
-    exam: { type: String, required: true, trim: true },
+    texte: { type: String, default: null, trim: true },
+    image: { type: String, default: null },
+    options: { type: [String], default: [] },
+    reponseCorrecte: { type: String, default: null },
+    subject: { type: String, required: true },
+    exam: { type: String, required: true },
     note: { type: Number, default: 1 },
+    isGroup: { type: Boolean, default: false },
+    groupId: { type: Schema.Types.ObjectId, ref: "QuestionGroup", default: null },
+    isFree: { type: Boolean, default: false }, // 👈 AJOUT ICI
   },
   { timestamps: true }
 );
 
-// ✅ Empêcher les doublons de texte pour un même examen
-questionSchema.index({ texte: 1, exam: 1 }, { unique: true });
-
-export default mongoose.model<IQuestion>("Question", questionSchema);
+export default mongoose.models.Question || mongoose.model<IQuestion>("Question", questionSchema);
