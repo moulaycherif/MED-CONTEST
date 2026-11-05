@@ -1242,7 +1242,7 @@ export default function StudentPage() {
         );
       }
 
-      return (
+return (
   <div className="flex flex-wrap gap-5 justify-start items-start min-h-full p-4">
     {chapters.map((chapter, index) => (
       <motion.div
@@ -1251,12 +1251,11 @@ export default function StudentPage() {
         className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
         onClick={() => setSelectedChapter(chapter)}
       >
-        {/* 1. Remplacement de la hauteur fixe par h-auto ou un conteneur flexible */}
         <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden">
+          {/* L'image est maintenant en object-contain et h-auto */}
           <img 
             src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
             alt={chapter} 
-            {/* 2. object-cover devient object-contain, w-full garde la largeur de la carte, h-auto respecte la proportion */}
             className="w-full h-auto max-h-48 object-contain" 
           />
         </div>
