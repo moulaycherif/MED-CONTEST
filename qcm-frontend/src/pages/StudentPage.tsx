@@ -1256,7 +1256,7 @@ return (
   <img 
     src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
     alt={chapter} 
-    className="w-40 h-auto max-h-40 object-contain" 
+    className="w-32 h-auto max-h-32 object-contain" 
   />
 </div>
         <div 
