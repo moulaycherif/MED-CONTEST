@@ -1183,7 +1183,7 @@ export default function StudentPage() {
                 }}
                 className="mt-6 px-6 py-2 bg-green-600 text-white rounded font-bold w-full md:w-auto shadow"
               >
-                ✅ Valider ce chapitre
+                ✅ Valider cet énoncé
               </button>
             )}
 
