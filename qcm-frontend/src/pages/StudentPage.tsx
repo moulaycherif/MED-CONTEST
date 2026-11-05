@@ -672,36 +672,60 @@ export default function StudentPage() {
     if (section === "soutien" && selectedMatiere) {
       const chaptersBySubject: Record<string, string[]> = {
         Mathématique: [
-          "Chapitre I : Suites & Sommes",
-          "Chapitre II : Etude de fonctions",
-          "Chapitre III : Equations différentielles",
-          "Chapitre IV : Nombres complexes",
-          "Chapitre V : Intégrales",
-          "Chapitre VI : Géométrie dans l'espace",
-          "Chapitre VII : Probabilité",
-        ],
-        Physique: [
-          "Chapitre I : Les ondes",
-          "Chapitre II : Nucléaire",
-          "Chapitre III : Electricité",
-          "Chapitre IV : Lois de Newton & Théorème d'énergie cinétique",
-          "Chapitre V : Système oscillant & Pendule élastique",
-        ],
-        Chimie: [
-          "Chapitre I : Chimie des solutions",
-          "Chapitre II : Cinétique chimique",
-          "Chapitre III : Les piles",
-          "Chapitre IV : Chimie organique",
-        ],
-        SVT: [
-          "Chapitre 1 : Les réactions responsables de la libération de l'énergie emmagasinée dans la matière organique",
-          "Chapitre 2 : Rôle du muscle strié squelettique dans la conversion de l'énergie",
-          "Chapitre 3 : L'information génétique",
-          "Chapitre 4 : Le génie génétique",
-          "Chapitre 5 : La génétique humaine",
-          "Chapitre 6 : La génétique des populations",
-          "Chapitre 7 : L'immunité"
-        ],
+    "Chapitre I : Limites et Continuité",
+    "Chapitre II : Dérivation et étude de fonctions",
+    "Chapitre III : Suites numériques",
+    "Chapitre IV : Fonctions primitives",
+    "Chapitre V : Fonctions logarithmiques",
+    "Chapitre VI : Nombres complexes (Partie 1)",
+    "Chapitre VII : Fonctions exponentielles",
+    "Chapitre VIII : Nombres complexes (Partie 2)",
+    "Chapitre IX : Calcul intégral",
+    "Chapitre X : Equations différentielles",
+    "Chapitre XI : Produit scalaire et produit vectoriel dans l'espace",
+    "Chapitre XII : Dénombrement et probabilités"
+  ],
+  Physique: [
+    "CHAPITRE 1 : Ondes mécaniques progressives",
+    "CHAPITRE 2 : Ondes mécaniques progressives périodiques",
+    "CHAPITRE 3 : Propagation d’une onde lumineuse",
+    "CHAPITRE 4 : Décroissance radioactive",
+    "CHAPITRE 5 : Noyaux, masse et énergie",
+    "CHAPITRE 6 : Dipôle RC",
+    "CHAPITRE 7 : Dipôle RL",
+    "CHAPITRE 8 : Oscillations libres d'un circuit RLC série",
+    "CHAPITRE 9 : Ondes électromagnétiques",
+    "CHAPITRE 10 : Modulation d'amplitude",
+    "CHAPITRE 11 : Lois de Newton",
+    "CHAPITRE 12 : Chute verticale d'un corps solide",
+    "CHAPITRE 13 : Mouvements plans",
+    "CHAPITRE 14 : Mouvement des satellites et des planètes",
+    "CHAPITRE 15 : Mouvement de rotation d’un solide autour d’un axe fixe",
+    "CHAPITRE 16 : Système mécanique oscillant",
+    "CHAPITRE 17 : Aspects énergétiques",
+    "CHAPITRE 18 : Atome et mécanique de Newton"
+  ],
+  Chimie: [
+    "Chapitre 1 : Transformations lentes et transformations rapides",
+    "Chapitre 2 : Suivi temporel d'une transformation chimique - Vitesse de réaction",
+    "Chapitre 3 : Transformations chimiques s'effectuant dans les 2 sens",
+    "Chapitre 4 : État d'équilibre d'un système chimique",
+    "Chapitre 5 : Transformations associées à des réactions acido-basiques en solution aqueuse",
+    "Chapitre 6 : Évolution spontanée d'un système chimique",
+    "Chapitre 7 : Transformations spontanées dans les piles et production d'énergie",
+    "Chapitre 8 : Transformations forcées (Électrolyse)",
+    "Chapitre 9 : Réactions d'estérification et d'hydrolyse",
+    "Chapitre 10 : Contrôle de l'évolution d'un système chimique"
+  ],
+  SVT: [
+    "Chapitre 1 : Les réactions responsables de la libération de l'énergie emmagasinée dans la matière organique",
+    "Chapitre 2 : Rôle du muscle strié squelettique dans la conversion de l'énergie",
+    "Chapitre 3 : L'information génétique",
+    "Chapitre 4 : Le génie génétique",
+    "Chapitre 5 : La génétique humaine",
+    "Chapitre 6 : La génétique des populations",
+    "Chapitre 7 : L'immunité"
+  ],
       };
 
       const chapters = chaptersBySubject[selectedMatiere] || [];
@@ -1219,33 +1243,34 @@ export default function StudentPage() {
       }
 
       return (
-        <div className="flex flex-wrap gap-6 justify-start items-start min-h-full p-4">
-          {chapters.map((chapter, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.05 }}
-              className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-lg bg-white border border-gray-100 flex flex-col transition-all"
-              onClick={() => setSelectedChapter(chapter)}
-            >
-              <div className="w-48 h-48 bg-gray-50 shrink-0 overflow-hidden">
-                <img 
-                  src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
-                  alt={chapter} 
-                  className="w-full h-full object-cover" 
-                />
-              </div>
-              <div 
-                className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
-                title={chapter}
-              >
-                <span className="line-clamp-3 break-words leading-tight">
-                  {chapter}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+  <div className="flex flex-wrap gap-5 justify-start items-start min-h-full p-4">
+    {chapters.map((chapter, index) => (
+      <motion.div
+        key={index}
+        whileHover={{ scale: 1.05 }}
+        className="w-40 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
+        onClick={() => setSelectedChapter(chapter)}
+      >
+        {/* Hauteur réduite à h-28 (112px) au lieu de h-48 (192px) */}
+        <div className="w-full h-28 bg-gray-50 shrink-0 overflow-hidden">
+          <img 
+            src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
+            alt={chapter} 
+            className="w-full h-full object-cover" 
+          />
         </div>
-      );
+        <div 
+          className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
+          title={chapter}
+        >
+          <span className="line-clamp-3 break-words leading-tight">
+            {chapter}
+          </span>
+        </div>
+      </motion.div>
+    ))}
+  </div>
+);
     }
     return <StudentDashboardStats />;
   };
