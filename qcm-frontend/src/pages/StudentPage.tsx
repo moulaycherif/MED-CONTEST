@@ -1248,15 +1248,16 @@ export default function StudentPage() {
       <motion.div
         key={index}
         whileHover={{ scale: 1.05 }}
-        className="w-40 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
+        className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
         onClick={() => setSelectedChapter(chapter)}
       >
-        {/* Hauteur réduite à h-28 (112px) au lieu de h-48 (192px) */}
-        <div className="w-full h-28 bg-gray-50 shrink-0 overflow-hidden">
+        {/* 1. Remplacement de la hauteur fixe par h-auto ou un conteneur flexible */}
+        <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden">
           <img 
             src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
             alt={chapter} 
-            className="w-full h-full object-cover" 
+            {/* 2. object-cover devient object-contain, w-full garde la largeur de la carte, h-auto respecte la proportion */}
+            className="w-full h-auto max-h-48 object-contain" 
           />
         </div>
         <div 
