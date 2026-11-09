@@ -1183,7 +1183,7 @@ export default function StudentPage() {
                 }}
                 className="mt-6 px-6 py-2 bg-green-600 text-white rounded font-bold w-full md:w-auto shadow"
               >
-                ✅ Valider ce chapitre
+                ✅ Valider cet énoncé
               </button>
             )}
 
@@ -1242,23 +1242,23 @@ export default function StudentPage() {
         );
       }
 
-      return (
+return (
   <div className="flex flex-wrap gap-5 justify-start items-start min-h-full p-4">
     {chapters.map((chapter, index) => (
       <motion.div
         key={index}
         whileHover={{ scale: 1.05 }}
-        className="w-40 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
+        className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
         onClick={() => setSelectedChapter(chapter)}
       >
-        {/* Hauteur réduite à h-28 (112px) au lieu de h-48 (192px) */}
-        <div className="w-full h-28 bg-gray-50 shrink-0 overflow-hidden">
-          <img 
-            src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
-            alt={chapter} 
-            className="w-full h-full object-cover" 
-          />
-        </div>
+       <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden py-4">
+  {/* On remplace w-full par w-40 (160px) pour que l'image ne touche pas les bords */}
+  <img 
+    src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
+    alt={chapter} 
+    className="w-32 h-auto max-h-32 object-contain" 
+  />
+</div>
         <div 
           className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
           title={chapter}
