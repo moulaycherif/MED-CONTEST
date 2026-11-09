@@ -686,24 +686,10 @@ export default function StudentPage() {
     "Chapitre XII : Dénombrement et probabilités"
   ],
   Physique: [
-    "CHAPITRE 1 : Ondes mécaniques progressives",
-    "CHAPITRE 2 : Ondes mécaniques progressives périodiques",
-    "CHAPITRE 3 : Propagation d’une onde lumineuse",
-    "CHAPITRE 4 : Décroissance radioactive",
-    "CHAPITRE 5 : Noyaux, masse et énergie",
-    "CHAPITRE 6 : Dipôle RC",
-    "CHAPITRE 7 : Dipôle RL",
-    "CHAPITRE 8 : Oscillations libres d'un circuit RLC série",
-    "CHAPITRE 9 : Ondes électromagnétiques",
-    "CHAPITRE 10 : Modulation d'amplitude",
-    "CHAPITRE 11 : Lois de Newton",
-    "CHAPITRE 12 : Chute verticale d'un corps solide",
-    "CHAPITRE 13 : Mouvements plans",
-    "CHAPITRE 14 : Mouvement des satellites et des planètes",
-    "CHAPITRE 15 : Mouvement de rotation d’un solide autour d’un axe fixe",
-    "CHAPITRE 16 : Système mécanique oscillant",
-    "CHAPITRE 17 : Aspects énergétiques",
-    "CHAPITRE 18 : Atome et mécanique de Newton"
+    "PARTIE I : LES ONDES",
+    "PARTIE II : LES TRANSFORMATIONS NUCLÉAIRES",
+    "PARTIE III : ÉLECTRICITÉ",
+    "PARTIE IV : MÉCANIQUE"
   ],
   Chimie: [
     "Chapitre 1 : Transformations lentes et transformations rapides",
