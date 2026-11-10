@@ -1238,11 +1238,9 @@ return (
         onClick={() => setSelectedChapter(chapter)}
       >
        <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden py-4 h-40">
-  <img 
-    src={subjectImages[selectedMatiere] || mathsImg} 
-    alt={chapter} 
-    className="w-32 h-32 object-contain" 
-  />
+ 
+    <img src="https://placehold.co/150" alt="Test" className="w-32 h-32 object-contain" />
+    
 </div>
         <div 
           className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
