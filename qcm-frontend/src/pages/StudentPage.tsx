@@ -1237,12 +1237,11 @@ return (
         className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
         onClick={() => setSelectedChapter(chapter)}
       >
-       <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden py-4">
-  {/* On remplace w-full par w-40 (160px) pour que l'image ne touche pas les bords */}
+       <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden py-4 h-40">
   <img 
-    src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
+    src={subjectImages[selectedMatiere] || mathsImg} 
     alt={chapter} 
-    className="w-32 h-auto max-h-32 object-contain" 
+    className="w-32 h-32 object-contain" 
   />
 </div>
         <div 
