@@ -252,7 +252,7 @@ export default function StudentPage() {
     setSubmitted(false);
     setScore(null);
   };
-
+console.log("STUDENT PAGE PROCEDURE");
 // =========================================================================
   // 🌟 MOTEUR NATIF ULTRA-TOLÉRANT : KATEX + CORRECTION RETOURS À LA LIGNE IMAGES
   // =========================================================================

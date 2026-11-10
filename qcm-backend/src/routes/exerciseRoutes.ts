@@ -38,7 +38,7 @@ const formatExcelMath = (text: any) => {
   str = str.replace(/\$([^$]+)\$/g, "\\($1\\)");
   return str;
 };
-
+console.log("EXERCICE ROUTES PROCEDURE");
 // ======================================================
 // 📋 Récupérer tous les exercices (Bridé pour l'invité)
 // ======================================================
