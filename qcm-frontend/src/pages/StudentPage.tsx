@@ -1237,10 +1237,14 @@ return (
         className="w-48 cursor-pointer rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 flex flex-col transition-all"
         onClick={() => setSelectedChapter(chapter)}
       >
-       <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden py-4 h-40">
- 
-    <img src="https://placehold.co/150" alt="Test" className="w-32 h-32 object-contain" />
-    
+       <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden py-4">
+  {/* On remplace w-full par w-40 (160px) pour que l'image ne touche pas les bords */}
+  console.log("IMAGES",selectedMatiere, subjectImages[selectedMatiere], mathsImg)
+  <img 
+    src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
+    alt={chapter} 
+    className="w-32 h-auto max-h-32 object-contain" 
+  />
 </div>
         <div 
           className="bg-yellow-300 text-black text-center p-2 font-semibold text-xs flex items-center justify-center h-16 min-w-0"
