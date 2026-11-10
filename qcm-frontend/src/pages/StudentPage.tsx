@@ -1238,8 +1238,6 @@ return (
         onClick={() => setSelectedChapter(chapter)}
       >
        <div className="w-full bg-gray-50 shrink-0 flex items-center justify-center overflow-hidden py-4">
-  {/* On remplace w-full par w-40 (160px) pour que l'image ne touche pas les bords */}
-  console.log("IMAGES",selectedMatiere, mathsImg);
   <img 
     src={(selectedMatiere && subjectImages[selectedMatiere]) || mathsImg} 
     alt={chapter} 
